@@ -1,7 +1,7 @@
 import { useState } from "react";
+import { Bounce, toast, ToastContainer } from "react-toastify";
 import Header from "../../../components/Header";
 import Sidebar from "../../../components/Sidebar";
-import { Bounce, toast, ToastContainer } from "react-toastify";
 
 const ProfilePage = () => {
     const [sidebar, setSidebar] = useState(false);
@@ -24,7 +24,7 @@ const ProfilePage = () => {
             <Sidebar isOpen={sidebar} closeSidebar={setSidebar} />
             <div className='flex flex-col max-w-screen w-full pl-0 min-h-screen transition-all duration-200 md:pl-[265px]'>
                 <Header openSidebar={setSidebar} />
-                <div className='flex flex-col gap-4 px-6 pb-6 w-full h-full'>
+                <div className='flex flex-col gap-4 px-6 pb-20 w-full h-full'>
                     <h2 className='text-2xl leading-9 text-white font-noto'>Profile</h2>
                     <div className="flex gap-6 flex-wrap lg:flex-nowrap">
                         <div className="flex flex-col w-full gap-6 lg:max-w-80">
@@ -100,7 +100,7 @@ const ProfilePage = () => {
                                     />
                                 </div>
                             </div>
-                            <div className="flex gap-4">
+                            <div className="flex gap-4 flex-wrap">
                                 <button onClick={() => toast.success('Profile updates successfully')} className="font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">Save</button>
                                 <button className="font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border-[1px] border-[#868686] rounded-full transition-all hover:bg-[#868686] hover:text-[#252C38]">Cancel</button>
                             </div>

@@ -34,9 +34,9 @@ const SopDocumentPage = () => {
                 transition={Bounce}
             />
             <Sidebar isOpen={sidebar} closeSidebar={setSidebar} />
-            <div className='flex flex-col max-w-screen w-full pl-0 h-screen transition-all duration-200 md:pl-[265px]'>
+            <div className='flex flex-col max-w-screen w-full pl-0 min-h-screen md:h-screen transition-all duration-200 md:pl-[265px]'>
                 <Header openSidebar={setSidebar} />
-                <div className='flex flex-col gap-4 px-6 pb-6 w-full h-full'>
+                <div className='flex flex-col gap-4 px-6 pb-20 w-full h-full'>
                     <h2 className='text-2xl leading-9 text-white font-noto'>Settings</h2>
                     <div className="flex flex-col gap-8 w-full h-full">
                         <Navbar />
@@ -130,7 +130,7 @@ const SopDocumentPage = () => {
                             <button className="font-medium text-sm leading-[21px] text-[#EFBF04] px-5 py-2 border-[1px] border-[#EFBF04] rounded-full cursor-pointer w-fit transition-all hover:bg-[#EFBF04] hover:text-[#252C38]">Upload file</button>
                         </div>
                         <div className="flex gap-4">
-                            <button onClick={() => {setEditDoc(false); toast.success('Document added edited successfully')}} className="font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">Save</button>
+                            <button onClick={() => { setEditDoc(false); toast.success('Document added edited successfully') }} className="font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">Save</button>
                             <button onClick={() => setEditDoc(false)} className="font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border-[1px] border-[#868686] rounded-full transition-all hover:bg-[#868686] hover:text-[#252C38]">Cancel</button>
                         </div>
                     </div>
@@ -154,7 +154,7 @@ const SopDocumentPage = () => {
                             <button className="font-medium text-sm leading-[21px] text-[#EFBF04] px-5 py-2 border-[1px] border-[#EFBF04] rounded-full cursor-pointer w-fit transition-all hover:bg-[#EFBF04] hover:text-[#252C38]">Upload file</button>
                         </div>
                         <div className="flex gap-4">
-                            <button onClick={() => {setAddDoc(false); toast.success('Document added successfully')}} className="font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">Save</button>
+                            <button onClick={() => { setAddDoc(false); toast.success('Document added successfully') }} className="font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">Save</button>
                             <button onClick={() => setAddDoc(false)} className="font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border-[1px] border-[#868686] rounded-full transition-all hover:bg-[#868686] hover:text-[#252C38]">Cancel</button>
                         </div>
                     </div>

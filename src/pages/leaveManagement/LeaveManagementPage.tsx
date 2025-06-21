@@ -24,9 +24,9 @@ const LeaveManagementPage = () => {
                 transition={Bounce}
             />
             <Sidebar isOpen={sidebar} closeSidebar={setSidebar} />
-            <div className='flex flex-col max-w-screen w-full pl-0 h-screen transition-all duration-200 md:pl-[265px]'>
+            <div className='flex flex-col max-w-screen w-full pl-0 min-h-screen transition-all duration-200 md:pl-[265px]'>
                 <Header openSidebar={setSidebar} />
-                <div className='flex flex-col gap-6 px-6 pb-6 w-full h-full'>
+                <div className='flex flex-col gap-6 px-6 pb-20 w-full h-full'>
                     <h2 className='text-2xl leading-9 text-white font-noto'>Leave management</h2>
                     <div className="flex flex-col gap-10 bg-[#252C38] p-6 rounded-lg w-full h-full">
                         <div className="w-full flex flex-col gap-4 flex-wrap">

@@ -9,6 +9,8 @@ const OccurrenceCatgPage = () => {
     const [addCatg, setAddCatg] = useState(false);
     const [editCatg, setEditCatg] = useState(false);
     const [sidebar, setSidebar] = useState(false);
+    const [data1, setData1] = useState(true);
+    const [data2, setData2] = useState(false);
 
     return (
         <main className='max-w-screen w-full min-h-screen bg-[#181D26]'>
@@ -26,9 +28,9 @@ const OccurrenceCatgPage = () => {
                 transition={Bounce}
             />
             <Sidebar isOpen={sidebar} closeSidebar={setSidebar} />
-            <div className='flex flex-col max-w-screen w-full pl-0 h-screen transition-all duration-200 md:pl-[265px]'>
+            <div className='flex flex-col max-w-screen w-full pl-0 min-h-screen md:h-screen transition-all duration-200 md:pl-[265px]'>
                 <Header openSidebar={setSidebar} />
-                <div className='flex flex-col gap-4 px-6 pb-6 w-full h-full'>
+                <div className='flex flex-col gap-4 px-6 pb-20 w-full h-full'>
                     <h2 className='text-2xl leading-9 text-white font-noto'>Settings</h2>
                     <div className="flex flex-col gap-8 w-full h-full">
                         <Navbar />
@@ -70,7 +72,7 @@ const OccurrenceCatgPage = () => {
                                                 <td className="text-[#F4F7FF] pt-6 pb-3">1</td>
                                                 <td className="text-[#F4F7FF] pt-6 pb-3 ">HR</td>
                                                 <td className="text-[#F4F7FF] pt-6 pb-3 ">
-                                                    <SwitchCustomStyles checked={true} label='Active' />
+                                                    <SwitchCustomStyles checked={data1} onChange={setData1} labelTrue='Active' labelFalse="Inactive" />
                                                 </td>
                                                 <td className="pt-6 pb-3">
                                                     <div className="flex gap-6 items-center justify-center">
@@ -84,7 +86,7 @@ const OccurrenceCatgPage = () => {
                                                 <td className="text-[#F4F7FF] pt-6 pb-3">2</td>
                                                 <td className="text-[#F4F7FF] pt-6 pb-3 ">Admin</td>
                                                 <td className="text-[#F4F7FF] pt-6 pb-3 ">
-                                                    <SwitchCustomStyles checked={false} label='Inactive' />
+                                                    <SwitchCustomStyles checked={data2} onChange={setData2} labelTrue="Active" labelFalse='Inactive' />
                                                 </td>
                                                 <td className="pt-6 pb-3">
                                                     <div className="flex gap-6 items-center justify-center">
@@ -121,7 +123,7 @@ const OccurrenceCatgPage = () => {
                             />
                         </div>
                         <div className="flex gap-4">
-                            <button onClick={() => {setEditCatg(false); toast.success('Category edited successfully')}} className="font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">Save</button>
+                            <button onClick={() => { setEditCatg(false); toast.success('Category edited successfully') }} className="font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">Save</button>
                             <button onClick={() => setEditCatg(false)} className="font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border-[1px] border-[#868686] rounded-full transition-all hover:bg-[#868686] hover:text-[#252C38]">Cancel</button>
                         </div>
                     </div>
@@ -141,7 +143,7 @@ const OccurrenceCatgPage = () => {
                             />
                         </div>
                         <div className="flex gap-4">
-                            <button onClick={() => {setAddCatg(false); toast.success('Category added successfully')}} className="font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">Submit</button>
+                            <button onClick={() => { setAddCatg(false); toast.success('Category added successfully') }} className="font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">Submit</button>
                             <button onClick={() => setAddCatg(false)} className="font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border-[1px] border-[#868686] rounded-full transition-all hover:bg-[#868686] hover:text-[#252C38]">Cancel</button>
                         </div>
                     </div>

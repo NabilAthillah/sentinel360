@@ -28,9 +28,9 @@ const HistoryPage = () => {
                 transition={Bounce}
             />
             <Sidebar isOpen={sidebar} closeSidebar={setSidebar} />
-            <div className='flex flex-col max-w-screen w-full pl-0 h-screen transition-all duration-200 md:pl-[265px]'>
+            <div className='flex flex-col max-w-screen w-full pl-0 min-h-screen md:h-screen transition-all duration-200 md:pl-[265px]'>
                 <Header openSidebar={setSidebar} />
-                <div className='flex flex-col gap-6 px-6 pb-6 w-full h-full'>
+                <div className='flex flex-col gap-6 px-6 pb-20 w-full h-full'>
                     <h2 className='text-2xl leading-9 text-white font-noto'>e-Learning</h2>
                     <nav>
                         <Link to="/e-learning" className={`font-medium text-sm text-[#F4F7FF] px-6 ${pathname === '/e-learning' ? 'pt-[14px] pb-3 border-b-2 border-b-[#F3C511]' : 'py-[14px] border-b-0'}`}>
@@ -81,7 +81,7 @@ const HistoryPage = () => {
                                             <td className="text-[#F4F7FF] pt-6 pb-3">OM</td>
                                             <td className="text-[#F4F7FF] pt-6 pb-3">Shiva</td>
                                             <td className="text-[#F4F7FF] pt-6 pb-3 ">
-                                                <SwitchCustomStyles checked={true} label="Active" />
+                                                <SwitchCustomStyles checked={true} labelTrue="Active" labelFalse="Inactive" />
                                             </td>
                                             <td className="text-[#F4F7FF] pt-6 pb-3">24/07/2025</td>
                                             <td className="pt-6 pb-3">

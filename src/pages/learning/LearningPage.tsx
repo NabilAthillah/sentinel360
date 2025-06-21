@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Link, useLocation } from 'react-router-dom';
 import { Bounce, toast, ToastContainer } from "react-toastify";
+import DeleteModal from "../../components/DeleteModal";
 import Header from "../../components/Header";
 import Sidebar from "../../components/Sidebar";
 import { SwitchCustomStyles } from "../../components/SwitchCustomStyles";
-import DeleteModal from "../../components/DeleteModal";
 
 const LearningPage = () => {
     const location = useLocation();
@@ -13,6 +13,7 @@ const LearningPage = () => {
     const [editData, setEditData] = useState(false);
     const [deleteModal, setDeleteModal] = useState(false);
     const [addData, setAddData] = useState(false);
+    const [data1, setData1] = useState(true)
 
     const handleDelete = () => {
         setDeleteModal(false);
@@ -35,10 +36,10 @@ const LearningPage = () => {
                 transition={Bounce}
             />
             <Sidebar isOpen={sidebar} closeSidebar={setSidebar} />
-            <div className='flex flex-col max-w-screen w-full pl-0 h-screen transition-all duration-200 md:pl-[265px]'>
+            <div className='flex flex-col max-w-screen w-full pl-0 min-h-screen md:h-screen transition-all duration-200 md:pl-[265px]'>
                 <Header openSidebar={setSidebar} />
-                <div className='flex flex-col gap-6 px-6 pb-6 w-full h-full'>
-                    <h2 className='text-2xl leading-9 text-white font-noto'>Employees</h2>
+                <div className='flex flex-col gap-6 px-6 pb-20 w-full h-full'>
+                    <h2 className='text-2xl leading-9 text-white font-noto'>e-Learning</h2>
                     <nav>
                         <Link to="/e-learning" className={`font-medium text-sm text-[#F4F7FF] px-6 ${pathname === '/e-learning' ? 'pt-[14px] pb-3 border-b-2 border-b-[#F3C511]' : 'py-[14px] border-b-0'}`}>
                             Courses
@@ -85,7 +86,7 @@ const LearningPage = () => {
                                             <td className="text-[#F4F7FF] pt-6 pb-3">1</td>
                                             <td className="text-[#F4F7FF] pt-6 pb-3 ">Fire safety</td>
                                             <td className="text-[#F4F7FF] pt-6 pb-3 ">
-                                                <SwitchCustomStyles checked={true} label="Active" />
+                                                <SwitchCustomStyles checked={data1} onChange={setData1} labelTrue="Active" labelFalse="Inactive" />
                                             </td>
                                             <td className="pt-6 pb-3">
                                                 <div className="flex gap-6 items-center justify-center">

@@ -1,14 +1,25 @@
-import { useState } from "react";
+import { Loader } from "lucide-react";
+import React, { useEffect, useState } from "react";
 import { Bounce, toast, ToastContainer } from "react-toastify";
 import Header from "../../../components/Header";
 import Navbar from "../../../components/Navbar";
 import Sidebar from "../../../components/Sidebar";
+import roleService from "../../../services/roleService";
+
+type Role = {
+    id: number;
+    name: string;
+}
 
 const RolesPage = () => {
     const [addRole, setAddRole] = useState(false);
     const [editRole, setEditRole] = useState(false);
     const [sidebar, setSidebar] = useState(false);
     const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
+    const [name, setName] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [roles, setRoles] = useState<Role[]>([]);
+    const [editedRole, setEditedRole] = useState<Role>();
 
     const togglePermission = (permission: string) => {
         setSelectedPermissions((prev) =>
@@ -18,6 +29,58 @@ const RolesPage = () => {
         );
     };
 
+    const handleSubmit = async (e: React.SyntheticEvent) => {
+        e.preventDefault();
+        setLoading(true);
+
+        try {
+            const response = await roleService.addRole(name);
+
+            if (response.success) {
+                toast.success('Role added successfully');
+            }
+        } catch (error: any) {
+            toast.error(error.message);
+        } finally {
+            setLoading(false)
+            setAddRole(false);
+        }
+    }
+
+    const handleEditRole = async (e: React.SyntheticEvent) => {
+        e.preventDefault();
+        setLoading(true);
+
+        try {
+            const response = await roleService.updateRole(editedRole?.id, editedRole?.name);
+
+            if (response.success) {
+                toast.success('Role edited successfully');
+                fetchRoles();
+            }
+        } catch (error: any) {
+            toast.error(error.message);
+        } finally {
+            setLoading(false)
+            setEditRole(false);
+        }
+    }
+
+    const fetchRoles = async () => {
+        try {
+            const response = await roleService.getAllRoles();
+
+            if (response.success) {
+                setRoles(response.data);
+            }
+        } catch (error: any) {
+            toast.error(error.message);
+        }
+    }
+
+    useEffect(() => {
+        fetchRoles();
+    }, [])
 
     const data = [
         {
@@ -80,9 +143,9 @@ const RolesPage = () => {
                 transition={Bounce}
             />
             <Sidebar isOpen={sidebar} closeSidebar={setSidebar} />
-            <div className='flex flex-col max-w-screen w-full pl-0 h-screen transition-all duration-200 md:pl-[265px]'>
+            <div className='flex flex-col max-w-screen w-full pl-0 min-h-screen transition-all duration-200 md:pl-[265px]'>
                 <Header openSidebar={setSidebar} />
-                <div className='flex flex-col gap-4 px-6 pb-6 w-full h-full'>
+                <div className='flex flex-col gap-4 px-6 pb-20 w-full h-full'>
                     <h2 className='text-2xl leading-9 text-white font-noto'>Settings</h2>
                     <div className="flex flex-col gap-8 w-full h-full">
                         <Navbar />
@@ -119,28 +182,19 @@ const RolesPage = () => {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <tr>
-                                                <td className="text-[#F4F7FF] pt-6 pb-3">1</td>
-                                                <td className="text-[#F4F7FF] pt-6 pb-3 ">HR</td>
-                                                <td className="pt-6 pb-3">
-                                                    <div className="flex gap-6 items-center justify-center">
-                                                        {/* <svg xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="28" height="28" viewBox="0 0 28 28"><defs><clipPath id="master_svg0_247_14305"><rect x="0" y="0" width="28" height="28" rx="0"/></clipPath></defs><g><g clip-path="url(#master_svg0_247_14305)"><g><path d="M11.46283298828125,19.6719859375L16.76641298828125,19.6719859375C17.495712988281248,19.6719859375,18.09231298828125,19.0752859375,18.09231298828125,18.3460859375L18.09231298828125,11.7165359375L20.20051298828125,11.7165359375C21.38061298828125,11.7165359375,21.97721298828125,10.2845659375,21.14191298828125,9.449245937499999L15.05601298828125,3.3633379375C14.54009298828125,2.8463349375,13.70246298828125,2.8463349375,13.18651298828125,3.3633379375L7.1006129882812505,9.449245937499999C6.26529298828125,10.2845659375,6.84869298828125,11.7165359375,8.02874298828125,11.7165359375L10.136932988281249,11.7165359375L10.136932988281249,18.3460859375C10.136932988281249,19.0752859375,10.73359298828125,19.6719859375,11.46283298828125,19.6719859375ZM6.15921298828125,22.3237859375L22.07011298828125,22.3237859375C22.79931298828125,22.3237859375,23.39601298828125,22.9203859375,23.39601298828125,23.6496859375C23.39601298828125,24.3788859375,22.79931298828125,24.9755859375,22.07011298828125,24.9755859375L6.15921298828125,24.9755859375C5.42996998828125,24.9755859375,4.83331298828125,24.3788859375,4.83331298828125,23.6496859375C4.83331298828125,22.9203859375,5.42996998828125,22.3237859375,6.15921298828125,22.3237859375Z" fill="#F4F7FF" fill-opacity="1"/></g></g></g></svg> */}
-                                                        <svg onClick={() => setEditRole(false)} className="cursor-pointer" xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="28" height="28" viewBox="0 0 28 28"><defs><clipPath id="master_svg0_247_14308"><rect x="0" y="0" width="28" height="28" rx="0" /></clipPath></defs><g><g clip-path="url(#master_svg0_247_14308)"><g><path d="M3.5,20.124948752212525L3.5,24.499948752212525L7.875,24.499948752212525L20.7783,11.596668752212524L16.4033,7.2216687522125245L3.5,20.124948752212525ZM24.1617,8.213328752212524C24.6166,7.759348752212524,24.6166,7.0223187522125246,24.1617,6.568328752212524L21.4317,3.8383337522125243C20.9777,3.3834207522125244,20.2406,3.3834207522125244,19.7867,3.8383337522125243L17.651699999999998,5.973328752212524L22.0267,10.348338752212523L24.1617,8.213328752212524Z" fill="#F4F7FF" fill-opacity="1" /></g></g></g></svg>
-                                                        {/* <svg xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="28" height="28" viewBox="0 0 28 28"><defs><clipPath id="master_svg0_247_14302"><rect x="0" y="0" width="28" height="28" rx="0" /></clipPath></defs><g><g clip-path="url(#master_svg0_247_14302)"><g><path d="M6.9996778125,24.5L20.9997078125,24.5L20.9997078125,8.16667L6.9996778125,8.16667L6.9996778125,24.5ZM22.1663078125,4.66667L18.0830078125,4.66667L16.9163078125,3.5L11.0830078125,3.5L9.9163378125,4.66667L5.8330078125,4.66667L5.8330078125,7L22.1663078125,7L22.1663078125,4.66667Z" fill="#F4F7FF" fill-opacity="1" /></g></g></g></svg> */}
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td className="text-[#F4F7FF] pt-6 pb-3">2</td>
-                                                <td className="text-[#F4F7FF] pt-6 pb-3 ">Admin</td>
-                                                <td className="pt-6 pb-3">
-                                                    <div className="flex gap-6 items-center justify-center">
-                                                        {/* <svg xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="28" height="28" viewBox="0 0 28 28"><defs><clipPath id="master_svg0_247_14305"><rect x="0" y="0" width="28" height="28" rx="0"/></clipPath></defs><g><g clip-path="url(#master_svg0_247_14305)"><g><path d="M11.46283298828125,19.6719859375L16.76641298828125,19.6719859375C17.495712988281248,19.6719859375,18.09231298828125,19.0752859375,18.09231298828125,18.3460859375L18.09231298828125,11.7165359375L20.20051298828125,11.7165359375C21.38061298828125,11.7165359375,21.97721298828125,10.2845659375,21.14191298828125,9.449245937499999L15.05601298828125,3.3633379375C14.54009298828125,2.8463349375,13.70246298828125,2.8463349375,13.18651298828125,3.3633379375L7.1006129882812505,9.449245937499999C6.26529298828125,10.2845659375,6.84869298828125,11.7165359375,8.02874298828125,11.7165359375L10.136932988281249,11.7165359375L10.136932988281249,18.3460859375C10.136932988281249,19.0752859375,10.73359298828125,19.6719859375,11.46283298828125,19.6719859375ZM6.15921298828125,22.3237859375L22.07011298828125,22.3237859375C22.79931298828125,22.3237859375,23.39601298828125,22.9203859375,23.39601298828125,23.6496859375C23.39601298828125,24.3788859375,22.79931298828125,24.9755859375,22.07011298828125,24.9755859375L6.15921298828125,24.9755859375C5.42996998828125,24.9755859375,4.83331298828125,24.3788859375,4.83331298828125,23.6496859375C4.83331298828125,22.9203859375,5.42996998828125,22.3237859375,6.15921298828125,22.3237859375Z" fill="#F4F7FF" fill-opacity="1"/></g></g></g></svg> */}
-                                                        <svg onClick={() => setEditRole(false)} className="cursor-pointer" xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="28" height="28" viewBox="0 0 28 28"><defs><clipPath id="master_svg0_247_14308"><rect x="0" y="0" width="28" height="28" rx="0" /></clipPath></defs><g><g clip-path="url(#master_svg0_247_14308)"><g><path d="M3.5,20.124948752212525L3.5,24.499948752212525L7.875,24.499948752212525L20.7783,11.596668752212524L16.4033,7.2216687522125245L3.5,20.124948752212525ZM24.1617,8.213328752212524C24.6166,7.759348752212524,24.6166,7.0223187522125246,24.1617,6.568328752212524L21.4317,3.8383337522125243C20.9777,3.3834207522125244,20.2406,3.3834207522125244,19.7867,3.8383337522125243L17.651699999999998,5.973328752212524L22.0267,10.348338752212523L24.1617,8.213328752212524Z" fill="#F4F7FF" fill-opacity="1" /></g></g></g></svg>
-                                                        {/* <svg xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="28" height="28" viewBox="0 0 28 28"><defs><clipPath id="master_svg0_247_14302"><rect x="0" y="0" width="28" height="28" rx="0" /></clipPath></defs><g><g clip-path="url(#master_svg0_247_14302)"><g><path d="M6.9996778125,24.5L20.9997078125,24.5L20.9997078125,8.16667L6.9996778125,8.16667L6.9996778125,24.5ZM22.1663078125,4.66667L18.0830078125,4.66667L16.9163078125,3.5L11.0830078125,3.5L9.9163378125,4.66667L5.8330078125,4.66667L5.8330078125,7L22.1663078125,7L22.1663078125,4.66667Z" fill="#F4F7FF" fill-opacity="1" /></g></g></g></svg> */}
-                                                    </div>
-                                                </td>
-                                            </tr>
+                                            {roles.length > 0 && roles.map((data, index) => (
+                                                <tr>
+                                                    <td className="text-[#F4F7FF] pt-6 pb-3">{index + 1}</td>
+                                                    <td className="text-[#F4F7FF] pt-6 pb-3 ">{data.name}</td>
+                                                    <td className="pt-6 pb-3">
+                                                        <div className="flex gap-6 items-center justify-center">
+                                                            {/* <svg xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="28" height="28" viewBox="0 0 28 28"><defs><clipPath id="master_svg0_247_14305"><rect x="0" y="0" width="28" height="28" rx="0"/></clipPath></defs><g><g clip-path="url(#master_svg0_247_14305)"><g><path d="M11.46283298828125,19.6719859375L16.76641298828125,19.6719859375C17.495712988281248,19.6719859375,18.09231298828125,19.0752859375,18.09231298828125,18.3460859375L18.09231298828125,11.7165359375L20.20051298828125,11.7165359375C21.38061298828125,11.7165359375,21.97721298828125,10.2845659375,21.14191298828125,9.449245937499999L15.05601298828125,3.3633379375C14.54009298828125,2.8463349375,13.70246298828125,2.8463349375,13.18651298828125,3.3633379375L7.1006129882812505,9.449245937499999C6.26529298828125,10.2845659375,6.84869298828125,11.7165359375,8.02874298828125,11.7165359375L10.136932988281249,11.7165359375L10.136932988281249,18.3460859375C10.136932988281249,19.0752859375,10.73359298828125,19.6719859375,11.46283298828125,19.6719859375ZM6.15921298828125,22.3237859375L22.07011298828125,22.3237859375C22.79931298828125,22.3237859375,23.39601298828125,22.9203859375,23.39601298828125,23.6496859375C23.39601298828125,24.3788859375,22.79931298828125,24.9755859375,22.07011298828125,24.9755859375L6.15921298828125,24.9755859375C5.42996998828125,24.9755859375,4.83331298828125,24.3788859375,4.83331298828125,23.6496859375C4.83331298828125,22.9203859375,5.42996998828125,22.3237859375,6.15921298828125,22.3237859375Z" fill="#F4F7FF" fill-opacity="1"/></g></g></g></svg> */}
+                                                            <svg onClick={() => { setEditedRole(data); setEditRole(true) }} className="cursor-pointer" xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="28" height="28" viewBox="0 0 28 28"><defs><clipPath id="master_svg0_247_14308"><rect x="0" y="0" width="28" height="28" rx="0" /></clipPath></defs><g><g clip-path="url(#master_svg0_247_14308)"><g><path d="M3.5,20.124948752212525L3.5,24.499948752212525L7.875,24.499948752212525L20.7783,11.596668752212524L16.4033,7.2216687522125245L3.5,20.124948752212525ZM24.1617,8.213328752212524C24.6166,7.759348752212524,24.6166,7.0223187522125246,24.1617,6.568328752212524L21.4317,3.8383337522125243C20.9777,3.3834207522125244,20.2406,3.3834207522125244,19.7867,3.8383337522125243L17.651699999999998,5.973328752212524L22.0267,10.348338752212523L24.1617,8.213328752212524Z" fill="#F4F7FF" fill-opacity="1" /></g></g></g></svg>
+                                                            {/* <svg xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="28" height="28" viewBox="0 0 28 28"><defs><clipPath id="master_svg0_247_14302"><rect x="0" y="0" width="28" height="28" rx="0" /></clipPath></defs><g><g clip-path="url(#master_svg0_247_14302)"><g><path d="M6.9996778125,24.5L20.9997078125,24.5L20.9997078125,8.16667L6.9996778125,8.16667L6.9996778125,24.5ZM22.1663078125,4.66667L18.0830078125,4.66667L16.9163078125,3.5L11.0830078125,3.5L9.9163378125,4.66667L5.8330078125,4.66667L5.8330078125,7L22.1663078125,7L22.1663078125,4.66667Z" fill="#F4F7FF" fill-opacity="1" /></g></g></g></svg> */}
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
                                         </tbody>
                                     </table>
                                 </div>
@@ -156,7 +210,7 @@ const RolesPage = () => {
             </div>
             {addRole && (
                 <div className="fixed w-screen h-screen flex justify-end items-start top-0 left-0 z-50 bg-[rgba(0,0,0,0.5)]">
-                    <div className="flex flex-col gap-6 p-6 bg-[#252C38] max-w-[568px] w-full max-h-screen overflow-auto h-full">
+                    <form onSubmit={handleSubmit} className="flex flex-col gap-6 p-6 bg-[#252C38] max-w-[568px] w-full max-h-screen overflow-auto h-full">
                         <h2 className='text-2xl leading-[36px] text-white font-noto'>Add Role</h2>
                         <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
                             <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Role name</label>
@@ -164,10 +218,11 @@ const RolesPage = () => {
                                 type={"text"}
                                 className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
                                 placeholder='Role name'
-                                value='HR'
+                                onChange={(e) => setName(e.target.value)}
+                                required
                             />
                         </div>
-                        {Object.entries(data[0]).map(([category, permissions]) => (
+                        {/* {Object.entries(data[0]).map(([category, permissions]) => (
                             <div className="flex flex-col gap-2">
                                 <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">{category}</label>
                                 <div className="flex flex-wrap gap-x-3 gap-y-[14px]">
@@ -186,15 +241,15 @@ const RolesPage = () => {
                                     })}
                                 </div>
                             </div>
-                        ))}
+                        ))} */}
                         <div className="flex gap-4">
-                            <button onClick={() => {setAddRole(false); toast.success('Role added successfully')}} className="font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">Save</button>
+                            <button type="submit" className="flex justify-center items-center font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">{loading ? <Loader /> : 'Save'}</button>
                             <button onClick={() => setAddRole(false)} className="font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border-[1px] border-[#868686] rounded-full transition-all hover:bg-[#868686] hover:text-[#252C38]">Cancel</button>
                         </div>
-                    </div>
+                    </form>
                 </div>
             )}
-            {editRole && (
+            {editRole && editedRole && (
                 <div className="fixed w-screen h-screen flex justify-end items-start top-0 left-0 z-50 bg-[rgba(0,0,0,0.5)]">
                     <div className="flex flex-col gap-6 p-6 bg-[#252C38] max-w-[568px] w-full max-h-screen overflow-auto h-full">
                         <h2 className='text-2xl leading-[36px] text-white font-noto'>Edit Role</h2>
@@ -204,10 +259,17 @@ const RolesPage = () => {
                                 type={"text"}
                                 className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
                                 placeholder='Role name'
-                                value='HR'
+                                value={editedRole.name}
+                                onChange={(e) =>
+                                    setEditedRole({
+                                        ...editedRole,
+                                        name: e.target.value,
+                                    })
+                                }
+                                required
                             />
                         </div>
-                        {Object.entries(data[0]).map(([category, permissions]) => (
+                        {/* {Object.entries(data[0]).map(([category, permissions]) => (
                             <div className="flex flex-col gap-2">
                                 <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">{category}</label>
                                 <div className="flex flex-wrap gap-x-3 gap-y-[14px]">
@@ -226,9 +288,9 @@ const RolesPage = () => {
                                     })}
                                 </div>
                             </div>
-                        ))}
+                        ))} */}
                         <div className="flex gap-4">
-                            <button onClick={() => {setEditRole(false); toast.success('Role edited successfully')}} className="font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">Save</button>
+                            <button onClick={handleEditRole} className="flex items-center justify-center font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">{loading ? <Loader /> : 'Save'}</button>
                             <button onClick={() => setEditRole(false)} className="font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border-[1px] border-[#868686] rounded-full transition-all hover:bg-[#868686] hover:text-[#252C38]">Cancel</button>
                         </div>
                     </div>
