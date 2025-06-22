@@ -1,9 +1,10 @@
+import axios from 'axios';
 import { Eye, EyeOff } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bounce, toast, ToastContainer } from 'react-toastify';
-import authService from '../../services/authService';
+import { toast } from 'react-toastify';
 import Loader from '../../components/Loader';
+import authService from '../../services/authService';
 
 const LoginPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -35,6 +36,8 @@ const LoginPage: React.FC = () => {
       }
     } catch (error: any) {
       toast.error(error.message)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -43,7 +46,21 @@ const LoginPage: React.FC = () => {
     const user = localStorage.getItem('user');
 
     if (token && user) {
-      navigate('/dashboard');
+      axios.get(process.env.REACT_APP_API_URL || 'http://localhost:8000/api/check-token', {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
+        .then((res) => {
+          navigate('/dashboard');
+        })
+        .catch((err) => {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+        });
+    } else {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
     }
   }, [navigate])
 

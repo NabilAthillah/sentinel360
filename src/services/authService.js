@@ -6,8 +6,8 @@ const authService = {
   login: async (email, password) => {
     try {
       const response = await api.post('/auth/login', {
-        email : email,
-        password : password
+        email: email,
+        password: password
       });
       if (response.data) {
         return response.data;
@@ -51,6 +51,28 @@ const authService = {
       if (response.data.token) {
         localStorage.setItem('token', response.data.token);
       }
+      return response.data;
+    } catch (error) {
+      throw error.response ? error.response.data : { message: 'Network error' };
+    }
+  },
+
+  updateProfile: async (id, token, name, address, mobile, email, old_password, new_password) => {
+    try {
+      const response = await api.post('/auth/update-profile', {
+        id,
+        name,
+        address,
+        mobile,
+        email,
+        old_password,
+        new_password
+      }, {
+        headers: {
+          'Authorization' : `Bearer ${token}`
+        }
+      })
+
       return response.data;
     } catch (error) {
       throw error.response ? error.response.data : { message: 'Network error' };

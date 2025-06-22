@@ -1,11 +1,12 @@
-import { useState } from "react";
-import Header from "../../../components/Header";
+import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 import Navbar from "../../../components/Navbar";
-import Sidebar from "../../../components/Sidebar";
+import MainLayout from "../../../layouts/MainLayout";
+import attendanceSettingService from "../../../services/attendanceSettingService";
 
 const SettingsAttendancePage = () => {
     const [sidebar, setSidebar] = useState(false);
-    const inputData = [
+    const [formData, setFormData] = useState([
         {
             label: 'Grace period (in minutes)',
             placeholder: 'Grace period (in minutes)',
@@ -56,40 +57,107 @@ const SettingsAttendancePage = () => {
             placeholder: '00:00',
             value: '08:00'
         },
-    ]
+    ]);
+
+    const fetchSettings = async () => {
+        try {
+            const token = localStorage.getItem('token');
+
+            const response = await attendanceSettingService.getAttendanceSetting(token);
+
+            if (response.success) {
+                const data = response.data;
+
+                const mappedData = [
+                    { label: 'Grace period (in minutes)', placeholder: 'Grace period (in minutes)', value: data.grace_period.toString() },
+                    { label: 'Geo fencing (in minutes)', placeholder: 'Geo fencing (in minutes)', value: data.geo_fencing.toString() },
+                    { label: 'Day shift start time', placeholder: '00:00', value: data.day_shift_start_time.slice(0, 5) },
+                    { label: 'Day shift end time', placeholder: '00:00', value: data.day_shift_end_time.slice(0, 5) },
+                    { label: 'Night shift start time', placeholder: '00:00', value: data.night_shift_start_time.slice(0, 5) },
+                    { label: 'Night shift end time', placeholder: '00:00', value: data.night_shift_end_time.slice(0, 5) },
+                    { label: 'RELIEF Day shift start time', placeholder: '00:00', value: data.relief_day_shift_start_time.slice(0, 5) },
+                    { label: 'RELIEF Day shift end time', placeholder: '00:00', value: data.relief_day_shift_end_time.slice(0, 5) },
+                    { label: 'RELIEF night shift start time', placeholder: '00:00', value: data.relief_night_shift_start_time.slice(0, 5) },
+                    { label: 'RELIEF night shift end time', placeholder: '00:00', value: data.relief_night_shift_end_time.slice(0, 5) },
+                ];
+
+                setFormData(mappedData);
+            }
+        } catch (error: any) {
+            toast.error(error.message);
+        }
+    };
+
+
+    const handleInputChange = (index: number, newValue: string) => {
+        setFormData(prev => {
+            const updated = [...prev];
+            updated[index].value = newValue;
+            return updated;
+        });
+    };
+
+    const handleSubmit = async (e: React.SyntheticEvent) => {
+        e.preventDefault();
+
+        const dataToSend = {
+            grace_period: parseInt(formData[0].value) || 0,
+            geo_fencing: parseInt(formData[1].value) || 0,
+            day_shift_start_time: formData[2].value + ':00',
+            day_shift_end_time: formData[3].value + ':00',
+            night_shift_start_time: formData[4].value + ':00',
+            night_shift_end_time: formData[5].value + ':00',
+            relief_day_shift_start_time: formData[6].value + ':00',
+            relief_day_shift_end_time: formData[7].value + ':00',
+            relief_night_shift_start_time: formData[8].value + ':00',
+            relief_night_shift_end_time: formData[9].value + ':00',
+        };
+
+        try {
+            const token = localStorage.getItem('token');
+            const res = await attendanceSettingService.updateAttendanceSetting(token, dataToSend);
+            if (res.success) toast.success("Settings updated");
+        } catch (error: any) {
+            toast.error(error.message);
+        } finally {
+            fetchSettings();
+        }
+    };
+
+
+    useEffect(() => {
+        fetchSettings();
+    }, [])
 
     return (
-        <main className='max-w-screen w-full min-h-screen bg-[#181D26]'>
-            <Sidebar isOpen={sidebar} closeSidebar={setSidebar} />
-            <div className='flex flex-col max-w-screen w-full pl-0 min-h-screen transition-all duration-200 md:pl-[265px]'>
-                <Header openSidebar={setSidebar} />
-                <div className='flex flex-col gap-4 px-6 pb-20 w-full h-full'>
-                    <h2 className='text-2xl leading-9 text-white font-noto'>Settings</h2>
-                    <div className="flex flex-col gap-8 w-full h-full">
-                        <Navbar />
-                        <div className="bg-[#252C38] p-6 rounded-lg w-full h-full">
-                            <div className="grid grid-cols-1 gap-x-12 gap-y-6 sm:grid-cols-2">
-                                {inputData.map((item) => (
-                                    <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                                        <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">{item.label}</label>
-                                        <input
-                                            type={"text"}
-                                            className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
-                                            placeholder={item.placeholder}
-                                            value={item.value}
-                                        />
-                                    </div>
-                                ))}
-                                <div className="flex gap-4 flex-wrap">
-                                    <button className="font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">Save</button>
-                                    <button className="font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border-[1px] border-[#868686] rounded-full transition-all hover:bg-[#868686] hover:text-[#252C38]">Cancel</button>
+        <MainLayout>
+            <div className='flex flex-col gap-4 px-6 pb-20 w-full h-full'>
+                <h2 className='text-2xl leading-9 text-white font-noto'>Settings</h2>
+                <div className="flex flex-col gap-8 w-full h-full">
+                    <Navbar />
+                    <div className="bg-[#252C38] p-6 rounded-lg w-full h-full">
+                        <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-x-12 gap-y-6 sm:grid-cols-2">
+                            {formData && formData.map((item, index) => (
+                                <div key={index} className="flex flex-col w-full px-4 pt-2 py-2 rounded bg-[#222834] border-b border-b-[#98A1B3]">
+                                    <label className="text-xs leading-[21px] text-[#98A1B3]">{item.label}</label>
+                                    <input
+                                        type={index <= 1 ? 'number' : 'time'}
+                                        className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3]"
+                                        placeholder={item.placeholder}
+                                        value={item.value}
+                                        onChange={(e) => handleInputChange(index, e.target.value)}
+                                    />
                                 </div>
+                            ))}
+                            <div className="flex gap-4 flex-wrap">
+                                <button type="submit" className="font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">Save</button>
+                                <button className="font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border-[1px] border-[#868686] rounded-full transition-all hover:bg-[#868686] hover:text-[#252C38]">Cancel</button>
                             </div>
-                        </div>
+                        </form>
                     </div>
                 </div>
             </div>
-        </main>
+        </MainLayout>
     )
 }
 
