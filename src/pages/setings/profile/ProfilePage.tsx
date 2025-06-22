@@ -3,9 +3,9 @@ import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import Loader from "../../../components/Loader";
 import MainLayout from "../../../layouts/MainLayout";
-import { setUser } from "../../../lib/redux/reducer/userSlice";
-import { RootState } from "../../../lib/redux/store";
 import authService from "../../../services/authService";
+import { RootState } from "../../../store";
+import { setUser } from "../../../features/user/userSlice";
 
 const ProfilePage = () => {
     const user = useSelector((state: RootState) => state.user.user);

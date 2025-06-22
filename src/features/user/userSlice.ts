@@ -1,32 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-
-type Permission = {
-  name: string;
-  category: string;
-};
-
-type Role = {
-  id: string;
-  name: string;
-  permissions: Permission[];
-};
-
-type User = {
-  id: string;
-  name: string;
-  email: string;
-  mobile: string;
-  status: string;
-  address?: string;
-  profile_image?: string;
-  role: Role;
-  employee?: Employee;
-};
-
-type Employee = {
-  id: string;
-  nric_fin_no: string;
-}
+import { User } from '../../types/user';
 
 type UserState = {
   user: User | null;
@@ -50,5 +23,4 @@ export const userSlice = createSlice({
 });
 
 export const { setUser, clearUser } = userSlice.actions;
-
 export default userSlice.reducer;

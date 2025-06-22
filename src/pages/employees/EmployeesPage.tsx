@@ -7,9 +7,9 @@ import DeleteModal from "../../components/DeleteModal";
 import Loader from "../../components/Loader";
 import { SwitchCustomStyleToggleable } from "../../components/SwitchCustomStyleToggleable";
 import MainLayout from "../../layouts/MainLayout";
-import { RootState } from "../../lib/redux/store";
 import employeeService from "../../services/employeeService";
 import roleService from "../../services/roleService";
+import { RootState } from "../../store";
 
 type Employee = {
     id: string;
@@ -204,9 +204,9 @@ const EmployeesPage = () => {
 
     return (
         <MainLayout>
-            <div className='flex flex-col gap-6 px-6 pb-20 w-full h-full'>
+            <div className='flex flex-col gap-6 px-6 pb-20 w-full min-h-[calc(100vh-91px)] h-full'>
                 <h2 className='text-2xl leading-9 text-white font-noto'>Employees</h2>
-                <div className="flex flex-col gap-10 bg-[#252C38] p-6 rounded-lg w-full h-full">
+                <div className="flex flex-col flex-1 gap-10 bg-[#252C38] p-6 rounded-lg w-full h-full">
                     <div className="w-full flex justify-between items-center gap-4 flex-wrap">
                         <div className="flex items-end gap-4 w-fit flex-wrap md:flex-nowrap">
                             <div className="max-w-[400px] w-full flex items-center bg-[#222834] border-b-[1px] border-b-[#98A1B3] rounded-[4px_4px_0px_0px]">
@@ -229,8 +229,8 @@ const EmployeesPage = () => {
                             <button onClick={() => setAddEmployee(true)} className="font-medium text-base text-[#181d26] px-7 py-[13.5px] border-[1px] border-[#EFBF04] bg-[#EFBF04] rounded-full hover:bg-[#181d26] hover:text-[#EFBF04] transition-all">Add employee</button>
                         </div>
                     </div>
-                    <div className="w-full h-full relative">
-                        <div className="w-full h-fit overflow-auto pb-5">
+                    <div className="w-full h-full relative pb-10 flex flex-1">
+                        <div className="w-full h-full overflow-auto pb-5 flex flex-1">
                             <table className="min-w-[700px] w-full">
                                 <thead>
                                     <tr>
@@ -244,7 +244,7 @@ const EmployeesPage = () => {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {employees && employees.map((data, index) => (
+                                    {employees.length > 0 && employees.map((data, index) => (
                                         <tr className="border-b-[1px] border-b-[#98A1B3]" key={data.id}>
                                             <td className="text-[#F4F7FF] pt-6 pb-3">{index + 1}</td>
                                             <td className="text-[#F4F7FF] pt-6 pb-3 ">{data.nric_fin_no}</td>

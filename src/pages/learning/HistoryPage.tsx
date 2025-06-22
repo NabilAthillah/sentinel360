@@ -12,7 +12,7 @@ const HistoryPage = () => {
 
     return (
         <MainLayout>
-            <div className='flex flex-col gap-6 px-6 pb-20 w-full h-full'>
+            <div className='flex flex-col gap-6 px-6 pb-20 w-full h-full flex-1'>
                 <h2 className='text-2xl leading-9 text-white font-noto'>e-Learning</h2>
                 <nav>
                     <Link to="/e-learning" className={`font-medium text-sm text-[#F4F7FF] px-6 ${pathname === '/e-learning' ? 'pt-[14px] pb-3 border-b-2 border-b-[#F3C511]' : 'py-[14px] border-b-0'}`}>
@@ -22,7 +22,7 @@ const HistoryPage = () => {
                         History
                     </Link>
                 </nav>
-                <div className="flex flex-col gap-10 bg-[#252C38] p-6 rounded-lg w-full h-full">
+                <div className="flex flex-col gap-10 bg-[#252C38] p-6 rounded-lg w-full h-full flex-1">
                     <div className="w-full flex justify-between items-center">
                         <div className="flex items-end gap-4 w-fit flex-wrap md:flex-nowrap">
                             <div className="max-w-[400px] w-full flex items-center bg-[#222834] border-b-[1px] border-b-[#98A1B3] rounded-[4px_4px_0px_0px]">
@@ -42,7 +42,7 @@ const HistoryPage = () => {
                             <button className="font-medium text-sm min-w-[82px] text-[#EFBF04] px-4 py-[9.5px] border-[1px] border-[#EFBF04] rounded-full hover:bg-[#EFBF04] hover:text-[#252C38] transition-all">Export</button>
                         </div>
                     </div>
-                    <div className="w-full h-full relative">
+                    <div className="w-full h-full relative flex flex-1 pb-10">
                         <div className="w-full h-fit overflow-auto pb-5">
                             <table className="min-w-[700px] w-full">
                                 <thead>

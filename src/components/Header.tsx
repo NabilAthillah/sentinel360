@@ -1,31 +1,9 @@
 import { AlignLeft } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { User } from "../types/user";
 
-type User = {
-    id: string;
-    name: string;
-    mobile: string;
-    address?: string;
-    profile_image?: string;
-    email: string;
-    status: string;
-    role: Role;
-};
-
-type Role = {
-    id: string;
-    name: string;
-    permissions: Permission[];
-};
-
-type Permission = {
-    name: string;
-    category: string;
-};
-
-
-const Header = ({ openSidebar, user, handleLogout }: { openSidebar: any, user: User | undefined, handleLogout: any }) => {
+const Header = ({ openSidebar, user, handleLogout }: { openSidebar: any, user: User | null, handleLogout: any }) => {
     const [dropdownOpen, setDropdownOpen] = useState(false);
 
     return (

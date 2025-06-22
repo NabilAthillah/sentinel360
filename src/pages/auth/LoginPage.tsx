@@ -5,8 +5,11 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Loader from '../../components/Loader';
 import authService from '../../services/authService';
+import { useDispatch } from 'react-redux';
+import { setUser } from '../../features/user/userSlice';
 
 const LoginPage: React.FC = () => {
+  const dispatch = useDispatch();
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
@@ -27,6 +30,7 @@ const LoginPage: React.FC = () => {
       const response = await authService.login(email, password);
 
       if (response.success) {
+        dispatch(setUser(response.data.user));
         localStorage.setItem('token', response.data.token);
         localStorage.setItem('user', JSON.stringify(response.data.user));
         navigate('/dashboard');
@@ -46,7 +50,7 @@ const LoginPage: React.FC = () => {
     const user = localStorage.getItem('user');
 
     if (token && user) {
-      axios.get(process.env.REACT_APP_API_URL || 'http://localhost:8000/api/check-token', {
+      axios.get(`${process.env.REACT_APP_API_URL}/check-token` || 'http://localhost:8000/api/check-token', {
         headers: {
           Authorization: `Bearer ${token}`
         }

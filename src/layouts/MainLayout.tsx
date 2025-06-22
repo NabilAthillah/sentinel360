@@ -1,43 +1,24 @@
 import axios from 'axios';
 import { useEffect, useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { Bounce, toast, ToastContainer } from 'react-toastify';
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
-import { setUser } from '../lib/redux/reducer/userSlice';
-
-type User = {
-    id: string;
-    name: string;
-    mobile: string;
-    address?: string;
-    profile_image?: string;
-    email: string;
-    status: string;
-    role: Role;
-};
-
-type Role = {
-    id: string;
-    name: string;
-    permissions: Permission[];
-};
-
-type Permission = {
-    name: string;
-    category: string;
-};
+import { User } from '../types/user';
+import { clearUser } from '../features/user/userSlice';
+import { RootState } from '../store';
 
 const MainLayout = ({ children }: { children: React.ReactNode }) => {
     const [sidebar, setSidebar] = useState(false);
     const navigate = useNavigate();
-    const [user, setUserState] = useState<User>();
+    const user = useSelector((state: RootState) => state.user.user)
     const dispatch = useDispatch();
 
     const handleLogout = async (e: React.SyntheticEvent) => {
         e.preventDefault();
 
+        dispatch(clearUser());
         localStorage.removeItem('token');
         localStorage.removeItem('user');
 
@@ -50,7 +31,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
         const userData = localStorage.getItem('user');
 
         if (token || userData) {
-            axios.get(process.env.REACT_APP_API_URL || 'http://localhost:8000/api/check-token', {
+            axios.get(`${process.env.REACT_APP_API_URL}/check-token` || 'http://localhost:8000/api/check-token', {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
@@ -63,9 +44,6 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
                         navigate('/login');
                         return;
                     }
-
-                    setUserState(parsedUser);
-                    dispatch(setUser(parsedUser));
                 })
                 .catch((err) => {
                     navigate('/login')
@@ -80,7 +58,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
     }, [navigate])
 
     return (
-        <main className='max-w-screen w-full min-h-screen bg-[#181D26]'>
+        <main className='max-w-screen w-full min-h-screen h-full bg-[#181D26]'>
             <ToastContainer
                 position="top-right"
                 autoClose={5000}
@@ -95,7 +73,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
                 transition={Bounce}
             />
             <Sidebar isOpen={sidebar} closeSidebar={setSidebar} user={user} />
-            <div className='flex flex-col max-w-screen w-full pl-0 min-h-screen transition-all duration-200 md:pl-[265px]'>
+            <div className='flex flex-col max-w-screen w-full pl-0 min-h-screen h-full transition-all duration-200 md:pl-[265px]'>
                 <Header openSidebar={setSidebar} user={user} handleLogout={handleLogout} />
                 {children}
             </div>

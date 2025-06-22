@@ -1,34 +1,35 @@
-import { useState } from "react";
+import { useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { toast } from "react-toastify";
-import DeleteModal from "../../components/DeleteModal";
+import { toast } from 'react-toastify';
 import { SwitchCustomStyles } from "../../components/SwitchCustomStyles";
-import MainLayout from "../../layouts/MainLayout";
+import MainLayout from '../../layouts/MainLayout';
 
-const LearningPage = () => {
+const SitePage = () => {
     const location = useLocation();
     const { pathname } = location;
-    const [sidebar, setSidebar] = useState(false);
-    const [editData, setEditData] = useState(false);
-    const [deleteModal, setDeleteModal] = useState(false);
     const [addData, setAddData] = useState(false);
-    const [data1, setData1] = useState(true)
+    const [data1, setData1] = useState(true);
+    const [deleteModal, setDeleteModal] = useState(false);
 
-    const handleDelete = () => {
-        setDeleteModal(false);
-        toast.success('Record deleted successfully');
-    }
+    const imageInputRef = useRef<HTMLInputElement | null>(null);
+    const chartInputRef = useRef<HTMLInputElement | null>(null);
+    const [imageName, setImageName] = useState<string | null>(null);
+    const [imageFile, setImageFile] = useState<File | null>(null);
+    const [chartName, setChartName] = useState<string | null>(null);
+    const [chartFile, setChartFile] = useState<File | null>(null);
+
+    const [name, setName] = useState('');
 
     return (
         <MainLayout>
             <div className='flex flex-col gap-6 px-6 pb-20 w-full h-full flex-1'>
-                <h2 className='text-2xl leading-9 text-white font-noto'>e-Learning</h2>
+                <h2 className='text-2xl leading-9 text-white font-noto'>Sites</h2>
                 <nav>
-                    <Link to="/e-learning" className={`font-medium text-sm text-[#F4F7FF] px-6 ${pathname === '/e-learning' ? 'pt-[14px] pb-3 border-b-2 border-b-[#F3C511]' : 'py-[14px] border-b-0'}`}>
-                        Courses
+                    <Link to="/sites" className={`font-medium text-sm text-[#F4F7FF] px-6 ${pathname === '/sites' ? 'pt-[14px] pb-3 border-b-2 border-b-[#F3C511]' : 'py-[14px] border-b-0'}`}>
+                        Sites
                     </Link>
-                    <Link to="/e-learning/history" className={`font-medium text-sm text-[#F4F7FF] px-6 ${pathname === '/e-learning/history' ? 'pt-[14px] pb-3 border-b-2 border-b-[#F3C511]' : 'py-[14px] border-b-0'}`}>
-                        History
+                    <Link to="/routes" className={`font-medium text-sm text-[#F4F7FF] px-6 ${pathname === '/routes' ? 'pt-[14px] pb-3 border-b-2 border-b-[#F3C511]' : 'py-[14px] border-b-0'}`}>
+                        Routes
                     </Link>
                 </nav>
                 <div className="flex flex-col gap-10 bg-[#252C38] p-6 rounded-lg w-full h-full flex-1">
@@ -50,17 +51,20 @@ const LearningPage = () => {
                             </div>
                         </div>
                         <div className="min-w-[180px] max-w-[200px] w-fit">
-                            <button onClick={() => setAddData(true)} className="font-medium text-base text-[#181d26] px-[46.5px] py-[13.5px] border-[1px] border-[#EFBF04] bg-[#EFBF04] rounded-full hover:bg-[#181d26] hover:text-[#EFBF04] transition-all">Add route</button>
+                            <button onClick={() => setAddData(true)} className="font-medium text-base text-[#181d26] px-[46.5px] py-[13.5px] border-[1px] border-[#EFBF04] bg-[#EFBF04] rounded-full hover:bg-[#181d26] hover:text-[#EFBF04] transition-all">Add site</button>
                         </div>
                     </div>
-                    <div className="w-full h-full relative flex flex-1 pb-10">
+                    <div className="w-full h-full relative flex flex-1">
                         <div className="w-full h-fit overflow-auto pb-5">
                             <table className="min-w-[700px] w-full">
                                 <thead>
                                     <tr>
                                         <th className="font-semibold text-[#98A1B3] text-start">S. no</th>
-                                        <th className="font-semibold text-[#98A1B3] text-start">Course name</th>
-                                        <th className="font-semibold text-[#98A1B3] text-start">Status</th>
+                                        <th className="font-semibold text-[#98A1B3] text-start">Image</th>
+                                        <th className="font-semibold text-[#98A1B3] text-start">Site name</th>
+                                        <th className="font-semibold text-[#98A1B3] text-start">Address</th>
+                                        <th className="font-semibold text-[#98A1B3] text-start">Latitude</th>
+                                        <th className="font-semibold text-[#98A1B3] text-start">Longitude</th>
                                         <th className="font-semibold text-[#98A1B3] text-center">Actions</th>
                                     </tr>
                                 </thead>
@@ -94,78 +98,155 @@ const LearningPage = () => {
                 addData && (
                     <div className="fixed w-screen h-screen flex justify-end items-start top-0 left-0 z-50 bg-[rgba(0,0,0,0.5)]">
                         <div className="flex flex-col gap-6 p-6 bg-[#252C38] max-w-[568px] w-full max-h-screen overflow-auto h-full">
-                            <h2 className='text-2xl leading-[36px] text-white font-noto'>Add course</h2>
+                            <h2 className='text-2xl leading-[36px] text-white font-noto'>Add site</h2>
                             <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Course name</label>
+                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Site name</label>
                                 <input
                                     type={"text"}
                                     className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
-                                    placeholder='Course name'
-                                    value='Safety'
+                                    placeholder='Site name'
+                                    required
                                 />
                             </div>
                             <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Question</label>
+                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Email</label>
+                                <input
+                                    type={"email"}
+                                    className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
+                                    placeholder='Email'
+                                />
+                            </div>
+                            <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
+                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Mobile</label>
                                 <input
                                     type={"text"}
                                     className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
-                                    placeholder='Question'
-                                    value='Lorem ipsum'
+                                    placeholder='Mobile'
+                                />
+                            </div>
+                            <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
+                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">MCST number</label>
+                                <input
+                                    type={"text"}
+                                    className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
+                                    placeholder='MCST Number'
+                                />
+                            </div>
+                            <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
+                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">MA name</label>
+                                <input
+                                    type={"text"}
+                                    className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
+                                    placeholder='MA name'
+                                />
+                            </div>
+                            <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
+                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Company Name</label>
+                                <input
+                                    type={"text"}
+                                    className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
+                                    placeholder='Company Name'
+                                />
+                            </div>
+                            <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
+                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Address</label>
+                                <input
+                                    type={"text"}
+                                    className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
+                                    placeholder='Address'
+                                    required
                                 />
                             </div>
                             <div className="grid grid-cols-2 gap-8">
                                 <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                                    <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Choice A</label>
+                                    <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Block</label>
                                     <input
                                         type={"text"}
                                         className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
-                                        placeholder='Choice A'
-                                        value='123'
+                                        placeholder='Block'
                                     />
                                 </div>
                                 <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                                    <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Choice B</label>
+                                    <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Unit</label>
                                     <input
                                         type={"text"}
                                         className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
-                                        placeholder='Choice B'
-                                        value='09'
+                                        placeholder='Unit'
                                     />
                                 </div>
                                 <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                                    <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Choice C</label>
+                                    <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Latitude</label>
                                     <input
                                         type={"text"}
                                         className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
-                                        placeholder='Choice C'
-                                        value='12313'
+                                        placeholder='Latitude'
+                                        required
                                     />
                                 </div>
                                 <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                                    <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Choice D</label>
+                                    <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Longitude</label>
                                     <input
                                         type={"text"}
                                         className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
-                                        placeholder='Choice D'
-                                        value='51233'
-                                    />
-                                </div>
-                                <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                                    <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Answer</label>
-                                    <input
-                                        type={"text"}
-                                        className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
-                                        placeholder='Answer'
-                                        value='D'
+                                        placeholder='Longitude'
+                                        required
                                     />
                                 </div>
                             </div>
                             <div className="flex flex-col gap-3">
-                                <button className="font-medium text-sm leading-[21px] text-[#EFBF04] px-5 py-2 border-[1px] border-[#EFBF04] rounded-full cursor-pointer w-fit transition-all hover:bg-[#EFBF04] hover:text-[#252C38]">Add question</button>
+                                <label className="text-xs leading-[21px] text-[#98A1B3]">Site image</label>
+                                <div className="flex items-center gap-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => imageInputRef.current?.click()}
+                                        className="font-medium text-sm leading-[21px] text-[#EFBF04] px-5 py-2 border-[1px] border-[#EFBF04] rounded-full cursor-pointer w-fit transition-all hover:bg-[#EFBF04] hover:text-[#252C38]"
+                                    >
+                                        Upload file
+                                    </button>
+                                    {imageName && (
+                                        <span className="text-sm text-[#98A1B3]">{imageName}</span>
+                                    )}
+                                </div>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    ref={imageInputRef}
+                                    onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) {
+                                            setImageName(file.name);
+                                            setImageFile(file)
+                                        }
+                                    }}
+                                    className="hidden"
+                                />
                             </div>
                             <div className="flex flex-col gap-3">
-                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Video</label>
-                                <button className="font-medium text-sm leading-[21px] text-[#EFBF04] px-5 py-2 border-[1px] border-[#EFBF04] rounded-full cursor-pointer w-fit transition-all hover:bg-[#EFBF04] hover:text-[#252C38]">Upload file</button>
+                                <label className="text-xs leading-[21px] text-[#98A1B3]">Organisation chart</label>
+                                <div className="flex items-center gap-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => chartInputRef.current?.click()}
+                                        className="font-medium text-sm leading-[21px] text-[#EFBF04] px-5 py-2 border-[1px] border-[#EFBF04] rounded-full cursor-pointer w-fit transition-all hover:bg-[#EFBF04] hover:text-[#252C38]"
+                                    >
+                                        Upload file
+                                    </button>
+                                    {chartName && (
+                                        <span className="text-sm text-[#98A1B3]">{chartName}</span>
+                                    )}
+                                </div>
+                                <input
+                                    type="file"
+                                    ref={chartInputRef}
+                                    onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) {
+                                            setChartName(file.name);
+                                            setChartFile(file)
+                                        }
+                                    }}
+                                    className="hidden"
+                                />
                             </div>
                             <div className="flex gap-4 flex-wrap">
                                 <button onClick={() => { setAddData(false); toast.success('Course added successfully') }} className="font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">Save</button>
@@ -175,13 +256,8 @@ const LearningPage = () => {
                     </div>
                 )
             }
-            {deleteModal && (
-                <div className="fixed w-screen h-screen flex justify-center items-center top-0 left-0 z-50 bg-[rgba(0,0,0,0.5)]">
-                    <DeleteModal setModal={setDeleteModal} handleDelete={handleDelete} />
-                </div>
-            )}
         </MainLayout>
     )
 }
 
-export default LearningPage
+export default SitePage

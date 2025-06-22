@@ -15,6 +15,7 @@ import RolesPage from '../pages/setings/roles/RolesPage';
 import SopDocumentPage from '../pages/setings/sop-document/SopDocumentPage';
 import ProfilePage from '../pages/setings/profile/ProfilePage';
 import HistoryPage from '../pages/learning/HistoryPage';
+import SitePage from '../pages/site/SitePage';
 
 const AppRoutes = () => {
   return (
@@ -30,6 +31,7 @@ const AppRoutes = () => {
             <Route path='/e-learning/history' element={<HistoryPage />}/>
             <Route path='/incidents' element={<IncidentPage />}/>
             <Route path='/leave-management' element={<LeaveManagementPage />}/>
+            <Route path='/sites' element={<SitePage />}/>
             <Route path='/settings/attendance' element={<SettingsAttendancePage />}/>
             <Route path='/settings/client-info' element={<ClientInfoPage />}/>
             <Route path='/settings/employee-document' element={<EmployeeDocumentPage />}/>
