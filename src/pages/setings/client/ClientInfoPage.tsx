@@ -1,10 +1,35 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import Navbar from "../../../components/Navbar";
 import MainLayout from "../../../layouts/MainLayout";
+import { Client } from "../../../types/client";
 
 const ClientInfoPage = () => {
-    const [sidebar, setSidebar] = useState(false);
+    const navigate = useNavigate();
+
+    const [client, setClient] = useState<Client>({
+        id: '',
+        name: '',
+        reg_no: '',
+        address: '',
+        contact: '',
+        website: '',
+        email: '',
+        logo: '',
+        chart: '',
+    });
+
+    const handleChange = (
+        e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    ) => {
+        const { name, value } = e.target;
+
+        setClient((prev) => ({
+            ...prev,
+            [name]: value,
+        }));
+    };
 
     return (
         <MainLayout>

@@ -1,70 +1,9 @@
 import api from "../utils/api";
 
-const siteService = {
-    getAllSite: async (token) => {
+const occurrenceCatgService = {
+    getCategories: async (token) => {
         try {
-            const response = await api.get('/sites', {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-
-            if (response.data) {
-                return response.data
-            }
-        } catch (error) {
-            throw error.response ? error.response.data : { message: 'Network error' };
-        }
-    },
-
-    addSite: async (token, payload) => {
-        try {
-            const response = await api.post('/sites', payload, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            })
-            if (response.data) {
-                return response.data;
-            }
-        } catch (error) {
-            throw error.response ? error.response.data : { message: 'Network error' };
-        }
-    },
-
-    editSite: async (token, id, payload) => {
-        try {
-            const response = await api.put(`/sites/${id}`, payload, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            })
-            if (response.data) {
-                return response.data;
-            }
-        } catch (error) {
-            throw error.response ? error.response.data : { message: 'Network error' };
-        }
-    },
-
-    deleteSite: async (token, id) => {
-        try {
-            const response = await api.post(`/sites/${id}`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            })
-            if (response.data) {
-                return response.data;
-            }
-        } catch (error) {
-            throw error.response ? error.response.data : { message: 'Network error' };
-        }
-    },
-
-    getSiteById: async (id, token) => {
-        try {
-            const response = await api.get(`/sites/${id}`, {
+            const response = await api.get(`/occurrence-categories`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -77,6 +16,76 @@ const siteService = {
             throw error.response ? error.response.data : { message: 'Network error' };
         }
     },
+
+    addCategory: async (token, name) => {
+        try {
+            const response = await api.post(`/occurrence-categories`, {
+                name,
+            }, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.data) {
+                return response.data;
+            }
+        } catch (error) {
+            throw error.response ? error.response.data : { message: 'Network error' };
+        }
+    },
+
+    editCategory: async (token, id, name) => {
+        try {
+            const response = await api.put(`/occurrence-categories/${id}`, {
+                name,
+            }, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.data) {
+                return response.data;
+            }
+        } catch (error) {
+            throw error.response ? error.response.data : { message: 'Network error' };
+        }
+    },
+
+    editCategoryStatus: async (token, id, status) => {
+        try {
+            const response = await api.put(`/occurrence-categories/${id}`, {
+                status,
+            }, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.data) {
+                return response.data;
+            }
+        } catch (error) {
+            throw error.response ? error.response.data : { message: 'Network error' };
+        }
+    },
+
+    deleteRoute: async (token, route) => {
+        try {
+            const response = await api.post(`/routes/${route.id}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.data) {
+                return response.data;
+            }
+        } catch (error) {
+            throw error.response ? error.response.data : { message: 'Network error' };
+        }
+    }
 }
 
-export default siteService
+export default occurrenceCatgService;

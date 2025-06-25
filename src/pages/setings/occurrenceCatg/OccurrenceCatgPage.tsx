@@ -1,23 +1,171 @@
-import { useState } from "react";
+import { Switch } from "@material-tailwind/react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import Loader from "../../../components/Loader";
 import Navbar from "../../../components/Navbar";
-import { SwitchCustomStyles } from "../../../components/SwitchCustomStyles";
 import MainLayout from "../../../layouts/MainLayout";
+import occurrenceCatgService from "../../../services/occurrenceCatgService";
+import { OccurrenceCategory } from "../../../types/occurrenceCategory";
 
 const OccurrenceCatgPage = () => {
     const [addCatg, setAddCatg] = useState(false);
     const [editCatg, setEditCatg] = useState(false);
+    const [editData, setEditData] = useState<OccurrenceCategory | null>();
     const [sidebar, setSidebar] = useState(false);
     const [data1, setData1] = useState(true);
     const [data2, setData2] = useState(false);
+    const [loading, setLoading] = useState(false);
+
+    const [categories, setCategories] = useState<OccurrenceCategory[]>([]);
+
+    const navigate = useNavigate();
+
+    const [name, setName] = useState('');
+
+    const fetchCategories = async () => {
+        try {
+            const token = localStorage.getItem('token');
+
+            if (!token) {
+                localStorage.clear();
+                navigate('/login');
+            }
+
+            const response = await occurrenceCatgService.getCategories(token);
+
+            if (response.success) {
+                setCategories(response.data.categories)
+            }
+        } catch (error: any) {
+            console.error(error.message)
+        }
+    }
+
+    const [switchStates, setSwitchStates] = useState<Record<string, boolean>>(
+        categories?.reduce((acc, catg) => {
+            acc[catg.id] = catg.status === 'active';
+            return acc;
+        }, {} as Record<string, boolean>) ?? {}
+    );
+
+    const handleToggle = async (id: string) => {
+        const prevStatus = switchStates[id];
+        const newStatus = !prevStatus;
+
+        setSwitchStates((prev) => ({
+            ...prev,
+            [id]: newStatus,
+        }));
+
+        const token = localStorage.getItem('token');
+
+        if (!token) {
+            localStorage.clear();
+            navigate('/login');
+        }
+
+        try {
+            const response = await occurrenceCatgService.editCategoryStatus(token, id, newStatus ? 'active' : 'inactive');
+
+            if (response.success) {
+                toast.success('Category status updated successfully');
+                fetchCategories();
+            }
+        } catch (error) {
+            console.error();
+            setSwitchStates((prev) => ({
+                ...prev,
+                [id]: prevStatus,
+            }));
+
+            toast.error('Failed to update category status');
+        }
+    };
+
+    const handleSubmit = async (e: React.SyntheticEvent) => {
+        e.preventDefault();
+        setLoading(true);
+
+        try {
+            const token = localStorage.getItem('token');
+
+            if (!token) {
+                localStorage.clear();
+                navigate('/login');
+            }
+
+            const response = await occurrenceCatgService.addCategory(token, name);
+
+            if (response.success) {
+                toast.success('Category created successfully');
+
+                fetchCategories();
+                setLoading(false);
+                setAddCatg(false);
+                setName('');
+            }
+        } catch (error: any) {
+            toast.error(error.message);
+        }
+    }
+
+    const handleEdit = async (e: React.SyntheticEvent) => {
+        e.preventDefault();
+        setLoading(true);
+
+        try {
+            const token = localStorage.getItem('token');
+
+            if (!token) {
+                localStorage.clear();
+                navigate('/login');
+            }
+
+            const response = await occurrenceCatgService.editCategory(token, editData?.id, name);
+
+            if (response.success) {
+                toast.success('Category updated successfully');
+
+                fetchCategories();
+                setLoading(false);
+                setEditData(null);
+                setName('');
+                setEditCatg(false);
+            }
+        } catch (error: any) {
+            toast.error(error.message);
+        }
+    }
+
+    useEffect(() => {
+        fetchCategories();
+    }, []);
+
+    useEffect(() => {
+        if (categories) {
+            const newSwitchStates = categories.reduce((acc, catg) => {
+                acc[catg.id] = catg.status === 'active';
+                return acc;
+            }, {} as Record<string, boolean>);
+
+            setSwitchStates(newSwitchStates);
+        }
+    }, [categories]);
+
+    useEffect(() => {
+        if (editData && editCatg) {
+            setName(editData.name)
+        }
+    }, [editCatg])
 
     return (
         <MainLayout>
-            <div className='flex flex-col gap-4 px-6 pb-20 w-full h-full'>
+            <div className='flex flex-col gap-4 px-6 pb-20 w-full h-full flex-1'>
                 <h2 className='text-2xl leading-9 text-white font-noto'>Settings</h2>
-                <div className="flex flex-col gap-8 w-full h-full">
+                <div className="flex flex-col gap-8 w-full h-full flex-1">
                     <Navbar />
-                    <div className="flex flex-col gap-10 bg-[#252C38] p-6 rounded-lg w-full h-full">
+                    <div className="flex flex-col gap-10 bg-[#252C38] p-6 rounded-lg w-full h-full flex-1">
                         <div className="w-full flex justify-between items-center gap-4 flex-wrap lg:flex-nowrap">
                             <div className="flex items-end gap-4 w-full">
                                 <div className="max-w-[400px] w-full flex items-center bg-[#222834] border-b-[1px] border-b-[#98A1B3] rounded-[4px_4px_0px_0px]">
@@ -39,7 +187,7 @@ const OccurrenceCatgPage = () => {
                                 <button onClick={() => setAddCatg(true)} className="font-medium text-base min-w-[200px] text-[#181d26] px-[46.5px] py-3 border-[1px] border-[#EFBF04] bg-[#EFBF04] rounded-full hover:bg-[#181d26] hover:text-[#EFBF04] transition-all">Add category</button>
                             </div>
                         </div>
-                        <div className="w-full h-full relative">
+                        <div className="w-full h-full relative flex flex-1 pb-10">
                             <div className="w-full h-fit overflow-auto pb-5">
                                 <table className="w-full min-w-[500px]">
                                     <thead>
@@ -51,34 +199,38 @@ const OccurrenceCatgPage = () => {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <tr>
-                                            <td className="text-[#F4F7FF] pt-6 pb-3">1</td>
-                                            <td className="text-[#F4F7FF] pt-6 pb-3 ">HR</td>
-                                            <td className="text-[#F4F7FF] pt-6 pb-3 ">
-                                                <SwitchCustomStyles checked={data1} onChange={setData1} labelTrue='Active' labelFalse="Inactive" />
-                                            </td>
-                                            <td className="pt-6 pb-3">
-                                                <div className="flex gap-6 items-center justify-center">
-                                                    {/* <svg xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="28" height="28" viewBox="0 0 28 28"><defs><clipPath id="master_svg0_247_14305"><rect x="0" y="0" width="28" height="28" rx="0"/></clipPath></defs><g><g clip-path="url(#master_svg0_247_14305)"><g><path d="M11.46283298828125,19.6719859375L16.76641298828125,19.6719859375C17.495712988281248,19.6719859375,18.09231298828125,19.0752859375,18.09231298828125,18.3460859375L18.09231298828125,11.7165359375L20.20051298828125,11.7165359375C21.38061298828125,11.7165359375,21.97721298828125,10.2845659375,21.14191298828125,9.449245937499999L15.05601298828125,3.3633379375C14.54009298828125,2.8463349375,13.70246298828125,2.8463349375,13.18651298828125,3.3633379375L7.1006129882812505,9.449245937499999C6.26529298828125,10.2845659375,6.84869298828125,11.7165359375,8.02874298828125,11.7165359375L10.136932988281249,11.7165359375L10.136932988281249,18.3460859375C10.136932988281249,19.0752859375,10.73359298828125,19.6719859375,11.46283298828125,19.6719859375ZM6.15921298828125,22.3237859375L22.07011298828125,22.3237859375C22.79931298828125,22.3237859375,23.39601298828125,22.9203859375,23.39601298828125,23.6496859375C23.39601298828125,24.3788859375,22.79931298828125,24.9755859375,22.07011298828125,24.9755859375L6.15921298828125,24.9755859375C5.42996998828125,24.9755859375,4.83331298828125,24.3788859375,4.83331298828125,23.6496859375C4.83331298828125,22.9203859375,5.42996998828125,22.3237859375,6.15921298828125,22.3237859375Z" fill="#F4F7FF" fill-opacity="1"/></g></g></g></svg> */}
-                                                    <svg onClick={() => setEditCatg(true)} className="cursor-pointer" xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="28" height="28" viewBox="0 0 28 28"><defs><clipPath id="master_svg0_247_14308"><rect x="0" y="0" width="28" height="28" rx="0" /></clipPath></defs><g><g clip-path="url(#master_svg0_247_14308)"><g><path d="M3.5,20.124948752212525L3.5,24.499948752212525L7.875,24.499948752212525L20.7783,11.596668752212524L16.4033,7.2216687522125245L3.5,20.124948752212525ZM24.1617,8.213328752212524C24.6166,7.759348752212524,24.6166,7.0223187522125246,24.1617,6.568328752212524L21.4317,3.8383337522125243C20.9777,3.3834207522125244,20.2406,3.3834207522125244,19.7867,3.8383337522125243L17.651699999999998,5.973328752212524L22.0267,10.348338752212523L24.1617,8.213328752212524Z" fill="#F4F7FF" fill-opacity="1" /></g></g></g></svg>
-                                                    {/* <svg xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="28" height="28" viewBox="0 0 28 28"><defs><clipPath id="master_svg0_247_14302"><rect x="0" y="0" width="28" height="28" rx="0" /></clipPath></defs><g><g clip-path="url(#master_svg0_247_14302)"><g><path d="M6.9996778125,24.5L20.9997078125,24.5L20.9997078125,8.16667L6.9996778125,8.16667L6.9996778125,24.5ZM22.1663078125,4.66667L18.0830078125,4.66667L16.9163078125,3.5L11.0830078125,3.5L9.9163378125,4.66667L5.8330078125,4.66667L5.8330078125,7L22.1663078125,7L22.1663078125,4.66667Z" fill="#F4F7FF" fill-opacity="1" /></g></g></g></svg> */}
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td className="text-[#F4F7FF] pt-6 pb-3">2</td>
-                                            <td className="text-[#F4F7FF] pt-6 pb-3 ">Admin</td>
-                                            <td className="text-[#F4F7FF] pt-6 pb-3 ">
-                                                <SwitchCustomStyles checked={data2} onChange={setData2} labelTrue="Active" labelFalse='Inactive' />
-                                            </td>
-                                            <td className="pt-6 pb-3">
-                                                <div className="flex gap-6 items-center justify-center">
-                                                    {/* <svg xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="28" height="28" viewBox="0 0 28 28"><defs><clipPath id="master_svg0_247_14305"><rect x="0" y="0" width="28" height="28" rx="0"/></clipPath></defs><g><g clip-path="url(#master_svg0_247_14305)"><g><path d="M11.46283298828125,19.6719859375L16.76641298828125,19.6719859375C17.495712988281248,19.6719859375,18.09231298828125,19.0752859375,18.09231298828125,18.3460859375L18.09231298828125,11.7165359375L20.20051298828125,11.7165359375C21.38061298828125,11.7165359375,21.97721298828125,10.2845659375,21.14191298828125,9.449245937499999L15.05601298828125,3.3633379375C14.54009298828125,2.8463349375,13.70246298828125,2.8463349375,13.18651298828125,3.3633379375L7.1006129882812505,9.449245937499999C6.26529298828125,10.2845659375,6.84869298828125,11.7165359375,8.02874298828125,11.7165359375L10.136932988281249,11.7165359375L10.136932988281249,18.3460859375C10.136932988281249,19.0752859375,10.73359298828125,19.6719859375,11.46283298828125,19.6719859375ZM6.15921298828125,22.3237859375L22.07011298828125,22.3237859375C22.79931298828125,22.3237859375,23.39601298828125,22.9203859375,23.39601298828125,23.6496859375C23.39601298828125,24.3788859375,22.79931298828125,24.9755859375,22.07011298828125,24.9755859375L6.15921298828125,24.9755859375C5.42996998828125,24.9755859375,4.83331298828125,24.3788859375,4.83331298828125,23.6496859375C4.83331298828125,22.9203859375,5.42996998828125,22.3237859375,6.15921298828125,22.3237859375Z" fill="#F4F7FF" fill-opacity="1"/></g></g></g></svg> */}
-                                                    <svg onClick={() => setEditCatg(true)} className="cursor-pointer" xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="28" height="28" viewBox="0 0 28 28"><defs><clipPath id="master_svg0_247_14308"><rect x="0" y="0" width="28" height="28" rx="0" /></clipPath></defs><g><g clip-path="url(#master_svg0_247_14308)"><g><path d="M3.5,20.124948752212525L3.5,24.499948752212525L7.875,24.499948752212525L20.7783,11.596668752212524L16.4033,7.2216687522125245L3.5,20.124948752212525ZM24.1617,8.213328752212524C24.6166,7.759348752212524,24.6166,7.0223187522125246,24.1617,6.568328752212524L21.4317,3.8383337522125243C20.9777,3.3834207522125244,20.2406,3.3834207522125244,19.7867,3.8383337522125243L17.651699999999998,5.973328752212524L22.0267,10.348338752212523L24.1617,8.213328752212524Z" fill="#F4F7FF" fill-opacity="1" /></g></g></g></svg>
-                                                    {/* <svg xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="28" height="28" viewBox="0 0 28 28"><defs><clipPath id="master_svg0_247_14302"><rect x="0" y="0" width="28" height="28" rx="0" /></clipPath></defs><g><g clip-path="url(#master_svg0_247_14302)"><g><path d="M6.9996778125,24.5L20.9997078125,24.5L20.9997078125,8.16667L6.9996778125,8.16667L6.9996778125,24.5ZM22.1663078125,4.66667L18.0830078125,4.66667L16.9163078125,3.5L11.0830078125,3.5L9.9163378125,4.66667L5.8330078125,4.66667L5.8330078125,7L22.1663078125,7L22.1663078125,4.66667Z" fill="#F4F7FF" fill-opacity="1" /></g></g></g></svg> */}
-                                                </div>
-                                            </td>
-                                        </tr>
+                                        {categories?.length > 0 && categories?.map((category, index) => (
+                                            <tr key={index}>
+                                                <td className="text-[#F4F7FF] pt-6 pb-3">{index + 1}</td>
+                                                <td className="text-[#F4F7FF] pt-6 pb-3 ">{category.name}</td>
+                                                <td className="text-[#F4F7FF] pt-6 pb-3 ">
+                                                    <div className="flex items-center gap-4 w-40">
+                                                        <Switch
+                                                            id={`custom-switch-component-${category.id}`}
+                                                            ripple={false}
+                                                            checked={switchStates[category.id]}
+                                                            onChange={(e) => handleToggle(category.id)}
+                                                            className="h-full w-full checked:bg-[#446FC7]"
+                                                            containerProps={{
+                                                                className: "w-11 h-6",
+                                                            }}
+                                                            circleProps={{
+                                                                className: "before:hidden left-0.5 border-none",
+                                                            }} onResize={undefined} onResizeCapture={undefined} onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} crossOrigin={undefined} />
+                                                        <p className={`font-medium text-sm capitalize ${switchStates[category.id] ? 'text-[#19CE74]' : 'text-[#FF7E6A]'}`}>
+                                                            {switchStates[category.id] ? 'active' : 'inactive'}
+                                                        </p>
+                                                    </div>
+                                                </td>
+                                                <td className="pt-6 pb-3">
+                                                    <div className="flex gap-6 items-center justify-center">
+                                                        {/* <svg xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="28" height="28" viewBox="0 0 28 28"><defs><clipPath id="master_svg0_247_14305"><rect x="0" y="0" width="28" height="28" rx="0"/></clipPath></defs><g><g clip-path="url(#master_svg0_247_14305)"><g><path d="M11.46283298828125,19.6719859375L16.76641298828125,19.6719859375C17.495712988281248,19.6719859375,18.09231298828125,19.0752859375,18.09231298828125,18.3460859375L18.09231298828125,11.7165359375L20.20051298828125,11.7165359375C21.38061298828125,11.7165359375,21.97721298828125,10.2845659375,21.14191298828125,9.449245937499999L15.05601298828125,3.3633379375C14.54009298828125,2.8463349375,13.70246298828125,2.8463349375,13.18651298828125,3.3633379375L7.1006129882812505,9.449245937499999C6.26529298828125,10.2845659375,6.84869298828125,11.7165359375,8.02874298828125,11.7165359375L10.136932988281249,11.7165359375L10.136932988281249,18.3460859375C10.136932988281249,19.0752859375,10.73359298828125,19.6719859375,11.46283298828125,19.6719859375ZM6.15921298828125,22.3237859375L22.07011298828125,22.3237859375C22.79931298828125,22.3237859375,23.39601298828125,22.9203859375,23.39601298828125,23.6496859375C23.39601298828125,24.3788859375,22.79931298828125,24.9755859375,22.07011298828125,24.9755859375L6.15921298828125,24.9755859375C5.42996998828125,24.9755859375,4.83331298828125,24.3788859375,4.83331298828125,23.6496859375C4.83331298828125,22.9203859375,5.42996998828125,22.3237859375,6.15921298828125,22.3237859375Z" fill="#F4F7FF" fill-opacity="1"/></g></g></g></svg> */}
+                                                        <svg onClick={() => { setEditCatg(true); setEditData(category) }} className="cursor-pointer" xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="28" height="28" viewBox="0 0 28 28"><defs><clipPath id="master_svg0_247_14308"><rect x="0" y="0" width="28" height="28" rx="0" /></clipPath></defs><g><g clip-path="url(#master_svg0_247_14308)"><g><path d="M3.5,20.124948752212525L3.5,24.499948752212525L7.875,24.499948752212525L20.7783,11.596668752212524L16.4033,7.2216687522125245L3.5,20.124948752212525ZM24.1617,8.213328752212524C24.6166,7.759348752212524,24.6166,7.0223187522125246,24.1617,6.568328752212524L21.4317,3.8383337522125243C20.9777,3.3834207522125244,20.2406,3.3834207522125244,19.7867,3.8383337522125243L17.651699999999998,5.973328752212524L22.0267,10.348338752212523L24.1617,8.213328752212524Z" fill="#F4F7FF" fill-opacity="1" /></g></g></g></svg>
+                                                        {/* <svg xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="28" height="28" viewBox="0 0 28 28"><defs><clipPath id="master_svg0_247_14302"><rect x="0" y="0" width="28" height="28" rx="0" /></clipPath></defs><g><g clip-path="url(#master_svg0_247_14302)"><g><path d="M6.9996778125,24.5L20.9997078125,24.5L20.9997078125,8.16667L6.9996778125,8.16667L6.9996778125,24.5ZM22.1663078125,4.66667L18.0830078125,4.66667L16.9163078125,3.5L11.0830078125,3.5L9.9163378125,4.66667L5.8330078125,4.66667L5.8330078125,7L22.1663078125,7L22.1663078125,4.66667Z" fill="#F4F7FF" fill-opacity="1" /></g></g></g></svg> */}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
                                     </tbody>
                                 </table>
                             </div>
@@ -93,7 +245,7 @@ const OccurrenceCatgPage = () => {
             </div>
             {editCatg && (
                 <div className="fixed w-screen h-screen flex justify-center items-center top-0 left-0 z-50 bg-[rgba(0,0,0,0.5)]">
-                    <div className="flex flex-col gap-6 p-6 bg-[#252C38]">
+                    <form onSubmit={handleEdit} className="flex flex-col gap-6 p-6 bg-[#252C38]">
                         <h2 className='text-2xl leading-[36px] text-white font-noto'>Edit Category</h2>
                         <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
                             <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Category name</label>
@@ -101,19 +253,20 @@ const OccurrenceCatgPage = () => {
                                 type={"text"}
                                 className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
                                 placeholder='Category name'
-                                value='Fire Hazard'
+                                onChange={(e) => setName(e.target.value)}
+                                value={name}
                             />
                         </div>
                         <div className="flex gap-4">
-                            <button onClick={() => { setEditCatg(false); toast.success('Category edited successfully') }} className="font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">Save</button>
-                            <button onClick={() => setEditCatg(false)} className="font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border-[1px] border-[#868686] rounded-full transition-all hover:bg-[#868686] hover:text-[#252C38]">Cancel</button>
+                            <button type="submit" className="font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">{loading ? <Loader /> : 'Save'}</button>
+                            <button onClick={() => { setEditCatg(false); setEditData(null) }} className="font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border-[1px] border-[#868686] rounded-full transition-all hover:bg-[#868686] hover:text-[#252C38]">Cancel</button>
                         </div>
-                    </div>
+                    </form>
                 </div>
             )}
             {addCatg && (
                 <div className="fixed w-screen h-screen flex justify-center items-center top-0 left-0 z-50 bg-[rgba(0,0,0,0.5)]">
-                    <div className="flex flex-col gap-6 p-6 bg-[#252C38]">
+                    <form onSubmit={handleSubmit} className="flex flex-col gap-6 p-6 bg-[#252C38]">
                         <h2 className='text-2xl leading-[36px] text-white font-noto'>Add Category</h2>
                         <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
                             <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Category name</label>
@@ -121,14 +274,15 @@ const OccurrenceCatgPage = () => {
                                 type={"text"}
                                 className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
                                 placeholder='Category name'
-                                value='Fire Hazard'
+                                onChange={(e) => setName(e.target.value)}
+                                required
                             />
                         </div>
                         <div className="flex gap-4">
-                            <button onClick={() => { setAddCatg(false); toast.success('Category added successfully') }} className="font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">Submit</button>
+                            <button type="submit" className="font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">{loading ? <Loader /> : 'Submit'}</button>
                             <button onClick={() => setAddCatg(false)} className="font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border-[1px] border-[#868686] rounded-full transition-all hover:bg-[#868686] hover:text-[#252C38]">Cancel</button>
                         </div>
-                    </div>
+                    </form>
                 </div>
             )}
         </MainLayout>

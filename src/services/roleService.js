@@ -52,7 +52,7 @@ const roleService = {
         } catch (error) {
             throw error.response ? error.response.data : { message: 'Network error' };
         }
-    }
+    },
 }
 
 export default roleService;

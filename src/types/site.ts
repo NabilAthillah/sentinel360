@@ -1,3 +1,5 @@
+import { Route } from "./route";
+
 export type Site = {
     id: string;
     name: string;
@@ -14,4 +16,5 @@ export type Site = {
     lat: string;
     long: string;
     organisation_chart?: string;
+    routes?: Route[];
 }
