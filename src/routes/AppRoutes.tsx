@@ -17,6 +17,8 @@ import ProfilePage from '../pages/setings/profile/ProfilePage';
 import HistoryPage from '../pages/learning/HistoryPage';
 import SitePage from '../pages/site/SitePage';
 import RoutePage from '../pages/site/RoutePage';
+import MapPage from '../pages/site/MapPage';
+import AllocationPage from '../pages/site/AllocationPage';
 
 const AppRoutes = () => {
   return (
@@ -33,6 +35,8 @@ const AppRoutes = () => {
             <Route path='/incidents' element={<IncidentPage />}/>
             <Route path='/leave-management' element={<LeaveManagementPage />}/>
             <Route path='/sites' element={<SitePage />}/>
+            <Route path='/sites/map' element={<MapPage />}/>
+            <Route path='/sites/allocation' element={<AllocationPage />}/>
             <Route path='/sites/:idSite/routes' element={<RoutePage />}/>
             <Route path='/settings/attendance' element={<SettingsAttendancePage />}/>
             <Route path='/settings/client-info' element={<ClientInfoPage />}/>

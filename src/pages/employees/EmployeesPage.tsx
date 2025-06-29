@@ -17,7 +17,6 @@ type Employee = {
     briefing_date?: Date;
     user: User;
     reporting_to: User;
-    shift: string;
 };
 
 type User = {
@@ -60,13 +59,13 @@ const EmployeesPage = () => {
     const [email, setEmail] = useState('');
     const [loading, setLoading] = useState(false);
     const [employees, setEmployees] = useState<Employee[]>([]);
+    const [reportingEmployees, setReportingEmployees] = useState<Employee[]>([]);
     const [role, setRole] = useState<string>();
 
     const [addData, setAddData] = useState({
         nric_fin_no: '',
         briefing_date: '',
         reporting_to: '',
-        shift: '',
         name: '',
         email: '',
         mobile: '',
@@ -89,7 +88,6 @@ const EmployeesPage = () => {
                 addData.name,
                 addData.nric_fin_no,
                 addData.mobile,
-                addData.shift,
                 addData.email,
                 addData.id_role,
                 addData.reporting_to,
@@ -110,7 +108,6 @@ const EmployeesPage = () => {
                 nric_fin_no: '',
                 briefing_date: '',
                 reporting_to: '',
-                shift: '',
                 name: '',
                 email: '',
                 mobile: '',
@@ -123,16 +120,19 @@ const EmployeesPage = () => {
     const fetchEmployees = async () => {
         try {
             const token = localStorage.getItem('token');
+            const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
 
             const response = await employeeService.getAllEmployee(token);
 
             if (response.success) {
-                setEmployees(response.data)
+                setEmployees(response.data);
+                const filtered = response.data.filter((emp: Employee) => emp.user.id !== currentUser.id);
+                setReportingEmployees(filtered);
             }
         } catch (error) {
-            console.error(error)
+            console.error(error);
         }
-    }
+    };
 
     const fetchRoles = async () => {
         try {
@@ -191,7 +191,7 @@ const EmployeesPage = () => {
     const maskPhone = (phone: string): string => {
         if (!phone) return '';
         const visibleDigits = 4;
-        const maskedLength = phone.length - visibleDigits;
+        const maskedLength = Math.max(0, phone.length - visibleDigits);
         return '*'.repeat(maskedLength) + phone.slice(-visibleDigits);
     };
 
@@ -238,7 +238,6 @@ const EmployeesPage = () => {
                                         <th className="font-semibold text-[#98A1B3] text-start">NIRC/FIN</th>
                                         <th className="font-semibold text-[#98A1B3] text-start">Mobile</th>
                                         <th className="font-semibold text-[#98A1B3] text-start">Role</th>
-                                        <th className="font-semibold text-[#98A1B3] text-start">Shift</th>
                                         <th className="font-semibold text-[#98A1B3] text-center">Status</th>
                                         <th className="font-semibold text-[#98A1B3] text-center">Actions</th>
                                     </tr>
@@ -250,7 +249,6 @@ const EmployeesPage = () => {
                                             <td className="text-[#F4F7FF] pt-6 pb-3 ">{data.nric_fin_no}</td>
                                             <td className="text-[#F4F7FF] pt-6 pb-3 ">{maskPhone(data.user.mobile)}</td>
                                             <td className="text-[#F4F7FF] pt-6 pb-3 ">{data.user.role.name}</td>
-                                            <td className="text-[#F4F7FF] pt-6 pb-3 ">{data.shift}</td>
                                             <td className="flex justify-center items-center pt-6 pb-3 ">
                                                 <div className="font-medium text-sm text-[#19CE74] px-6 py-2 bg-[rgba(25,206,116,0.16)] border-[1px] border-[#19CE74] rounded-full w-fit">
                                                     Active
@@ -343,7 +341,7 @@ const EmployeesPage = () => {
                                 <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Briefing conducted by</label>
                                 <select className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none" onChange={(e) => setAddData(prev => ({ ...prev, reporting_to: e.target.value }))}>
                                     <option value="">Select Emloyee</option>
-                                    {employees.length > 0 && employees.map((item) => (
+                                    {reportingEmployees.length > 0 && reportingEmployees.map((item) => (
                                         <option key={item.id} value={item.id}>{item.user?.name}</option>
                                     ))}
                                 </select>
@@ -381,24 +379,6 @@ const EmployeesPage = () => {
                 ${isSelected ? 'bg-[#446FC7] text-[#F4F7FF]' : 'bg-[#303847] text-[#F4F7FF] hover:bg-[#446FC7] hover:text-[#F4F7FF]'}`}
                                             >
                                                 {r.name}
-                                            </p>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                            <div className="flex flex-col gap-2">
-                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Shift</label>
-                                <div className="flex flex-wrap gap-x-3 gap-y-[14px]">
-                                    {shift.map((s: any) => {
-                                        const isSelected = addData.shift === s;
-                                        return (
-                                            <p
-                                                key={s}
-                                                onClick={() => setAddData(prev => ({ ...prev, shift: s }))}
-                                                className={`cursor-pointer font-medium text-sm leading-[20px] w-fit px-4 py-2 rounded-full bg-[#303847] text-[#F4F7FF]
-                ${isSelected ? 'bg-[#446FC7] text-[#F4F7FF]' : 'bg-[#303847] text-[#F4F7FF] hover:bg-[#446FC7] hover:text-[#F4F7FF]'}`}
-                                            >
-                                                {s}
                                             </p>
                                         );
                                     })}
@@ -511,7 +491,7 @@ const EmployeesPage = () => {
                                     </div>
                                 </div>
                             ))} */}
-                            <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
+                            {/* <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
                                 <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Remarks</label>
                                 <input
                                     type={"text"}
@@ -519,7 +499,7 @@ const EmployeesPage = () => {
                                     placeholder='Remarks'
                                     value='Will settle it by end of the week'
                                 />
-                            </div>
+                            </div> */}
                             <div className="flex gap-4 flex-wrap">
                                 <button onClick={() => { setEditEmployee(false); toast.success('Employee edited successfully') }} className="font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">Save</button>
                                 <button onClick={() => setEditEmployee(false)} className="font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border-[1px] border-[#868686] rounded-full transition-all hover:bg-[#868686] hover:text-[#252C38]">Cancel</button>

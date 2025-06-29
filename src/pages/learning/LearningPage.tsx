@@ -23,7 +23,7 @@ const LearningPage = () => {
         <MainLayout>
             <div className='flex flex-col gap-6 px-6 pb-20 w-full h-full flex-1'>
                 <h2 className='text-2xl leading-9 text-white font-noto'>e-Learning</h2>
-                <nav>
+                <nav className='flex flex-wrap'>
                     <Link to="/e-learning" className={`font-medium text-sm text-[#F4F7FF] px-6 ${pathname === '/e-learning' ? 'pt-[14px] pb-3 border-b-2 border-b-[#F3C511]' : 'py-[14px] border-b-0'}`}>
                         Courses
                     </Link>
