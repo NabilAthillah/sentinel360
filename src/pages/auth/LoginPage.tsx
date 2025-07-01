@@ -1,12 +1,14 @@
 import axios from 'axios';
 import { Eye, EyeOff } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
+import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Loader from '../../components/Loader';
-import authService from '../../services/authService';
-import { useDispatch } from 'react-redux';
 import { setUser } from '../../features/user/userSlice';
+import authService from '../../services/authService';
+import clientInfoService from '../../services/clientInfoService';
+import { Client } from '../../types/client';
 
 const LoginPage: React.FC = () => {
   const dispatch = useDispatch();
@@ -45,6 +47,34 @@ const LoginPage: React.FC = () => {
     }
   }
 
+  const [client, setClient] = useState<Client>();
+
+  const baseURL = new URL(process.env.REACT_APP_API_URL || '');
+  baseURL.pathname = baseURL.pathname.replace(/\/api$/, '');
+
+  const fetchClientInfo = async () => {
+    try {
+      const token = localStorage.getItem('token');
+
+      if (!token) {
+        localStorage.clear();
+        navigate('/login');
+      }
+
+      const response = await clientInfoService.getData(token);
+
+      if (response.success) {
+        setClient(response.data)
+      }
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  useEffect(() => {
+    fetchClientInfo();
+  }, [])
+
   useEffect(() => {
     const token = localStorage.getItem('token');
     const user = localStorage.getItem('user');
@@ -70,7 +100,7 @@ const LoginPage: React.FC = () => {
 
   return (
     <div className='max-w-screen w-full h-screen bg-[#181D26] flex flex-col justify-center items-center gap-32 px-5 sm:px-0'>
-      <img src="/images/logo.png" alt="" className='max-w-60 w-full' />
+      <img src={client?.logo ? (`${baseURL.toString() != '' ? baseURL.toString() : 'http://localhost:8000/'}storage/${client.logo}`) : "/images/logo.png"} alt="" className='max-w-60 w-full' />
       <form className='max-w-[400px] w-full flex flex-col gap-6' onSubmit={handleSubmit}>
         <input
           type="email"

@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import Navbar from "../../../components/Navbar";
 import MainLayout from "../../../layouts/MainLayout";
+import clientInfoService from "../../../services/clientInfoService";
 import { Client } from "../../../types/client";
 
 const ClientInfoPage = () => {
@@ -20,6 +21,23 @@ const ClientInfoPage = () => {
         chart: '',
     });
 
+    const [name, setName] = useState('');
+    const [reg, setReg] = useState('');
+    const [address, setAddress] = useState('');
+    const [contact, setContact] = useState('');
+    const [website, setWebsite] = useState('');
+    const [email, setEmail] = useState('');
+
+    const imageInputRef = useRef<HTMLInputElement | null>(null);
+    const chartInputRef = useRef<HTMLInputElement | null>(null);
+    const [imageName, setImageName] = useState<string | null>(null);
+    const [imageFile, setImageFile] = useState<File | null>(null);
+    const [chartName, setChartName] = useState<string | null>(null);
+    const [chartFile, setChartFile] = useState<File | null>(null);
+
+    const baseURL = new URL(process.env.REACT_APP_API_URL || '');
+    baseURL.pathname = baseURL.pathname.replace(/\/api$/, '');
+
     const handleChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
     ) => {
@@ -31,6 +49,93 @@ const ClientInfoPage = () => {
         }));
     };
 
+    const fetchClientInfo = async () => {
+        try {
+            const token = localStorage.getItem('token');
+
+            if (!token) {
+                localStorage.clear();
+                navigate('/login');
+            }
+
+            const response = await clientInfoService.getData(token);
+
+            if (response.success) {
+                setClient(response.data)
+            }
+        } catch (error) {
+            console.error(error)
+        }
+    }
+
+    const handleSubmit = async (e: React.SyntheticEvent) => {
+        e.preventDefault();
+
+        try {
+            const toBase64 = (file: File): Promise<string> =>
+                new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.readAsDataURL(file);
+                    reader.onload = () => resolve(reader.result as string);
+                    reader.onerror = reject;
+                });
+
+            const imageBase64 = imageFile ? await toBase64(imageFile) : null;
+            const chartBase64 = chartFile ? await toBase64(chartFile) : null;
+
+            const payload = {
+                name,
+                reg_no: reg,
+                address,
+                contact,
+                website,
+                email,
+                logo: imageBase64,
+                chart: chartBase64,
+            };
+
+            const token = localStorage.getItem('token');
+
+            if (!token) {
+                localStorage.clear();
+                navigate('/login');
+            }
+
+            const response = await clientInfoService.updateData(token, payload, client.id);
+
+            if (response.success) {
+                toast.success('Client Info Updated successfully');
+                setName('');
+                setReg('');
+                setAddress('');
+                setContact('');
+                setWebsite('');
+                setEmail('');
+                setImageFile(null);
+                setImageName('');
+                setChartFile(null);
+                setChartName('');
+
+                fetchClientInfo();
+            }
+        } catch (error: any) {
+            toast.error(error.message)
+        }
+    }
+
+    useEffect(() => {
+        fetchClientInfo();
+    }, [])
+
+    useEffect(() => {
+        setName(client.name);
+        setReg(client.reg_no);
+        setAddress(client.address);
+        setContact(client.contact);
+        setWebsite(client.website);
+        setEmail(client.email);
+    }, [client])
+
     return (
         <MainLayout>
             <div className='flex flex-col gap-4 px-6 pb-20 w-full h-full'>
@@ -40,26 +145,26 @@ const ClientInfoPage = () => {
                     <div className="flex gap-6 flex-wrap xl:flex-nowrap">
                         <div className="flex flex-col w-full gap-6 xl:max-w-80">
                             <div className="flex flex-col gap-4 bg-[#252C38] xl:max-w-80 w-full h-fit p-4 rounded-lg">
-                                <p className="font-semibold text-base leading-[20px] text-[#EFBF04]">Sentinel Group</p>
+                                <p className="font-semibold text-base leading-[20px] text-[#EFBF04]">{client.name}</p>
                                 <div className="flex flex-col gap-1">
                                     <label htmlFor="" className="text-xs text-[#98A1B3]">Reg. No</label>
-                                    <p className="text-base leading-[20px] text-[#F4F7FF]">102838123ER</p>
+                                    <p className="text-base leading-[20px] text-[#F4F7FF]">{client.reg_no}</p>
                                 </div>
                                 <div className="flex flex-col gap-1">
                                     <label htmlFor="" className="text-xs text-[#98A1B3]">Address</label>
-                                    <p className="text-base leading-[20px] text-[#F4F7FF]">8 Ubi Ave 10. #04-230, Singapore 21322</p>
+                                    <p className="text-base leading-[20px] text-[#F4F7FF]">{client.address}</p>
                                 </div>
                                 <div className="flex flex-col gap-1">
                                     <label htmlFor="" className="text-xs text-[#98A1B3]">Contact</label>
-                                    <p className="text-base leading-[20px] text-[#F4F7FF]">+65 93344768</p>
+                                    <p className="text-base leading-[20px] text-[#F4F7FF]">+65 {client.contact}</p>
                                 </div>
                                 <div className="flex flex-col gap-1">
                                     <label htmlFor="" className="text-xs text-[#98A1B3]">Website</label>
-                                    <p className="text-base leading-[20px] text-[#F4F7FF]">www.sentinelgp.com</p>
+                                    <p className="text-base leading-[20px] text-[#F4F7FF]">{client.website}</p>
                                 </div>
                                 <div className="flex flex-col gap-1">
                                     <label htmlFor="" className="text-xs text-[#98A1B3]">Email</label>
-                                    <p className="text-base leading-[20px] text-[#F4F7FF]">info@sentinelgp.com</p>
+                                    <p className="text-base leading-[20px] text-[#F4F7FF]">{client.email}</p>
                                 </div>
                                 <div className="flex flex-col gap-1">
                                     <label htmlFor="" className="text-xs text-[#98A1B3]">Management chart</label>
@@ -89,7 +194,7 @@ const ClientInfoPage = () => {
                                 </div>
                             </div>
                         </div>
-                        <div className="w-full p-6 h-full rounded-lg bg-[#252C38] flex flex-col gap-8">
+                        <form onSubmit={handleSubmit} className="w-full p-6 h-full rounded-lg bg-[#252C38] flex flex-col gap-8">
                             <div className="flex flex-col gap-6">
                                 <div className="flex flex-col max-w-[520px] w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
                                     <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Company name</label>
@@ -97,7 +202,8 @@ const ClientInfoPage = () => {
                                         type={"text"}
                                         className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
                                         placeholder='Company name'
-                                        value='Sentinel Group'
+                                        value={name}
+                                        onChange={(e) => setName(e.target.value)}
                                     />
                                 </div>
                                 <div className="flex flex-col max-w-[520px] w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
@@ -106,7 +212,8 @@ const ClientInfoPage = () => {
                                         type={"text"}
                                         className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
                                         placeholder='Reg No.'
-                                        value='102838123ER'
+                                        value={reg}
+                                        onChange={(e) => setReg(e.target.value)}
                                     />
                                 </div>
                                 <div className="flex flex-col max-w-[520px] w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
@@ -115,7 +222,8 @@ const ClientInfoPage = () => {
                                         type={"text"}
                                         className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
                                         placeholder='Adress with postal code'
-                                        value='8 Ubi Ave 10. #04-230, Singapore 21322'
+                                        value={address}
+                                        onChange={(e) => setAddress(e.target.value)}
                                     />
                                 </div>
                                 <div className="flex flex-col max-w-[520px] w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
@@ -124,7 +232,8 @@ const ClientInfoPage = () => {
                                         type={"text"}
                                         className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
                                         placeholder='Contact'
-                                        value='+65 93344768'
+                                        value={contact}
+                                        onChange={(e) => setContact(e.target.value)}
                                     />
                                 </div>
                                 <div className="flex flex-col max-w-[520px] w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
@@ -133,7 +242,8 @@ const ClientInfoPage = () => {
                                         type={"text"}
                                         className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
                                         placeholder='Website'
-                                        value='www.sentinelgp.com'
+                                        value={website}
+                                        onChange={(e) => setWebsite(e.target.value)}
                                     />
                                 </div>
                                 <div className="flex flex-col max-w-[520px] w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
@@ -142,23 +252,79 @@ const ClientInfoPage = () => {
                                         type={"text"}
                                         className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
                                         placeholder='Email'
-                                        value='info@sentinelgp.com'
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
                                     />
                                 </div>
                                 <div className="flex flex-col gap-3">
-                                    <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Company logo</label>
-                                    <button className="font-medium text-sm leading-[21px] text-[#EFBF04] px-5 py-2 border-[1px] border-[#EFBF04] rounded-full cursor-pointer w-fit transition-all hover:bg-[#EFBF04] hover:text-[#252C38]">Upload file</button>
+                                    <label className="text-xs leading-[21px] text-[#98A1B3]">Site image <span className='text-red-500 text-[10px]'>* Do not upload if you don't want to make changes</span></label>
+                                    <div className="flex items-center gap-4">
+                                        <button
+                                            type="button"
+                                            onClick={() => imageInputRef.current?.click()}
+                                            className="font-medium text-sm leading-[21px] text-[#EFBF04] px-5 py-2 border-[1px] border-[#EFBF04] rounded-full cursor-pointer w-fit transition-all hover:bg-[#EFBF04] hover:text-[#252C38]"
+                                        >
+                                            Upload file
+                                        </button>
+                                        {imageName && (
+                                            <span className="text-sm text-[#98A1B3]">{imageName}</span>
+                                        )}
+                                    </div>
+                                    {client.logo != '' && (
+                                        <img src={`${baseURL.toString() != '' ? baseURL.toString() : 'http://localhost:8000/'}storage/${client.logo}`} alt="Image" className='h-14 w-fit' />
+                                    )}
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        ref={imageInputRef}
+                                        onChange={(e) => {
+                                            const file = e.target.files?.[0];
+                                            console.log("Selected image file:", file);
+                                            if (file) {
+                                                setImageName(file.name);
+                                                setImageFile(file)
+                                            }
+                                        }}
+                                        className="hidden"
+                                    />
                                 </div>
                                 <div className="flex flex-col gap-3">
-                                    <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Management chart</label>
-                                    <button className="font-medium text-sm leading-[21px] text-[#EFBF04] px-5 py-2 border-[1px] border-[#EFBF04] rounded-full cursor-pointer w-fit transition-all hover:bg-[#EFBF04] hover:text-[#252C38]">Upload file</button>
+                                    <label className="text-xs leading-[21px] text-[#98A1B3]">Organisation chart <span className='text-red-500 text-[10px]'>* Do not upload if you don't want to make changes</span></label>
+                                    <div className="flex items-center gap-4">
+                                        <button
+                                            type="button"
+                                            onClick={() => chartInputRef.current?.click()}
+                                            className="font-medium text-sm leading-[21px] text-[#EFBF04] px-5 py-2 border-[1px] border-[#EFBF04] rounded-full cursor-pointer w-fit transition-all hover:bg-[#EFBF04] hover:text-[#252C38]"
+                                        >
+                                            Upload file
+                                        </button>
+                                        {chartName && (
+                                            <span className="text-sm text-[#98A1B3]">{chartName}</span>
+                                        )}
+                                    </div>
+                                    {client.chart != '' && (
+                                        <img src={`${baseURL.toString() != '' ? baseURL.toString() : 'http://localhost:8000/'}storage/${client.chart}`} alt="Image" className='h-14 w-fit' />
+                                    )}
+                                    <input
+                                        type="file"
+                                        ref={chartInputRef}
+                                        onChange={(e) => {
+                                            const file = e.target.files?.[0];
+                                            console.log("Selected image file:", file);
+                                            if (file) {
+                                                setChartName(file.name);
+                                                setChartFile(file)
+                                            }
+                                        }}
+                                        className="hidden"
+                                    />
                                 </div>
                             </div>
                             <div className="flex gap-4 flex-wrap">
-                                <button onClick={() => toast.success('Client info updated successfully')} className="font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">Save</button>
+                                <button type="submit" className="font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">Save</button>
                                 <button className="font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border-[1px] border-[#868686] rounded-full transition-all hover:bg-[#868686] hover:text-[#252C38]">Cancel</button>
                             </div>
-                        </div>
+                        </form>
                     </div>
                 </div>
             </div>

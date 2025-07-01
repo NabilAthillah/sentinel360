@@ -1,12 +1,31 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "../../../components/Navbar";
 import { SwitchCustomStyles } from "../../../components/SwitchCustomStyles";
 import MainLayout from "../../../layouts/MainLayout";
+import { EmployeeDocument } from "../../../types/employeeDocument";
 
 const EmployeeDocumentPage = () => {
     const [sidebar, setSidebar] = useState(false);
     const [data1, setData1] = useState(true);
     const [data2, setData2] = useState(false);
+
+    const navigate = useNavigate();
+
+    const [datas, setDatas] = useState<EmployeeDocument>();
+
+    const fetchDatas = async () => {
+        try {
+            const token = localStorage.getItem('token');
+
+            if (!token) {
+                localStorage.clear();
+                navigate('/login');
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    }
 
     return (
         <MainLayout>

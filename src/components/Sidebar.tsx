@@ -1,19 +1,50 @@
 import { X } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import clientInfoService from '../services/clientInfoService';
+import { Client } from '../types/client';
 import { User } from '../types/user';
 
 const Sidebar = ({ isOpen, closeSidebar, user }: { isOpen: boolean, closeSidebar: any, user: User | null }) => {
   const location = useLocation();
   const { pathname } = location;
+  const [client, setClient] = useState<Client>();
+  const navigate = useNavigate();
+
+  const baseURL = new URL(process.env.REACT_APP_API_URL || '');
+  baseURL.pathname = baseURL.pathname.replace(/\/api$/, '');
 
   const hasPermission = (permissionName: string) => {
     return user?.role?.permissions?.some(p => p.name === permissionName);
   };
 
+  const fetchClientInfo = async () => {
+    try {
+      const token = localStorage.getItem('token');
+
+      if (!token) {
+        localStorage.clear();
+        navigate('/login');
+      }
+
+      const response = await clientInfoService.getData(token);
+
+      if (response.success) {
+        setClient(response.data)
+      }
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  useEffect(() => {
+    fetchClientInfo();
+  }, [])
+
   return (
     <aside className={`sm:max-w-[264px] w-full h-screen fixed top-0 bg-[#161721] border-r-[1px] border-r-[#161721] transition-all duration-200 z-50 md:left-0 ${isOpen ? 'left-0' : '-left-full'}`}>
       <Link to='/dashboard' className='w-full px-5 py-6 flex justify-between'>
-        <img src="/images/logo.png" alt="" className='w-[126px] ' />
+        <img src={client?.logo ? (`${baseURL.toString() != '' ? baseURL.toString() : 'http://localhost:8000/'}storage/${client.logo}`) : "/images/logo.png"} alt="" className='w-[126px] ' />
         <X onClick={() => closeSidebar(false)} color='#ffffff' className='block md:hidden' />
       </Link>
       <div className='flex flex-col gap-2 py-4'>
