@@ -17,6 +17,14 @@ const SitePage = () => {
     const [deleteModal, setDeleteModal] = useState(false);
     const [loading, setLoading] = useState(false);
     const [sites, setSites] = useState<Site[]>([]);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [filteredSites, setFilteredSites] = useState<Site[]>([]);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
+
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentItems = (searchTerm ? filteredSites : sites).slice(indexOfFirstItem, indexOfLastItem);
 
     const imageInputRef = useRef<HTMLInputElement | null>(null);
     const chartInputRef = useRef<HTMLInputElement | null>(null);
@@ -40,6 +48,17 @@ const SitePage = () => {
 
     const baseURL = new URL(process.env.REACT_APP_API_URL || '');
     baseURL.pathname = baseURL.pathname.replace(/\/api$/, '');
+
+    const totalItems = searchTerm ? filteredSites.length : sites.length;
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+    const handlePrev = () => {
+        if (currentPage > 1) setCurrentPage(currentPage - 1);
+    };
+
+    const handleNext = () => {
+        if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+    };
 
     const handleSubmit = async (e: React.SyntheticEvent) => {
         e.preventDefault();
@@ -186,6 +205,13 @@ const SitePage = () => {
         }
     }
 
+    const handleSearch = () => {
+        const filtered = sites.filter((site) =>
+            site.name.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+        setFilteredSites(filtered);
+    };
+
     const fetchSites = async () => {
         try {
             const token = localStorage.getItem('token');
@@ -220,6 +246,13 @@ const SitePage = () => {
         }
     }, [editData])
 
+    useEffect(() => {
+        const filtered = sites.filter((site) =>
+            site.name.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+        setFilteredSites(filtered);
+    }, [searchTerm, sites]);
+
     return (
         <MainLayout>
             <div className='flex flex-col gap-6 px-6 pb-20 w-full h-full flex-1'>
@@ -243,11 +276,17 @@ const SitePage = () => {
                                     type={"text"}
                                     className="w-full px-4 pt-[17.5px] pb-[10.5px] bg-[#222834] rounded-[4px_4px_0px_0px] text-[#F4F7FF] text-base placeholder:text-[#98A1B3]  placeholder:text-base active:outline-none focus-visible:outline-none"
                                     placeholder="Search"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') handleSearch();
+                                    }}
                                 />
                                 <button
                                     type="button"
                                     className="p-2 rounded-[4px_4px_0px_0px]"
                                     tabIndex={-1}
+                                    onClick={handleSearch}
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="32" height="32" viewBox="0 0 32 32"><defs><clipPath id="master_svg0_247_12873"><rect x="0" y="0" width="32" height="32" rx="0" /></clipPath></defs><g clip-path="url(#master_svg0_247_12873)"><g><path d="M20.666698807907103,18.666700953674315L19.613298807907107,18.666700953674315L19.239998807907106,18.306700953674316C20.591798807907104,16.738700953674318,21.334798807907106,14.736900953674317,21.333298807907106,12.666670953674316C21.333298807907106,7.880200953674317,17.453098807907104,4.000000953674316,12.666668807907104,4.000000953674316C7.880198807907105,4.000000953674316,4.000000715257104,7.880200953674317,4.000000715257104,12.666670953674316C4.000000715257104,17.453100953674316,7.880198807907105,21.333300953674318,12.666668807907104,21.333300953674318C14.813298807907104,21.333300953674318,16.786698807907104,20.546700953674318,18.306698807907104,19.24000095367432L18.666698807907103,19.61330095367432L18.666698807907103,20.666700953674315L25.333298807907106,27.320000953674317L27.319998807907105,25.333300953674318L20.666698807907103,18.666700953674315ZM12.666668807907104,18.666700953674315C9.346668807907104,18.666700953674315,6.666668807907104,15.986700953674317,6.666668807907104,12.666670953674316C6.666668807907104,9.346670953674316,9.346668807907104,6.666670953674316,12.666668807907104,6.666670953674316C15.986698807907105,6.666670953674316,18.666698807907103,9.346670953674316,18.666698807907103,12.666670953674316C18.666698807907103,15.986700953674317,15.986698807907105,18.666700953674315,12.666668807907104,18.666700953674315Z" fill="#98A1B3" fill-opacity="1" /></g></g></svg>
                                 </button>
@@ -257,9 +296,9 @@ const SitePage = () => {
                             <button onClick={() => setAddData(true)} className="font-medium text-base text-[#181d26] px-[46.5px] py-[13.5px] border-[1px] border-[#EFBF04] bg-[#EFBF04] rounded-full hover:bg-[#181d26] hover:text-[#EFBF04] transition-all">Add site</button>
                         </div>
                     </div>
-                    <div className="w-full h-full relative flex flex-1">
-                        <div className="w-full h-fit overflow-auto pb-5">
-                            <table className="min-w-[700px] w-full">
+                        <div className="w-full h-full relative flex flex-1 pb-10">
+                            <div className="w-full h-fit overflow-auto pb-5 flex-1">
+                                <table className="w-full min-w-[500px]">
                                 <thead>
                                     <tr>
                                         <th className="font-semibold text-[#98A1B3] text-start">S. no</th>
@@ -272,16 +311,20 @@ const SitePage = () => {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {sites.length > 0 && sites.map((site, index) => (
-                                        <tr key={index}>
-                                            <td className="text-[#F4F7FF] pt-6 pb-3">{index + 1}</td>
-                                            <td className="text-[#F4F7FF] pt-6 pb-3 ">
-                                                {site.image != '' && (
-                                                    <img src={`${baseURL.toString() != '' ? baseURL.toString() : 'http://localhost:8000/'}storage/${site.image}`} alt="Image" className='h-14 w-fit' />
+                                    {currentItems.map((site, index) => (
+                                        <tr key={site.id}>
+                                            <td className="text-[#F4F7FF] pt-6 pb-3">{indexOfFirstItem + index + 1}</td>
+                                            <td className="text-[#F4F7FF] pt-6 pb-3">
+                                                {site.image !== '' && (
+                                                    <img
+                                                        src={`${baseURL.toString() !== '' ? baseURL.toString() : 'http://localhost:8000/'}storage/${site.image}`}
+                                                        alt="Image"
+                                                        className="h-14 w-fit"
+                                                    />
                                                 )}
                                             </td>
                                             <td className="text-[#F4F7FF] pt-6 pb-3">{site.name}</td>
-                                            <td className="text-[#F4F7FF] pt-6 pb-3 ">{`${site.address}, ${site.postal_code}`}</td>
+                                            <td className="text-[#F4F7FF] pt-6 pb-3">{`${site.address}, ${site.postal_code}`}</td>
                                             <td className="text-[#F4F7FF] pt-6 pb-3">{site.lat}</td>
                                             <td className="text-[#F4F7FF] pt-6 pb-3">{site.long}</td>
                                             <td className="pt-6 pb-3">
@@ -300,9 +343,21 @@ const SitePage = () => {
                             </table>
                         </div>
                         <div className="grid grid-cols-3 w-[162px] absolute bottom-0 right-0">
-                            <button className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[8px_0px_0px_8px] bg-[#575F6F]">Prev</button>
-                            <button className="font-medium text-xs leading-[21px] text-[#181D26] py-1 px-3 bg-[#D4AB0B]">1</button>
-                            <button className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[0px_8px_8px_0px] bg-[#575F6F]">Next</button>
+                            <button
+                                className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[8px_0px_0px_8px] bg-[#575F6F] disabled:opacity-50"
+                                onClick={handlePrev}
+                                disabled={currentPage === 1}
+                            >
+                                Prev
+                            </button>
+                            <button className="font-medium text-xs leading-[21px] text-[#181D26] py-1 px-3 bg-[#D4AB0B]">{currentPage}</button>
+                            <button
+                                className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[0px_8px_8px_0px] bg-[#575F6F] disabled:opacity-50"
+                                onClick={handleNext}
+                                disabled={currentPage === totalPages}
+                            >
+                                Next
+                            </button>
                         </div>
                     </div>
                 </div>

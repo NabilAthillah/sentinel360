@@ -10,30 +10,8 @@ import MainLayout from "../../layouts/MainLayout";
 import employeeService from "../../services/employeeService";
 import roleService from "../../services/roleService";
 import { RootState } from "../../store";
-
-type Employee = {
-    id: string;
-    nric_fin_no: string;
-    briefing_date?: Date;
-    user: User;
-    reporting_to: User;
-};
-
-type User = {
-    id: string;
-    name: string;
-    mobile: string;
-    address?: string;
-    profile_image?: string;
-    email: string;
-    status: string;
-    role: Role;
-};
-
-type Role = {
-    id: string;
-    name: string;
-};
+import { Employee } from "../../types/employee";
+import { Role } from "../../types/role";
 
 const EmployeesPage = () => {
     const user = useSelector((state: RootState) => state.user.user);
@@ -61,6 +39,14 @@ const EmployeesPage = () => {
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [reportingEmployees, setReportingEmployees] = useState<Employee[]>([]);
     const [role, setRole] = useState<string>();
+    const [searchTerm, setSearchTerm] = useState('');
+    const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>([]);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
+
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentItems = (searchTerm ? filteredEmployees : employees).slice(indexOfFirstItem, indexOfLastItem);
 
     const [addData, setAddData] = useState({
         nric_fin_no: '',
@@ -72,6 +58,17 @@ const EmployeesPage = () => {
         address: '',
         id_role: '',
     });
+
+    const totalItems = searchTerm ? filteredEmployees.length : employees.length;
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+    const handlePrev = () => {
+        if (currentPage > 1) setCurrentPage(currentPage - 1);
+    };
+
+    const handleNext = () => {
+        if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+    };
 
     const togglePassword = () => {
         setShowPassword((prev: any) => !prev);
@@ -195,12 +192,26 @@ const EmployeesPage = () => {
         return '*'.repeat(maskedLength) + phone.slice(-visibleDigits);
     };
 
+    const handleSearch = () => {
+        const filtered = employees.filter((employee) =>
+            employee.user.name.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+        setFilteredEmployees(filtered);
+    };
+
     useEffect(() => {
         const checkPermission = user?.role?.permissions?.some(p => p.name === 'List employees');
         if (!checkPermission) {
             navigate('/dashboard')
         }
     }, [user])
+
+    useEffect(() => {
+        const filtered = employees.filter((employee) =>
+            employee.user.name.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+        setFilteredEmployees(filtered);
+    }, [searchTerm, employees]);
 
     return (
         <MainLayout>
@@ -214,13 +225,19 @@ const EmployeesPage = () => {
                                     type={"text"}
                                     className="w-full px-4 pt-[17.5px] pb-[10.5px] bg-[#222834] rounded-[4px_4px_0px_0px] text-[#F4F7FF] text-base placeholder:text-[#98A1B3]  placeholder:text-base active:outline-none focus-visible:outline-none"
                                     placeholder="Search"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') handleSearch();
+                                    }}
                                 />
                                 <button
                                     type="button"
                                     className="p-2 rounded-[4px_4px_0px_0px]"
                                     tabIndex={-1}
+                                    onClick={handleSearch}
                                 >
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="32" height="32" viewBox="0 0 32 32"><defs><clipPath id="master_svg0_247_12873"><rect x="0" y="0" width="32" height="32" rx="0" /></clipPath></defs><g clipPath="url(#master_svg0_247_12873)"><g><path d="M20.666698807907103,18.666700953674315L19.613298807907107,18.666700953674315L19.239998807907106,18.306700953674316C20.591798807907104,16.738700953674318,21.334798807907106,14.736900953674317,21.333298807907106,12.666670953674316C21.333298807907106,7.880200953674317,17.453098807907104,4.000000953674316,12.666668807907104,4.000000953674316C7.880198807907105,4.000000953674316,4.000000715257104,7.880200953674317,4.000000715257104,12.666670953674316C4.000000715257104,17.453100953674316,7.880198807907105,21.333300953674318,12.666668807907104,21.333300953674318C14.813298807907104,21.333300953674318,16.786698807907104,20.546700953674318,18.306698807907104,19.24000095367432L18.666698807907103,19.61330095367432L18.666698807907103,20.666700953674315L25.333298807907106,27.320000953674317L27.319998807907105,25.333300953674318L20.666698807907103,18.666700953674315ZM12.666668807907104,18.666700953674315C9.346668807907104,18.666700953674315,6.666668807907104,15.986700953674317,6.666668807907104,12.666670953674316C6.666668807907104,9.346670953674316,9.346668807907104,6.666670953674316,12.666668807907104,6.666670953674316C15.986698807907105,6.666670953674316,18.666698807907103,9.346670953674316,18.666698807907103,12.666670953674316C18.666698807907103,15.986700953674317,15.986698807907105,18.666700953674315,12.666668807907104,18.666700953674315Z" fill="#98A1B3" fill-opacity="1" /></g></g></svg>
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="32" height="32" viewBox="0 0 32 32"><defs><clipPath id="master_svg0_247_12873"><rect x="0" y="0" width="32" height="32" rx="0" /></clipPath></defs><g clip-path="url(#master_svg0_247_12873)"><g><path d="M20.666698807907103,18.666700953674315L19.613298807907107,18.666700953674315L19.239998807907106,18.306700953674316C20.591798807907104,16.738700953674318,21.334798807907106,14.736900953674317,21.333298807907106,12.666670953674316C21.333298807907106,7.880200953674317,17.453098807907104,4.000000953674316,12.666668807907104,4.000000953674316C7.880198807907105,4.000000953674316,4.000000715257104,7.880200953674317,4.000000715257104,12.666670953674316C4.000000715257104,17.453100953674316,7.880198807907105,21.333300953674318,12.666668807907104,21.333300953674318C14.813298807907104,21.333300953674318,16.786698807907104,20.546700953674318,18.306698807907104,19.24000095367432L18.666698807907103,19.61330095367432L18.666698807907103,20.666700953674315L25.333298807907106,27.320000953674317L27.319998807907105,25.333300953674318L20.666698807907103,18.666700953674315ZM12.666668807907104,18.666700953674315C9.346668807907104,18.666700953674315,6.666668807907104,15.986700953674317,6.666668807907104,12.666670953674316C6.666668807907104,9.346670953674316,9.346668807907104,6.666670953674316,12.666668807907104,6.666670953674316C15.986698807907105,6.666670953674316,18.666698807907103,9.346670953674316,18.666698807907103,12.666670953674316C18.666698807907103,15.986700953674317,15.986698807907105,18.666700953674315,12.666668807907104,18.666700953674315Z" fill="#98A1B3" fill-opacity="1" /></g></g></svg>
                                 </button>
                             </div>
                             <button className="font-medium text-sm min-w-[142px] text-[#EFBF04] px-4 py-[9.5px] border-[1px] border-[#EFBF04] rounded-full hover:bg-[#EFBF04] hover:text-[#252C38] transition-all">Download Report</button>
@@ -235,6 +252,7 @@ const EmployeesPage = () => {
                                 <thead>
                                     <tr>
                                         <th className="font-semibold text-[#98A1B3] text-start">S. no</th>
+                                        <th className="font-semibold text-[#98A1B3] text-start">Name</th>
                                         <th className="font-semibold text-[#98A1B3] text-start">NIRC/FIN</th>
                                         <th className="font-semibold text-[#98A1B3] text-start">Mobile</th>
                                         <th className="font-semibold text-[#98A1B3] text-start">Role</th>
@@ -243,9 +261,10 @@ const EmployeesPage = () => {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {employees.length > 0 && employees.map((data, index) => (
+                                    {currentItems.map((data, index) => (
                                         <tr className="border-b-[1px] border-b-[#98A1B3]" key={data.id}>
                                             <td className="text-[#F4F7FF] pt-6 pb-3">{index + 1}</td>
+                                            <td className="text-[#F4F7FF] pt-6 pb-3 ">{data.user.name}</td>
                                             <td className="text-[#F4F7FF] pt-6 pb-3 ">{data.nric_fin_no}</td>
                                             <td className="text-[#F4F7FF] pt-6 pb-3 ">{maskPhone(data.user.mobile)}</td>
                                             <td className="text-[#F4F7FF] pt-6 pb-3 ">{data.user.role.name}</td>
@@ -267,9 +286,21 @@ const EmployeesPage = () => {
                             </table>
                         </div>
                         <div className="grid grid-cols-3 w-[162px] absolute bottom-0 right-0">
-                            <button className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[8px_0px_0px_8px] bg-[#575F6F]">Prev</button>
-                            <button className="font-medium text-xs leading-[21px] text-[#181D26] py-1 px-3 bg-[#D4AB0B]">1</button>
-                            <button className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[0px_8px_8px_0px] bg-[#575F6F]">Next</button>
+                            <button
+                                className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[8px_0px_0px_8px] bg-[#575F6F] disabled:opacity-50"
+                                onClick={handlePrev}
+                                disabled={currentPage === 1}
+                            >
+                                Prev
+                            </button>
+                            <button className="font-medium text-xs leading-[21px] text-[#181D26] py-1 px-3 bg-[#D4AB0B]">{currentPage}</button>
+                            <button
+                                className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[0px_8px_8px_0px] bg-[#575F6F] disabled:opacity-50"
+                                onClick={handleNext}
+                                disabled={currentPage === totalPages}
+                            >
+                                Next
+                            </button>
                         </div>
                     </div>
                 </div>

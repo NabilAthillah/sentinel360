@@ -1,6 +1,6 @@
-import Loader from "../../../components/Loader";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import Loader from "../../../components/Loader";
 import Navbar from "../../../components/Navbar";
 import MainLayout from "../../../layouts/MainLayout";
 import permissionService from "../../../services/permissionService";
@@ -33,6 +33,26 @@ const RolesPage = () => {
     const [roles, setRoles] = useState<Role[]>([]);
     const [editedRole, setEditedRole] = useState<Role>();
     const permissionsFlat = Object.values(permissions).flat();
+
+    const [searchTerm, setSearchTerm] = useState('');
+    const [filteredRoles, setFilteredRoles] = useState<Role[]>([]);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
+
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentItems = (searchTerm ? filteredRoles : roles).slice(indexOfFirstItem, indexOfLastItem);
+
+    const totalItems = searchTerm ? filteredRoles.length : roles.length;
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+    const handlePrev = () => {
+        if (currentPage > 1) setCurrentPage(currentPage - 1);
+    };
+
+    const handleNext = () => {
+        if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+    };
 
     const togglePermission = (id: string) => {
         setSelectedPermissions((prev) =>
@@ -115,41 +135,59 @@ const RolesPage = () => {
         }
     }
 
+    const handleSearch = () => {
+        const filtered = roles.filter((role) =>
+            role.name.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+        setFilteredRoles(filtered);
+    };
+
     useEffect(() => {
         fetchRoles();
         fetchPermissions();
     }, [])
 
+    useEffect(() => {
+        const filtered = roles.filter((role) =>
+            role.name.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+        setFilteredRoles(filtered);
+    }, [searchTerm, roles]);
+
     return (
         <MainLayout>
-            <div className='flex flex-col gap-4 px-6 pb-20 w-full h-full'>
+            <div className='flex flex-col gap-4 px-6 pb-20 w-full h-full flex-1'>
                 <h2 className='text-2xl leading-9 text-white font-noto'>Settings</h2>
-                <div className="flex flex-col gap-8 w-full h-full">
+                <div className="flex flex-col gap-8 w-full h-full flex-1">
                     <Navbar />
                     <div className="flex flex-col gap-10 bg-[#252C38] p-6 rounded-lg w-full h-full">
                         <div className="w-full flex justify-between items-center gap-4 flex-wrap lg:flex-nowrap">
-                            <div className="flex items-end gap-4 w-full">
-                                <div className="max-w-[400px] w-full flex items-center bg-[#222834] border-b-[1px] border-b-[#98A1B3] rounded-[4px_4px_0px_0px]">
-                                    <input
-                                        type={"text"}
-                                        className="w-full px-4 pt-[17.5px] pb-[10.5px] bg-[#222834] rounded-[4px_4px_0px_0px] text-[#F4F7FF] text-base placeholder:text-[#98A1B3]  placeholder:text-base active:outline-none focus-visible:outline-none"
-                                        placeholder="Search"
-                                    />
-                                    <button
-                                        type="button"
-                                        className="p-2 rounded-[4px_4px_0px_0px]"
-                                        tabIndex={-1}
-                                    >
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="32" height="32" viewBox="0 0 32 32"><defs><clipPath id="master_svg0_247_12873"><rect x="0" y="0" width="32" height="32" rx="0" /></clipPath></defs><g clip-path="url(#master_svg0_247_12873)"><g><path d="M20.666698807907103,18.666700953674315L19.613298807907107,18.666700953674315L19.239998807907106,18.306700953674316C20.591798807907104,16.738700953674318,21.334798807907106,14.736900953674317,21.333298807907106,12.666670953674316C21.333298807907106,7.880200953674317,17.453098807907104,4.000000953674316,12.666668807907104,4.000000953674316C7.880198807907105,4.000000953674316,4.000000715257104,7.880200953674317,4.000000715257104,12.666670953674316C4.000000715257104,17.453100953674316,7.880198807907105,21.333300953674318,12.666668807907104,21.333300953674318C14.813298807907104,21.333300953674318,16.786698807907104,20.546700953674318,18.306698807907104,19.24000095367432L18.666698807907103,19.61330095367432L18.666698807907103,20.666700953674315L25.333298807907106,27.320000953674317L27.319998807907105,25.333300953674318L20.666698807907103,18.666700953674315ZM12.666668807907104,18.666700953674315C9.346668807907104,18.666700953674315,6.666668807907104,15.986700953674317,6.666668807907104,12.666670953674316C6.666668807907104,9.346670953674316,9.346668807907104,6.666670953674316,12.666668807907104,6.666670953674316C15.986698807907105,6.666670953674316,18.666698807907103,9.346670953674316,18.666698807907103,12.666670953674316C18.666698807907103,15.986700953674317,15.986698807907105,18.666700953674315,12.666668807907104,18.666700953674315Z" fill="#98A1B3" fill-opacity="1" /></g></g></svg>
-                                    </button>
-                                </div>
+                            <div className="max-w-[400px] w-full flex items-center bg-[#222834] border-b-[1px] border-b-[#98A1B3] rounded-[4px_4px_0px_0px]">
+                                <input
+                                    type={"text"}
+                                    className="w-full px-4 pt-[17.5px] pb-[10.5px] bg-[#222834] rounded-[4px_4px_0px_0px] text-[#F4F7FF] text-base placeholder:text-[#98A1B3]  placeholder:text-base active:outline-none focus-visible:outline-none"
+                                    placeholder="Search"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') handleSearch();
+                                    }}
+                                />
+                                <button
+                                    type="button"
+                                    className="p-2 rounded-[4px_4px_0px_0px]"
+                                    tabIndex={-1}
+                                    onClick={handleSearch}
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="32" height="32" viewBox="0 0 32 32"><defs><clipPath id="master_svg0_247_12873"><rect x="0" y="0" width="32" height="32" rx="0" /></clipPath></defs><g clip-path="url(#master_svg0_247_12873)"><g><path d="M20.666698807907103,18.666700953674315L19.613298807907107,18.666700953674315L19.239998807907106,18.306700953674316C20.591798807907104,16.738700953674318,21.334798807907106,14.736900953674317,21.333298807907106,12.666670953674316C21.333298807907106,7.880200953674317,17.453098807907104,4.000000953674316,12.666668807907104,4.000000953674316C7.880198807907105,4.000000953674316,4.000000715257104,7.880200953674317,4.000000715257104,12.666670953674316C4.000000715257104,17.453100953674316,7.880198807907105,21.333300953674318,12.666668807907104,21.333300953674318C14.813298807907104,21.333300953674318,16.786698807907104,20.546700953674318,18.306698807907104,19.24000095367432L18.666698807907103,19.61330095367432L18.666698807907103,20.666700953674315L25.333298807907106,27.320000953674317L27.319998807907105,25.333300953674318L20.666698807907103,18.666700953674315ZM12.666668807907104,18.666700953674315C9.346668807907104,18.666700953674315,6.666668807907104,15.986700953674317,6.666668807907104,12.666670953674316C6.666668807907104,9.346670953674316,9.346668807907104,6.666670953674316,12.666668807907104,6.666670953674316C15.986698807907105,6.666670953674316,18.666698807907103,9.346670953674316,18.666698807907103,12.666670953674316C18.666698807907103,15.986700953674317,15.986698807907105,18.666700953674315,12.666668807907104,18.666700953674315Z" fill="#98A1B3" fill-opacity="1" /></g></g></svg>
+                                </button>
                             </div>
                             <div className="w-[200px]">
                                 <button onClick={() => setAddRole(true)} className="font-medium text-base min-w-[200px] text-[#181d26] px-[46.5px] py-3 border-[1px] border-[#EFBF04] bg-[#EFBF04] rounded-full hover:bg-[#181d26] hover:text-[#EFBF04] transition-all">Add role</button>
                             </div>
                         </div>
-                        <div className="w-full h-full relative">
-                            <div className="w-full h-fit overflow-auto pb-5">
+                        <div className="w-full h-full relative flex flex-1 pb-10">
+                            <div className="w-full h-fit overflow-auto pb-5 flex-1">
                                 <table className="w-full min-w-[500px]">
                                     <thead>
                                         <tr>
@@ -159,7 +197,7 @@ const RolesPage = () => {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {roles.length > 0 && roles.map((data, index) => (
+                                        {currentItems.map((data, index) => (
                                             <tr>
                                                 <td className="text-[#F4F7FF] pt-6 pb-3">{index + 1}</td>
                                                 <td className="text-[#F4F7FF] pt-6 pb-3 ">{data.name}</td>
@@ -176,109 +214,125 @@ const RolesPage = () => {
                                 </table>
                             </div>
                             <div className="grid grid-cols-3 w-[162px] absolute bottom-0 right-0">
-                                <button className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[8px_0px_0px_8px] bg-[#575F6F]">Prev</button>
-                                <button className="font-medium text-xs leading-[21px] text-[#181D26] py-1 px-3 bg-[#D4AB0B]">1</button>
-                                <button className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[0px_8px_8px_0px] bg-[#575F6F]">Next</button>
+                                <button
+                                    className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[8px_0px_0px_8px] bg-[#575F6F] disabled:opacity-50"
+                                    onClick={handlePrev}
+                                    disabled={currentPage === 1}
+                                >
+                                    Prev
+                                </button>
+                                <button className="font-medium text-xs leading-[21px] text-[#181D26] py-1 px-3 bg-[#D4AB0B]">{currentPage}</button>
+                                <button
+                                    className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[0px_8px_8px_0px] bg-[#575F6F] disabled:opacity-50"
+                                    onClick={handleNext}
+                                    disabled={currentPage === totalPages}
+                                >
+                                    Next
+                                </button>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            {addRole && (
-                <div className="fixed w-screen h-screen flex justify-end items-start top-0 left-0 z-50 bg-[rgba(0,0,0,0.5)]">
-                    <form onSubmit={handleSubmit} className="flex flex-col gap-6 p-6 bg-[#252C38] max-w-[568px] w-full max-h-screen overflow-auto h-full">
-                        <h2 className='text-2xl leading-[36px] text-white font-noto'>Add Role</h2>
-                        <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                            <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Role name</label>
-                            <input
-                                type={"text"}
-                                className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
-                                placeholder='Role name'
-                                onChange={(e) => setName(e.target.value)}
-                                required
-                            />
-                        </div>
-                        {Object.entries(permissions).map(([category, permissionList]) => (
-                            <div key={category} className="flex flex-col gap-2 mb-4">
-                                <label className="text-xs leading-[21px] text-[#98A1B3]">{category}</label>
-                                <div className="flex flex-wrap gap-x-3 gap-y-[14px]">
-                                    {permissionList.map((permission) => {
-                                        const isSelected = selectedPermissions.includes(permission.id);
-                                        return (
-                                            <button
-                                                key={permission.id}
-                                                type="button"
-                                                onClick={() => togglePermission(permission.id)}
-                                                className={`font-medium text-sm leading-[20px] w-fit px-4 py-2 rounded-full transition-all
+            {
+                addRole && (
+                    <div className="fixed w-screen h-screen flex justify-end items-start top-0 left-0 z-50 bg-[rgba(0,0,0,0.5)]">
+                        <form onSubmit={handleSubmit} className="flex flex-col gap-6 p-6 bg-[#252C38] max-w-[568px] w-full max-h-screen overflow-auto h-full">
+                            <h2 className='text-2xl leading-[36px] text-white font-noto'>Add Role</h2>
+                            <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
+                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Role name</label>
+                                <input
+                                    type={"text"}
+                                    className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
+                                    placeholder='Role name'
+                                    onChange={(e) => setName(e.target.value)}
+                                    required
+                                />
+                            </div>
+                            {Object.entries(permissions).map(([category, permissionList]) => (
+                                <div key={category} className="flex flex-col gap-2 mb-4">
+                                    <label className="text-xs leading-[21px] text-[#98A1B3]">{category}</label>
+                                    <div className="flex flex-wrap gap-x-3 gap-y-[14px]">
+                                        {permissionList.map((permission) => {
+                                            const isSelected = selectedPermissions.includes(permission.id);
+                                            return (
+                                                <button
+                                                    key={permission.id}
+                                                    type="button"
+                                                    onClick={() => togglePermission(permission.id)}
+                                                    className={`font-medium text-sm leading-[20px] w-fit px-4 py-2 rounded-full transition-all
               ${isSelected
-                                                        ? 'bg-[#446FC7] text-white'
-                                                        : 'bg-[#303847] text-[#F4F7FF] hover:bg-[#446FC7] hover:text-white'}`}
-                                            >
-                                                {permission.name}
-                                            </button>
-                                        );
-                                    })}
+                                                            ? 'bg-[#446FC7] text-white'
+                                                            : 'bg-[#303847] text-[#F4F7FF] hover:bg-[#446FC7] hover:text-white'}`}
+                                                >
+                                                    {permission.name}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
+                            ))}
+                            <div className="flex gap-4">
+                                <button type="submit" className="flex justify-center items-center font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">{loading ? <Loader /> : 'Save'}</button>
+                                <button onClick={() => setAddRole(false)} className="font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border-[1px] border-[#868686] rounded-full transition-all hover:bg-[#868686] hover:text-[#252C38]">Cancel</button>
                             </div>
-                        ))}
-                        <div className="flex gap-4">
-                            <button type="submit" className="flex justify-center items-center font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">{loading ? <Loader /> : 'Save'}</button>
-                            <button onClick={() => setAddRole(false)} className="font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border-[1px] border-[#868686] rounded-full transition-all hover:bg-[#868686] hover:text-[#252C38]">Cancel</button>
-                        </div>
-                    </form>
-                </div>
-            )}
-            {editRole && editedRole && (
-                <div className="fixed w-screen h-screen flex justify-end items-start top-0 left-0 z-50 bg-[rgba(0,0,0,0.5)]">
-                    <div className="flex flex-col gap-6 p-6 bg-[#252C38] max-w-[568px] w-full max-h-screen overflow-auto h-full">
-                        <h2 className='text-2xl leading-[36px] text-white font-noto'>Edit Role</h2>
-                        <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                            <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Role name</label>
-                            <input
-                                type={"text"}
-                                className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
-                                placeholder='Role name'
-                                value={editedRole.name}
-                                onChange={(e) =>
-                                    setEditedRole({
-                                        ...editedRole,
-                                        name: e.target.value,
-                                    })
-                                }
-                                required
-                            />
-                        </div>
-                        {Object.entries(permissions).map(([category, permissionList]) => (
-                            <div key={category}>
-                                <label className="text-xs text-gray-400">{category}</label>
-                                <div className="flex flex-wrap gap-2 mt-2">
-                                    {permissionList.map((permission) => {
-                                        const isSelected = editedRole.permissions.some((p) => p.id === permission.id);
+                        </form>
+                    </div>
+                )
+            }
+            {
+                editRole && editedRole && (
+                    <div className="fixed w-screen h-screen flex justify-end items-start top-0 left-0 z-50 bg-[rgba(0,0,0,0.5)]">
+                        <div className="flex flex-col gap-6 p-6 bg-[#252C38] max-w-[568px] w-full max-h-screen overflow-auto h-full">
+                            <h2 className='text-2xl leading-[36px] text-white font-noto'>Edit Role</h2>
+                            <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
+                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Role name</label>
+                                <input
+                                    type={"text"}
+                                    className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
+                                    placeholder='Role name'
+                                    value={editedRole.name}
+                                    onChange={(e) =>
+                                        setEditedRole({
+                                            ...editedRole,
+                                            name: e.target.value,
+                                        })
+                                    }
+                                    required
+                                />
+                            </div>
+                            {Object.entries(permissions).map(([category, permissionList]) => (
+                                <div key={category}>
+                                    <label className="text-xs text-gray-400">{category}</label>
+                                    <div className="flex flex-wrap gap-2 mt-2">
+                                        {permissionList.map((permission) => {
+                                            const isSelected = editedRole.permissions.some((p) => p.id === permission.id);
 
-                                        return (
-                                            <button
-                                                key={permission.id}
-                                                onClick={() => toggleEditPermission(permission.id)}
-                                                className={`px-4 py-2 rounded-full text-sm ${isSelected
-                                                    ? 'bg-blue-600 text-white'
-                                                    : 'bg-gray-700 text-white hover:bg-blue-600 hover:text-white'
-                                                    }`}
-                                            >
-                                                {permission.name}
-                                            </button>
-                                        );
-                                    })}
+                                            return (
+                                                <button
+                                                    key={permission.id}
+                                                    onClick={() => toggleEditPermission(permission.id)}
+                                                    className={`px-4 py-2 rounded-full text-sm ${isSelected
+                                                        ? 'bg-blue-600 text-white'
+                                                        : 'bg-gray-700 text-white hover:bg-blue-600 hover:text-white'
+                                                        }`}
+                                                >
+                                                    {permission.name}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
+                            ))}
+                            <div className="flex gap-4">
+                                <button onClick={handleEditRole} className="flex items-center justify-center font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">{loading ? <Loader /> : 'Save'}</button>
+                                <button onClick={() => setEditRole(false)} className="font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border-[1px] border-[#868686] rounded-full transition-all hover:bg-[#868686] hover:text-[#252C38]">Cancel</button>
                             </div>
-                        ))}
-                        <div className="flex gap-4">
-                            <button onClick={handleEditRole} className="flex items-center justify-center font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">{loading ? <Loader /> : 'Save'}</button>
-                            <button onClick={() => setEditRole(false)} className="font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border-[1px] border-[#868686] rounded-full transition-all hover:bg-[#868686] hover:text-[#252C38]">Cancel</button>
                         </div>
                     </div>
-                </div>
-            )}
-        </MainLayout>
+                )
+            }
+        </MainLayout >
     )
 }
 
