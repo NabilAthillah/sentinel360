@@ -518,10 +518,10 @@ const EmployeesPage = () => {
                                     <div key={index} className="flex flex-col gap-2">
                                         <div className="flex items-center justify-between">
                                             <p className="leading-[21px] text-[#F4F7FF]">{item}</p>
-                                            {/* <SwitchCustomStyleToggleable
-                                                // checked={switchStates[index] || false}
+                                            <SwitchCustomStyleToggleable
+                                                checked={switchStates[index] || false}
                                                 onChange={() => handleToggle(index)}
-                                            /> */}
+                                            />
                                         </div>
 
                                         {/* Tampilkan input alasan jika switch OFF (false) */}
