@@ -57,7 +57,7 @@ const authService = {
     }
   },
 
-  updateProfile: async (id, token, name, address, mobile, email, old_password, new_password) => {
+  updateProfile: async (id, token, name, address, mobile, email, old_password, new_password,profile) => {
     try {
       const response = await api.post('/auth/update-profile', {
         id,
@@ -66,7 +66,8 @@ const authService = {
         mobile,
         email,
         old_password,
-        new_password
+        new_password,
+        profile
       }, {
         headers: {
           'Authorization' : `Bearer ${token}`

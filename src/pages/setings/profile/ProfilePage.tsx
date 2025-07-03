@@ -6,11 +6,19 @@ import MainLayout from "../../../layouts/MainLayout";
 import authService from "../../../services/authService";
 import { RootState } from "../../../store";
 import { setUser } from "../../../features/user/userSlice";
+import { useRef } from "react";
+
 
 const ProfilePage = () => {
     const user = useSelector((state: RootState) => state.user.user);
     const dispatch = useDispatch();
+    const imageInputRef = useRef<HTMLInputElement>(null);
+    const [imageName, setImageName] = useState<string | null>(null);
+    const [imageFile, setImageFile] = useState<File | null>(null);
     const [loading, setLoading] = useState(false);
+    const baseURL = new URL(process.env.REACT_APP_API_URL || '');
+    baseURL.pathname = baseURL.pathname.replace(/\/api$/, '');
+
     const [data, setData] = useState({
         name: user?.name,
         address: user?.address,
@@ -18,6 +26,7 @@ const ProfilePage = () => {
         email: user?.email,
         old_password: '',
         new_password: '',
+        
     });
 
     const handleSubmit = async (e: React.SyntheticEvent) => {
@@ -25,8 +34,16 @@ const ProfilePage = () => {
 
         try {
             const token = localStorage.getItem('token');
+            const toBase64 = (file: File): Promise<string> =>
+                new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.readAsDataURL(file);
+                    reader.onload = () => resolve(reader.result as string);
+                    reader.onerror = reject;
+                });
 
-            const response = await authService.updateProfile(user?.id, token, data.name, data.address, data.mobile, data.email, data.old_password, data.new_password);
+            const imageBase64 = imageFile ? await toBase64(imageFile) : null;
+            const response = await authService.updateProfile(user?.id, token, data.name, data.address, data.mobile, data.email, data.old_password, data.new_password, imageBase64);
 
             if (response.success) {
                 toast.success('Profile updated successfully');
@@ -138,6 +155,50 @@ const ProfilePage = () => {
                                 />
                             </div>
                         </div>
+                        <div className="flex flex-col gap-3">
+                            <label className="text-xs leading-[21px] text-[#98A1B3]">
+                                Profile photo <span className='text-red-500 text-[10px]'>* Do not upload if you don't want to make changes</span>
+                            </label>
+
+                            <div className="flex items-center gap-4">
+                                <button
+                                    type="button"
+                                    onClick={() => imageInputRef.current?.click()}
+                                    className="font-medium text-sm leading-[21px] text-[#EFBF04] px-5 py-2 border border-[#EFBF04] rounded-full cursor-pointer hover:bg-[#EFBF04] hover:text-[#252C38]"
+                                >
+                                    Upload file
+                                </button>
+
+                                {imageName && (
+                                    <span className="text-sm text-[#98A1B3]">{imageName}</span>
+                                )}
+                            </div>
+
+                            {imageFile ? (
+                                <img
+                                    src={URL.createObjectURL(imageFile)}
+                                    alt="Preview"
+                                    className="h-14 w-auto rounded"
+                                />
+                            ) : user ? (
+                                    <img src={`${baseURL.toString() != '' ? baseURL.toString() : 'http://localhost:8000/'}storage/${user.profile_image}`} alt="Image" className='h-14 w-fit' />
+                            ) : null}
+
+                            <input
+                                type="file"
+                                accept="image/*"
+                                ref={imageInputRef}
+                                className="hidden"
+                                onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                        setImageName(file.name);
+                                        setImageFile(file);
+                                    }
+                                }}
+                            />
+                        </div>
+
                         <div className="flex gap-4 flex-wrap">
                             <button type="submit" className="font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">{loading ? <Loader /> : 'Save'}</button>
                             <button className="font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border-[1px] border-[#868686] rounded-full transition-all hover:bg-[#868686] hover:text-[#252C38]">Cancel</button>

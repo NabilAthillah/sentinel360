@@ -3,22 +3,22 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "../../../components/Navbar";
 import { Switch } from "@material-tailwind/react";
 import MainLayout from "../../../layouts/MainLayout";
-import employeeDocumentService from "../../../services/employeeDocumentService";
-import { EmployeeDocument } from "../../../types/employeeDocument";
+import IncidentTypesService from "../../../services/incidentService";
+import { Incident } from "../../../types/incident";
 import { toast } from "react-toastify";
 import Loader from "../../../components/Loader";
-const EmployeeDocumentPage = () => {
+const IncidentPageMaster = () => {
     const [sidebar, setSidebar] = useState(false);
     const [data1, setData1] = useState(true);
     const [data2, setData2] = useState(false);
-    const [addEmploy, setAddEmploy] = useState(false);
-    const [editEmploy, setEditEmploy] = useState(false);
-    const [editData, setEditData] = useState<EmployeeDocument | null>();
+    const [addIncident, setAddIncident] = useState(false);
+    const [editIncident, setEditIncident] = useState(false);
+    const [editData, setEditData] = useState<Incident| null>();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
-    const [datas, setDatas] = useState<EmployeeDocument[]>([]);
+    const [datas, setDatas] = useState<Incident[]>([]);
     const [name, setName] = useState('');
-    const fetchEmployeeDocuments = async () => {
+    const fetchIncidentTypes = async () => {
         try {
             const token = localStorage.getItem('token');
 
@@ -27,7 +27,7 @@ const EmployeeDocumentPage = () => {
                 navigate('/login');
             }
 
-            const response = await employeeDocumentService.getEmployeeDocuments(token);
+            const response = await IncidentTypesService.getIncidentTypes(token);
 
             if (response.success) {
                 setDatas(response.data)
@@ -60,11 +60,11 @@ const EmployeeDocumentPage = () => {
         }
 
         try {
-            const response = await employeeDocumentService.editEmployeeDocumentStatus(token, id, newStatus ? 'active' : 'deactive');
+            const response = await IncidentTypesService.editIncidentTypesStatus(token, id, newStatus ? 'active' : 'deactive');
 
             if (response.success) {
-                toast.success('Employee Document status updated successfully');
-                fetchEmployeeDocuments();
+                toast.success('Incident status updated successfully');
+                fetchIncidentTypes();
             }
         } catch (error) {
             console.error();
@@ -73,7 +73,7 @@ const EmployeeDocumentPage = () => {
                 [id]: prevStatus,
             }));
 
-            toast.error('Failed to update employee document status');
+            toast.error('Failed to update Incident status');
         }
     };
 
@@ -89,14 +89,14 @@ const EmployeeDocumentPage = () => {
                 navigate('/login');
             }
 
-            const response = await employeeDocumentService.addEmployeeDocument(token, name);
+            const response = await IncidentTypesService.addIncidentTypes(token, name);
 
             if (response.success) {
-                toast.success('Employee Document created successfully');
+                toast.success('Incident created successfully');
 
-                fetchEmployeeDocuments();
+                fetchIncidentTypes();
                 setLoading(false);
-                setAddEmploy(false);
+                setAddIncident(false);
                 setName('');
             }
         } catch (error: any) {
@@ -116,23 +116,23 @@ const EmployeeDocumentPage = () => {
                 navigate('/login');
             }
 
-            const response = await employeeDocumentService.editEmployeeDocument(token, editData?.id, name);
+            const response = await IncidentTypesService.editIncidentTypes(token, editData?.id, name);
 
             if (response.success) {
-                toast.success('Employee Document updated successfully');
+                toast.success('Incident updated successfully');
 
-                fetchEmployeeDocuments();
+                fetchIncidentTypes();
                 setLoading(false);
                 setEditData(null);
                 setName('');
-                setEditEmploy(false);
+                setEditIncident(false);
             }
         } catch (error: any) {
             toast.error(error.message);
         }
     }
     useEffect(() => {
-        fetchEmployeeDocuments();
+        fetchIncidentTypes();
     }, []);
 
     useEffect(() => {
@@ -147,10 +147,10 @@ const EmployeeDocumentPage = () => {
     }, [datas]);
 
     useEffect(() => {
-        if (editData && editEmploy) {
+        if (editData && editIncident) {
             setName(editData.name)
         }
-    }, [editEmploy])
+    }, [editIncident]);
 
     return (
         <MainLayout>
@@ -177,7 +177,7 @@ const EmployeeDocumentPage = () => {
                                 </div>
                             </div>
                             <div className="w-[200px]">
-                                <button onClick={() => setAddEmploy(true)} className="font-medium text-base min-w-[200px] text-[#181d26] px-[46.5px] py-3 border-[1px] border-[#EFBF04] bg-[#EFBF04] rounded-full hover:bg-[#181d26] hover:text-[#EFBF04] transition-all">Add document</button>
+                                <button onClick={() => setAddIncident(true)} className="font-medium text-base min-w-[200px] text-[#181d26] px-[46.5px] py-3 border-[1px] border-[#EFBF04] bg-[#EFBF04] rounded-full hover:bg-[#181d26] hover:text-[#EFBF04] transition-all">Add Incident</button>
                             </div>
                         </div>
                         <div className="w-full h-full relative">
@@ -186,23 +186,23 @@ const EmployeeDocumentPage = () => {
                                     <thead>
                                         <tr>
                                             <th className="font-semibold text-[#98A1B3] text-start">S. no</th>
-                                            <th className="font-semibold text-[#98A1B3] text-start">Document</th>
+                                            <th className="font-semibold text-[#98A1B3] text-start">Incident</th>
                                             <th className="font-semibold text-[#98A1B3] text-start flex items-center gap-2">Status <svg xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="14.689416885375977" height="20.504201889038086" viewBox="0 0 14.689416885375977 20.504201889038086"><g><path d="M12.0068,16.103L12.0068,9.09128C12.0068,8.44962,11.4818,7.92462,10.8401,7.92462C10.1985,7.92462,9.67346,8.44962,9.67346,9.09128L9.67346,16.103L7.58512,16.103C7.06012,16.103,6.80346,16.733,7.17679,17.0946L10.4318,20.338C10.6651,20.5596,11.0268,20.5596,11.2601,20.338L14.5151,17.0946C14.8885,16.733,14.6201,16.103,14.1068,16.103L12.0068,16.103ZM3.43179,0.166284L0.17679,3.42128C-0.196543,3.78295,0.0601238,4.41295,0.585124,4.41295L2.67346,4.41295L2.67346,11.4246C2.67346,12.0663,3.19846,12.5913,3.84012,12.5913C4.48179,12.5913,5.00679,12.0663,5.00679,11.4246L5.00679,4.41295L7.09512,4.41295C7.62012,4.41295,7.87679,3.78295,7.50346,3.42128L4.24846,0.166284C4.02138,-0.0554282,3.65887,-0.0554282,3.43179,0.166284Z" fill="#98A1B3" fill-opacity="1" /></g></svg></th>
                                             <th className="font-semibold text-[#98A1B3] text-center">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {datas?.length > 0 && datas?.map((employeeDocument, index) => (
+                                        {datas?.length > 0 && datas?.map((incident, index) => (
                                             <tr key={index}>
                                                 <td className="text-[#F4F7FF] pt-6 pb-3">{index + 1}</td>
-                                                <td className="text-[#F4F7FF] pt-6 pb-3 ">{employeeDocument.name}</td>
+                                                <td className="text-[#F4F7FF] pt-6 pb-3 ">{incident.name}</td>
                                                 <td className="text-[#F4F7FF] pt-6 pb-3 ">
                                                     <div className="flex items-center gap-4 w-40">
                                                         <Switch
-                                                            id={`custom-switch-component-${employeeDocument.id}`}
+                                                            id={`custom-switch-component-${incident.id}`}
                                                             ripple={false}
-                                                            checked={switchStates[employeeDocument.id]}
-                                                            onChange={(e) => handleToggle(employeeDocument.id)}
+                                                            checked={switchStates[incident.id]}
+                                                            onChange={(e) => handleToggle(incident.id)}
                                                             className="h-full w-full checked:bg-[#446FC7]"
                                                             containerProps={{
                                                                 className: "w-11 h-6",
@@ -210,15 +210,15 @@ const EmployeeDocumentPage = () => {
                                                             circleProps={{
                                                                 className: "before:hidden left-0.5 border-none",
                                                             }} onResize={undefined} onResizeCapture={undefined} onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} crossOrigin={undefined} />
-                                                        <p className={`font-medium text-sm capitalize ${switchStates[employeeDocument.id] ? 'text-[#19CE74]' : 'text-[#FF7E6A]'}`}>
-                                                            {switchStates[employeeDocument.id] ? 'active' : 'inactive'}
+                                                        <p className={`font-medium text-sm capitalize ${switchStates[incident.id] ? 'text-[#19CE74]' : 'text-[#FF7E6A]'}`}>
+                                                            {switchStates[incident.id] ? 'active' : 'inactive'}
                                                         </p>
                                                     </div>
                                                 </td>
                                                 <td className="pt-6 pb-3">
                                                     <div className="flex gap-6 items-center justify-center">
                                                         {/* <svg xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="28" height="28" viewBox="0 0 28 28"><defs><clipPath id="master_svg0_247_14305"><rect x="0" y="0" width="28" height="28" rx="0"/></clipPath></defs><g><g clip-path="url(#master_svg0_247_14305)"><g><path d="M11.46283298828125,19.6719859375L16.76641298828125,19.6719859375C17.495712988281248,19.6719859375,18.09231298828125,19.0752859375,18.09231298828125,18.3460859375L18.09231298828125,11.7165359375L20.20051298828125,11.7165359375C21.38061298828125,11.7165359375,21.97721298828125,10.2845659375,21.14191298828125,9.449245937499999L15.05601298828125,3.3633379375C14.54009298828125,2.8463349375,13.70246298828125,2.8463349375,13.18651298828125,3.3633379375L7.1006129882812505,9.449245937499999C6.26529298828125,10.2845659375,6.84869298828125,11.7165359375,8.02874298828125,11.7165359375L10.136932988281249,11.7165359375L10.136932988281249,18.3460859375C10.136932988281249,19.0752859375,10.73359298828125,19.6719859375,11.46283298828125,19.6719859375ZM6.15921298828125,22.3237859375L22.07011298828125,22.3237859375C22.79931298828125,22.3237859375,23.39601298828125,22.9203859375,23.39601298828125,23.6496859375C23.39601298828125,24.3788859375,22.79931298828125,24.9755859375,22.07011298828125,24.9755859375L6.15921298828125,24.9755859375C5.42996998828125,24.9755859375,4.83331298828125,24.3788859375,4.83331298828125,23.6496859375C4.83331298828125,22.9203859375,5.42996998828125,22.3237859375,6.15921298828125,22.3237859375Z" fill="#F4F7FF" fill-opacity="1"/></g></g></g></svg> */}
-                                                        <svg onClick={() => { setEditEmploy(true); setEditData(employeeDocument) }} className="cursor-pointer" xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="28" height="28" viewBox="0 0 28 28"><defs><clipPath id="master_svg0_247_14308"><rect x="0" y="0" width="28" height="28" rx="0" /></clipPath></defs><g><g clip-path="url(#master_svg0_247_14308)"><g><path d="M3.5,20.124948752212525L3.5,24.499948752212525L7.875,24.499948752212525L20.7783,11.596668752212524L16.4033,7.2216687522125245L3.5,20.124948752212525ZM24.1617,8.213328752212524C24.6166,7.759348752212524,24.6166,7.0223187522125246,24.1617,6.568328752212524L21.4317,3.8383337522125243C20.9777,3.3834207522125244,20.2406,3.3834207522125244,19.7867,3.8383337522125243L17.651699999999998,5.973328752212524L22.0267,10.348338752212523L24.1617,8.213328752212524Z" fill="#F4F7FF" fill-opacity="1" /></g></g></g></svg>
+                                                        <svg onClick={() => { setEditIncident(true); setEditData(incident) }} className="cursor-pointer" xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="28" height="28" viewBox="0 0 28 28"><defs><clipPath id="master_svg0_247_14308"><rect x="0" y="0" width="28" height="28" rx="0" /></clipPath></defs><g><g clip-path="url(#master_svg0_247_14308)"><g><path d="M3.5,20.124948752212525L3.5,24.499948752212525L7.875,24.499948752212525L20.7783,11.596668752212524L16.4033,7.2216687522125245L3.5,20.124948752212525ZM24.1617,8.213328752212524C24.6166,7.759348752212524,24.6166,7.0223187522125246,24.1617,6.568328752212524L21.4317,3.8383337522125243C20.9777,3.3834207522125244,20.2406,3.3834207522125244,19.7867,3.8383337522125243L17.651699999999998,5.973328752212524L22.0267,10.348338752212523L24.1617,8.213328752212524Z" fill="#F4F7FF" fill-opacity="1" /></g></g></g></svg>
                                                         {/* <svg xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="28" height="28" viewBox="0 0 28 28"><defs><clipPath id="master_svg0_247_14302"><rect x="0" y="0" width="28" height="28" rx="0" /></clipPath></defs><g><g clip-path="url(#master_svg0_247_14302)"><g><path d="M6.9996778125,24.5L20.9997078125,24.5L20.9997078125,8.16667L6.9996778125,8.16667L6.9996778125,24.5ZM22.1663078125,4.66667L18.0830078125,4.66667L16.9163078125,3.5L11.0830078125,3.5L9.9163378125,4.66667L5.8330078125,4.66667L5.8330078125,7L22.1663078125,7L22.1663078125,4.66667Z" fill="#F4F7FF" fill-opacity="1" /></g></g></g></svg> */}
                                                     </div>
                                                 </td>
@@ -236,44 +236,44 @@ const EmployeeDocumentPage = () => {
                     </div>
                 </div>
             </div>
-            {editEmploy && (
+            {editIncident && (
                 <div className="fixed w-screen h-screen flex justify-center items-center top-0 left-0 z-50 bg-[rgba(0,0,0,0.5)]">
                     <form onSubmit={handleEdit} className="flex flex-col gap-6 p-6 bg-[#252C38]">
-                        <h2 className='text-2xl leading-[36px] text-white font-noto'>Edit Employee Document</h2>
+                        <h2 className='text-2xl leading-[36px] text-white font-noto'>Edit Incident</h2>
                         <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                            <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Employee Document name</label>
+                            <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Incident name</label>
                             <input
                                 type={"text"}
                                 className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
-                                placeholder='Employee Document name'
+                                placeholder='Incident name'
                                 onChange={(e) => setName(e.target.value)}
                                 value={name}
                             />
                         </div>
                         <div className="flex gap-4">
                             <button type="submit" className="font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">{loading ? <Loader /> : 'Save'}</button>
-                            <button onClick={() => { setEditEmploy(false); setLoading(false); setEditData(null) }} className="font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border-[1px] border-[#868686] rounded-full transition-all hover:bg-[#868686] hover:text-[#252C38]">Cancel</button>
+                            <button onClick={() => { setEditIncident(false); setLoading(false); setEditData(null) }} className="font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border-[1px] border-[#868686] rounded-full transition-all hover:bg-[#868686] hover:text-[#252C38]">Cancel</button>
                         </div>
                     </form>
                 </div>
             )}
-            {addEmploy && (
+            {addIncident && (
                 <div className="fixed w-screen h-screen flex justify-center items-center top-0 left-0 z-50 bg-[rgba(0,0,0,0.5)]">
                     <form onSubmit={handleSubmit} className="flex flex-col gap-6 p-6 bg-[#252C38]">
-                        <h2 className='text-2xl leading-[36px] text-white font-noto'>Add Employee Document</h2>
+                        <h2 className='text-2xl leading-[36px] text-white font-noto'>Add Incident</h2>
                         <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                            <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Employe Document name</label>
+                            <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Incident name</label>
                             <input
                                 type={"text"}
                                 className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
-                                placeholder='Employee Document name'
+                                placeholder='Incident name'
                                 onChange={(e) => setName(e.target.value)}
                                 required
                             />
                         </div>
                         <div className="flex gap-4">
                             <button type="submit" className="font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">{loading ? <Loader /> : 'Submit'}</button>
-                            <button onClick={() => setAddEmploy(false)} className="font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border-[1px] border-[#868686] rounded-full transition-all hover:bg-[#868686] hover:text-[#252C38]">Cancel</button>
+                            <button onClick={() => setAddIncident(false)} className="font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border-[1px] border-[#868686] rounded-full transition-all hover:bg-[#868686] hover:text-[#252C38]">Cancel</button>
                         </div>
                     </form>
                 </div>
@@ -282,4 +282,4 @@ const EmployeeDocumentPage = () => {
     )
 }
 
-export default EmployeeDocumentPage;
+export default IncidentPageMaster;

@@ -27,14 +27,13 @@ const ClientInfoPage = () => {
     const [contact, setContact] = useState('');
     const [website, setWebsite] = useState('');
     const [email, setEmail] = useState('');
-
+    const [isOpen, setIsOpen] = useState(false);
     const imageInputRef = useRef<HTMLInputElement | null>(null);
     const chartInputRef = useRef<HTMLInputElement | null>(null);
     const [imageName, setImageName] = useState<string | null>(null);
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [chartName, setChartName] = useState<string | null>(null);
     const [chartFile, setChartFile] = useState<File | null>(null);
-
     const baseURL = new URL(process.env.REACT_APP_API_URL || '');
     baseURL.pathname = baseURL.pathname.replace(/\/api$/, '');
 
@@ -48,6 +47,7 @@ const ClientInfoPage = () => {
             [name]: value,
         }));
     };
+
 
     const fetchClientInfo = async () => {
         try {
@@ -168,7 +168,29 @@ const ClientInfoPage = () => {
                                 </div>
                                 <div className="flex flex-col gap-1">
                                     <label htmlFor="" className="text-xs text-[#98A1B3]">Management chart</label>
-                                    <div className="w-[80px] h-[52px] rounded-lg opacity-20 bg-[#D8D8D8]"></div>
+                                    <div>
+                                        <img src={`${baseURL.toString() != '' ? baseURL.toString() : 'http://localhost:8000/'}storage/${client.chart}`} onClick={() => setIsOpen(true)} />
+                                        {isOpen && (
+                                            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+                                                <div className="bg-white rounded-lg shadow-lg max-w-2xl w-full p-6 relative">
+                                                    <h2 className="text-xl font-semibold mb-4">Management Chart</h2>
+                                                    <button
+                                                        onClick={() => setIsOpen(false)}
+                                                        className="absolute top-4 right-4 bg-pink-500 text-white px-4 py-2 rounded hover:bg-pink-600"
+                                                    >
+                                                        Close
+                                                    </button>
+                                                    <img
+                                                        src={`${baseURL.toString() != '' ? baseURL.toString() : 'http://localhost:8000/'}storage/${client.chart}`}
+                                                        alt="Management Chart"
+                                                        className="mx-auto max-h-[400px] object-contain"
+                                                    />
+
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                    {/* <div className="w-[80px] h-[52px] rounded-lg opacity-20 bg-[#D8D8D8]"></div> */}
                                 </div>
                             </div>
                             <div className="grid grid-cols-1 justify-between gap-x-2 gap-y-4 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-3">

@@ -1,20 +1,177 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import DeleteModal from "../../../components/DeleteModal";
 import Navbar from "../../../components/Navbar";
 import MainLayout from "../../../layouts/MainLayout";
-
+import sopDocumentService from "../../../services/sopDocumentService";
+import { SopDocument } from "../../../types/sopDocument";
+import Loader from "../../../components/Loader";
+import { useNavigate } from "react-router-dom";
 const SopDocumentPage = () => {
     const [deleteModal, setDeleteModal] = useState(false);
     const [viewDoc, setViewDoc] = useState(false);
     const [editDoc, setEditDoc] = useState(false);
     const [addDoc, setAddDoc] = useState(false);
     const [sidebar, setSidebar] = useState(false);
+    const [datas, setDatas] = useState<SopDocument[]>([]);
+    const [addSop, setAddSop] = useState(false);
+    const [editSop, setEditSop] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [document, setDocument] = useState('');
+    const navigate = useNavigate();
+    const [name, setName] = useState('');
+    const [editData, setEditData] = useState<SopDocument | null>();
+    const [selectedId, setSelectedId] = useState<string | null>(null);
+    const imageInputRef = useRef<HTMLInputElement | null>(null);
+    const [imageName, setImageName] = useState<string | null>(null);
+    const [imageFile, setImageFile] = useState<File | null>(null);
+    const baseURL = new URL(process.env.REACT_APP_API_URL || '');
+    baseURL.pathname = baseURL.pathname.replace(/\/api$/, '');
 
-    const handleDelete = () => {
-        toast.success('Record deleted successfully')
-        setDeleteModal(false);
+    const [sop, setSop] = useState<SopDocument>({
+        id: '',
+        name: '',
+        document: '',
+    });
+
+    const fetchSopDocument = async () => {
+        try {
+            const token = localStorage.getItem('token');
+
+            if (!token) {
+                localStorage.clear();
+                navigate('/login');
+            }
+
+            const response = await sopDocumentService.getSop(token);
+
+            if (response.success) {
+                setDatas(response.data)
+            }
+        } catch (error: any) {
+            console.error(error.message)
+        }
     }
+
+    const handleSubmit = async (e: React.SyntheticEvent) => {
+        e.preventDefault();
+        setLoading(true);
+
+        try {
+            const toBase64 = (file: File): Promise<string> =>
+                new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.readAsDataURL(file);
+                    reader.onload = () => resolve(reader.result as string);
+                    reader.onerror = reject;
+                });
+
+            const imageBase64 = imageFile ? await toBase64(imageFile) : null;
+            const token = localStorage.getItem('token');
+
+            if (!token) {
+                localStorage.clear();
+                navigate('/login');
+            }
+
+            const response = await sopDocumentService.addSop(token, name, imageBase64);
+
+            if (response.success) {
+                toast.success('SOP Document created successfully');
+
+                fetchSopDocument();
+                setLoading(false);
+                setAddDoc(false);
+                setDocument('');
+                setName('');
+            }
+        } catch (error: any) {
+            toast.error(error.message);
+        }
+    }
+
+    const handleDelete = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                localStorage.clear();
+                navigate('/login');
+                return;
+            }
+
+            console.log("Deleting ID:", selectedId);
+
+            if (!selectedId) {
+                toast.error("No selected ID");
+                return;
+            }
+
+            const response = await sopDocumentService.deleteSop(selectedId, token);
+
+            if (response.success) {
+                toast.success('Document deleted successfully');
+                fetchSopDocument();
+                setDeleteModal(false);
+                setSelectedId(null);
+            } else {
+                toast.error('Failed to delete document');
+            }
+        } catch (error: any) {
+            toast.error(error.message || 'Error deleting document');
+        }
+    };
+
+
+    const handleEdit = async (e: React.SyntheticEvent) => {
+        e.preventDefault();
+        setLoading(true);
+
+        try {
+            const token = localStorage.getItem('token');
+
+            if (!token) {
+                localStorage.clear();
+                navigate('/login');
+                return;
+            }
+
+            // Convert new file to base64 if exists
+            const toBase64 = (file: File): Promise<string> =>
+                new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.readAsDataURL(file);
+                    reader.onload = () => resolve(reader.result as string);
+                    reader.onerror = reject;
+                });
+
+            const imageBase64 = imageFile ? await toBase64(imageFile) : document;
+
+            const response = await sopDocumentService.editSop(token, editData?.id, name, imageBase64);
+
+            if (response.success) {
+                toast.success('SOP Document updated successfully');
+
+                fetchSopDocument();
+                setLoading(false);
+                setEditData(null);
+                setName('');
+                setDocument('');
+                setImageFile(null); // reset image file
+                setEditDoc(false);
+            }
+        } catch (error: any) {
+            toast.error(error.message || 'Error editing document');
+        }
+    };
+
+    useEffect(() => {
+        fetchSopDocument();
+    }, []);
+
+
+    useEffect(() => {
+        setDocument(sop.document);
+    }, [sop]);
 
 
     return (
@@ -51,23 +208,57 @@ const SopDocumentPage = () => {
                                     <thead>
                                         <tr>
                                             <th className="font-semibold text-[#98A1B3] text-start">S. no</th>
-                                            <th className="font-semibold text-[#98A1B3] text-start">Document</th>
+                                            <th className="font-semibold text-[#98A1B3] text-start">Name</th>
                                             <th className="font-semibold text-[#98A1B3] text-center">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <tr>
-                                            <td className="text-[#F4F7FF] pt-6 pb-3">1</td>
-                                            <td className="text-[#F4F7FF] pt-6 pb-3 ">SOP Main</td>
-                                            <td className="pt-6 pb-3">
-                                                <div className="flex gap-6 items-center justify-center">
-                                                    {/* <svg xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="28" height="28" viewBox="0 0 28 28"><defs><clipPath id="master_svg0_247_14305"><rect x="0" y="0" width="28" height="28" rx="0"/></clipPath></defs><g><g clip-path="url(#master_svg0_247_14305)"><g><path d="M11.46283298828125,19.6719859375L16.76641298828125,19.6719859375C17.495712988281248,19.6719859375,18.09231298828125,19.0752859375,18.09231298828125,18.3460859375L18.09231298828125,11.7165359375L20.20051298828125,11.7165359375C21.38061298828125,11.7165359375,21.97721298828125,10.2845659375,21.14191298828125,9.449245937499999L15.05601298828125,3.3633379375C14.54009298828125,2.8463349375,13.70246298828125,2.8463349375,13.18651298828125,3.3633379375L7.1006129882812505,9.449245937499999C6.26529298828125,10.2845659375,6.84869298828125,11.7165359375,8.02874298828125,11.7165359375L10.136932988281249,11.7165359375L10.136932988281249,18.3460859375C10.136932988281249,19.0752859375,10.73359298828125,19.6719859375,11.46283298828125,19.6719859375ZM6.15921298828125,22.3237859375L22.07011298828125,22.3237859375C22.79931298828125,22.3237859375,23.39601298828125,22.9203859375,23.39601298828125,23.6496859375C23.39601298828125,24.3788859375,22.79931298828125,24.9755859375,22.07011298828125,24.9755859375L6.15921298828125,24.9755859375C5.42996998828125,24.9755859375,4.83331298828125,24.3788859375,4.83331298828125,23.6496859375C4.83331298828125,22.9203859375,5.42996998828125,22.3237859375,6.15921298828125,22.3237859375Z" fill="#F4F7FF" fill-opacity="1"/></g></g></g></svg> */}
-                                                    <svg onClick={() => setViewDoc(true)} className="cursor-pointer" xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="28" height="28" viewBox="0 0 28 28"><defs><clipPath id="master_svg0_247_10443"><rect x="0" y="0" width="28" height="28" rx="0" /></clipPath></defs><g><g clip-path="url(#master_svg0_247_10443)"><g><path d="M14.0002921875,5.25C8.1669921875,5.25,3.1853221875,8.87833,1.1669921875,14C3.1853221875,19.1217,8.1669921875,22.75,14.0002921875,22.75C19.8336921875,22.75,24.8152921875,19.1217,26.8336921875,14C24.8152921875,8.87833,19.8336921875,5.25,14.0002921875,5.25ZM14.0002921875,19.8333C10.7803221875,19.8333,8.1669921875,17.22,8.1669921875,14C8.1669921875,10.780000000000001,10.7803221875,8.16667,14.0002921875,8.16667C17.2202921875,8.16667,19.8336921875,10.780000000000001,19.8336921875,14C19.8336921875,17.22,17.2202921875,19.8333,14.0002921875,19.8333ZM14.0002921875,10.5C12.0636921875,10.5,10.5003221875,12.06333,10.5003221875,14C10.5003221875,15.9367,12.0636921875,17.5,14.0002921875,17.5C15.9369921875,17.5,17.5002921875,15.9367,17.5002921875,14C17.5002921875,12.06333,15.9369921875,10.5,14.0002921875,10.5Z" fill="#F4F7FF" fill-opacity="1" /></g></g></g></svg>
-                                                    <svg onClick={() => setEditDoc(true)} className="cursor-pointer" xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="28" height="28" viewBox="0 0 28 28"><defs><clipPath id="master_svg0_247_14308"><rect x="0" y="0" width="28" height="28" rx="0" /></clipPath></defs><g><g clip-path="url(#master_svg0_247_14308)"><g><path d="M3.5,20.124948752212525L3.5,24.499948752212525L7.875,24.499948752212525L20.7783,11.596668752212524L16.4033,7.2216687522125245L3.5,20.124948752212525ZM24.1617,8.213328752212524C24.6166,7.759348752212524,24.6166,7.0223187522125246,24.1617,6.568328752212524L21.4317,3.8383337522125243C20.9777,3.3834207522125244,20.2406,3.3834207522125244,19.7867,3.8383337522125243L17.651699999999998,5.973328752212524L22.0267,10.348338752212523L24.1617,8.213328752212524Z" fill="#F4F7FF" fill-opacity="1" /></g></g></g></svg>
-                                                    <svg onClick={() => setDeleteModal(true)} className="cursor-pointer" xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="28" height="28" viewBox="0 0 28 28"><defs><clipPath id="master_svg0_247_14302"><rect x="0" y="0" width="28" height="28" rx="0" /></clipPath></defs><g><g clip-path="url(#master_svg0_247_14302)"><g><path d="M6.9996778125,24.5L20.9997078125,24.5L20.9997078125,8.16667L6.9996778125,8.16667L6.9996778125,24.5ZM22.1663078125,4.66667L18.0830078125,4.66667L16.9163078125,3.5L11.0830078125,3.5L9.9163378125,4.66667L5.8330078125,4.66667L5.8330078125,7L22.1663078125,7L22.1663078125,4.66667Z" fill="#F4F7FF" fill-opacity="1" /></g></g></g></svg>
-                                                </div>
-                                            </td>
-                                        </tr>
+                                        {datas?.length > 0 && datas?.map((Sop, index) => (
+                                            <tr>
+                                                <td className="text-[#F4F7FF] pt-6 pb-3">{index + 1}</td>
+                                                <td className="text-[#F4F7FF] pt-6 pb-3">{Sop.name}</td>
+                                                <td className="pt-6 pb-3">
+                                                    <div className="flex gap-6 items-center justify-center">
+                                                        {/* <svg xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="28" height="28" viewBox="0 0 28 28"><defs><clipPath id="master_svg0_247_14305"><rect x="0" y="0" width="28" height="28" rx="0"/></clipPath></defs><g><g clip-path="url(#master_svg0_247_14305)"><g><path d="M11.46283298828125,19.6719859375L16.76641298828125,19.6719859375C17.495712988281248,19.6719859375,18.09231298828125,19.0752859375,18.09231298828125,18.3460859375L18.09231298828125,11.7165359375L20.20051298828125,11.7165359375C21.38061298828125,11.7165359375,21.97721298828125,10.2845659375,21.14191298828125,9.449245937499999L15.05601298828125,3.3633379375C14.54009298828125,2.8463349375,13.70246298828125,2.8463349375,13.18651298828125,3.3633379375L7.1006129882812505,9.449245937499999C6.26529298828125,10.2845659375,6.84869298828125,11.7165359375,8.02874298828125,11.7165359375L10.136932988281249,11.7165359375L10.136932988281249,18.3460859375C10.136932988281249,19.0752859375,10.73359298828125,19.6719859375,11.46283298828125,19.6719859375ZM6.15921298828125,22.3237859375L22.07011298828125,22.3237859375C22.79931298828125,22.3237859375,23.39601298828125,22.9203859375,23.39601298828125,23.6496859375C23.39601298828125,24.3788859375,22.79931298828125,24.9755859375,22.07011298828125,24.9755859375L6.15921298828125,24.9755859375C5.42996998828125,24.9755859375,4.83331298828125,24.3788859375,4.83331298828125,23.6496859375C4.83331298828125,22.9203859375,5.42996998828125,22.3237859375,6.15921298828125,22.3237859375Z" fill="#F4F7FF" fill-opacity="1"/></g></g></g></svg> */}
+                                                        <svg onClick={() => { setViewDoc(true); setSop(Sop) }} className="cursor-pointer" xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="28" height="28" viewBox="0 0 28 28"><defs><clipPath id="master_svg0_247_10443"><rect x="0" y="0" width="28" height="28" rx="0" /></clipPath></defs><g><g clip-path="url(#master_svg0_247_10443)"><g>
+                                                            <path d="M14.0002921875,5.25C8.1669921875,5.25,3.1853221875,8.87833,1.1669921875,14C3.1853221875,19.1217,8.1669921875,22.75,14.0002921875,22.75C19.8336921875,22.75,24.8152921875,19.1217,26.8336921875,14C24.8152921875,8.87833,19.8336921875,5.25,14.0002921875,5.25ZM14.0002921875,19.8333C10.7803221875,19.8333,8.1669921875,17.22,8.1669921875,14C8.1669921875,10.780000000000001,10.7803221875,8.16667,14.0002921875,8.16667C17.2202921875,8.16667,19.8336921875,10.780000000000001,19.8336921875,14C19.8336921875,17.22,17.2202921875,19.8333,14.0002921875,19.8333ZM14.0002921875,10.5C12.0636921875,10.5,10.5003221875,12.06333,10.5003221875,14C10.5003221875,15.9367,12.0636921875,17.5,14.0002921875,17.5C15.9369921875,17.5,17.5002921875,15.9367,17.5002921875,14C17.5002921875,12.06333,15.9369921875,10.5,14.0002921875,10.5Z" fill="#F4F7FF" fill-opacity="1" /></g></g></g>
+                                                        </svg>
+                                                        <svg onClick={() => {
+                                                            setEditDoc(true);
+                                                            setEditData(Sop); // ← penting!
+                                                            setName(Sop.name);
+                                                            setDocument(Sop.document); // agar document tidak kosong saat update
+                                                        }} className="cursor-pointer" xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="28" height="28" viewBox="0 0 28 28"><defs><clipPath id="master_svg0_247_14308"><rect x="0" y="0" width="28" height="28" rx="0" /></clipPath></defs><g><g clip-path="url(#master_svg0_247_14308)"><g><path d="M3.5,20.124948752212525L3.5,24.499948752212525L7.875,24.499948752212525L20.7783,11.596668752212524L16.4033,7.2216687522125245L3.5,20.124948752212525ZM24.1617,8.213328752212524C24.6166,7.759348752212524,24.6166,7.0223187522125246,24.1617,6.568328752212524L21.4317,3.8383337522125243C20.9777,3.3834207522125244,20.2406,3.3834207522125244,19.7867,3.8383337522125243L17.651699999999998,5.973328752212524L22.0267,10.348338752212523L24.1617,8.213328752212524Z" fill="#F4F7FF" fill-opacity="1" /></g></g></g></svg>
+                                                        <svg
+                                                            onClick={() => {
+                                                                console.log('Selected sop.id:', Sop.id);
+                                                                setSelectedId(Sop.id);
+                                                                setDeleteModal(true);
+                                                            }}
+                                                            className="cursor-pointer"
+                                                            xmlns="http://www.w3.org/2000/svg"
+                                                            fill="none"
+                                                            version="1.1"
+                                                            width="28"
+                                                            height="28"
+                                                            viewBox="0 0 28 28"
+                                                        >
+                                                            <defs>
+                                                                <clipPath id="delete_icon_clip">
+                                                                    <rect x="0" y="0" width="28" height="28" rx="0" />
+                                                                </clipPath>
+                                                            </defs>
+                                                            <g clipPath="url(#delete_icon_clip)">
+                                                                <path
+                                                                    d="M6.9997,24.5H21V8.16667H6.9997V24.5ZM22.1663,4.66667H18.083L16.9163,3.5H11.083L9.9163,4.66667H5.833V7H22.1663V4.66667Z"
+                                                                    fill="#F4F7FF"
+                                                                    fillOpacity="1"
+                                                                />
+                                                            </g>
+                                                        </svg></div>
+                                                </td>
+                                            </tr>
+                                        ))}
                                     </tbody>
                                 </table>
                             </div>
@@ -85,61 +276,133 @@ const SopDocumentPage = () => {
                     <DeleteModal setModal={setDeleteModal} handleDelete={handleDelete} />
                 </div>
             )}
+
             {viewDoc && (
                 <div className="fixed w-screen h-screen flex justify-center items-center top-0 left-0 z-50 bg-[rgba(0,0,0,0.5)]">
                     <div className="flex flex-col gap-6 pr-[150px] pl-6 py-6 bg-[#252C38]">
-                        <h2 className='text-2xl leading-[36px] text-white font-noto'>View SOP document</h2>
-                        <div className="w-[394px] h-[289px] rounded-lg bg-[#868686]"></div>
-                        <button className="w-fit font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border-[1px] border-[#868686] rounded-full transition-all hover:bg-[#868686] hover:text-[#252C38]" onClick={() => setViewDoc(false)}>Close</button>
+                        <h2 className="text-2xl leading-[36px] text-white font-noto">View SOP document</h2>
+
+                        <div className="w-[394px] h-[289px] rounded-lg">
+                            <img
+                                src={`${baseURL.toString() !== '' ? baseURL.toString() : 'http://localhost:8000/'}storage/${sop.document}`}
+                                alt="SOP Document"
+                                className="mx-auto max-h-[400px] object-contain"
+                            />
+                        </div>
+
+                        <button
+                            className="w-fit font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border-[1px] border-[#868686] rounded-full transition-all hover:bg-[#868686] hover:text-[#252C38]"
+                            onClick={() => setViewDoc(false)}
+                        >
+                            Close
+                        </button>
                     </div>
                 </div>
             )}
+
+
             {editDoc && (
                 <div className="fixed w-screen h-screen flex justify-center items-center top-0 left-0 z-50 bg-[rgba(0,0,0,0.5)]">
-                    <div className="flex flex-col gap-6 p-6 bg-[#252C38]">
-                        <h2 className='text-2xl leading-[36px] text-white font-noto'>Edit SOP document</h2>
+                    <form onSubmit={handleEdit} className="flex flex-col gap-6 p-6 bg-[#252C38]">
+                        <h2 className='text-2xl leading-[36px] text-white font-noto'>Edit SOP Document</h2>
                         <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                            <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Title</label>
+                            <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">SOP Document name</label>
                             <input
                                 type={"text"}
                                 className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
-                                placeholder='Title'
-                                value='SOP Main'
+                                placeholder='SOP Document name'
+                                onChange={(e) => setName(e.target.value)}
+                                required
                             />
                         </div>
-                        <div className="flex flex-col gap-3">
-                            <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Document</label>
-                            <button className="font-medium text-sm leading-[21px] text-[#EFBF04] px-5 py-2 border-[1px] border-[#EFBF04] rounded-full cursor-pointer w-fit transition-all hover:bg-[#EFBF04] hover:text-[#252C38]">Upload file</button>
+                        <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
+                            <label className="text-xs leading-[21px] text-[#98A1B3]">SOP Document image</label>
+                            <div className="flex items-center gap-4">
+                                <button
+                                    type="button"
+                                    onClick={() => imageInputRef.current?.click()}
+                                    className="font-medium text-sm leading-[21px] text-[#EFBF04] px-5 py-2 border-[1px] border-[#EFBF04] rounded-full cursor-pointer w-fit transition-all hover:bg-[#EFBF04] hover:text-[#252C38]"
+                                >
+                                    Upload file
+                                </button>
+                                {imageName && (
+                                    <span className="text-sm text-[#98A1B3]">{imageName}</span>
+                                )}
+                            </div>
+                            <input
+                                type="file"
+                                accept="image/*"
+                                ref={imageInputRef}
+                                onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    console.log("Selected image file:", file);
+                                    if (file) {
+                                        setImageName(file.name);
+                                        setImageFile(file)
+                                    }
+                                }}
+                                className="hidden"
+                            />
                         </div>
                         <div className="flex gap-4">
-                            <button onClick={() => { setEditDoc(false); toast.success('Document added edited successfully') }} className="font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">Save</button>
+                            <button type="submit" className="font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">{loading ? <Loader /> : 'Submit'}</button>
                             <button onClick={() => setEditDoc(false)} className="font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border-[1px] border-[#868686] rounded-full transition-all hover:bg-[#868686] hover:text-[#252C38]">Cancel</button>
                         </div>
-                    </div>
+                    </form>
+
+
                 </div>
             )}
             {addDoc && (
                 <div className="fixed w-screen h-screen flex justify-center items-center top-0 left-0 z-50 bg-[rgba(0,0,0,0.5)]">
-                    <div className="flex flex-col gap-6 p-6 bg-[#252C38]">
-                        <h2 className='text-2xl leading-[36px] text-white font-noto'>Add SOP document</h2>
+                    <form onSubmit={handleSubmit} className="flex flex-col gap-6 p-6 bg-[#252C38]">
+                        <h2 className='text-2xl leading-[36px] text-white font-noto'>Add SOP Document</h2>
                         <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                            <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Title</label>
+                            <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">SOP Document name</label>
                             <input
                                 type={"text"}
                                 className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
-                                placeholder='Title'
-                                value='SOP Main'
+                                placeholder='SOP Document name'
+                                onChange={(e) => setName(e.target.value)}
+                                required
                             />
                         </div>
-                        <div className="flex flex-col gap-3">
-                            <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Document</label>
-                            <button className="font-medium text-sm leading-[21px] text-[#EFBF04] px-5 py-2 border-[1px] border-[#EFBF04] rounded-full cursor-pointer w-fit transition-all hover:bg-[#EFBF04] hover:text-[#252C38]">Upload file</button>
+                        <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
+                            <label className="text-xs leading-[21px] text-[#98A1B3]">Site image</label>
+                            <div className="flex items-center gap-4">
+                                <button
+                                    type="button"
+                                    onClick={() => imageInputRef.current?.click()}
+                                    className="font-medium text-sm leading-[21px] text-[#EFBF04] px-5 py-2 border-[1px] border-[#EFBF04] rounded-full cursor-pointer w-fit transition-all hover:bg-[#EFBF04] hover:text-[#252C38]"
+                                >
+                                    Upload file
+                                </button>
+                                {imageName && (
+                                    <span className="text-sm text-[#98A1B3]">{imageName}</span>
+                                )}
+                            </div>
+                            <input
+                                type="file"
+                                accept="image/*"
+                                ref={imageInputRef}
+                                onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    console.log("Selected image file:", file);
+                                    if (file) {
+                                        setImageName(file.name);
+                                        setImageFile(file)
+                                    }
+                                }}
+                                className="hidden"
+                            />
                         </div>
                         <div className="flex gap-4">
-                            <button onClick={() => { setAddDoc(false); toast.success('Document added successfully') }} className="font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">Save</button>
+                            <button type="submit" className="font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">{loading ? <Loader /> : 'Submit'}</button>
                             <button onClick={() => setAddDoc(false)} className="font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border-[1px] border-[#868686] rounded-full transition-all hover:bg-[#868686] hover:text-[#252C38]">Cancel</button>
                         </div>
-                    </div>
+                    </form>
+
+
                 </div>
             )}
         </MainLayout>

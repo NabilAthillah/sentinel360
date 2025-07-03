@@ -1,5 +1,5 @@
 import { Eye, EyeOff } from "lucide-react";
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -10,14 +10,8 @@ import MainLayout from "../../layouts/MainLayout";
 import employeeService from "../../services/employeeService";
 import roleService from "../../services/roleService";
 import { RootState } from "../../store";
+import { Employee } from "../../types/employee";
 
-type Employee = {
-    id: string;
-    nric_fin_no: string;
-    briefing_date?: Date;
-    user: User;
-    reporting_to: User;
-};
 
 type User = {
     id: string;
@@ -45,12 +39,14 @@ const EmployeesPage = () => {
     const [sidebar, setSidebar] = useState(false);
     const [roles, setRoles] = useState<Role[]>([]);
     const [deleteId, setDeleteId] = useState<string>('');
-
+    const [imageFile, setImageFile] = useState<File | null>(null);
     const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
     const [selectedDatas, setSelectedDatas] = useState<string[]>([]);
+    const [switchStates, setSwitchStates] = useState<{ [key: number]: boolean }>({});
+    const [reasons, setReasons] = useState<{ [key: number]: string }>({});
+    const [searchTerm, setSearchTerm] = useState('');
 
     const [showPassword, setShowPassword] = useState(false);
-
     const [name, setName] = useState('');
     const [no, setNo] = useState('');
     const [number, setNumber] = useState('');
@@ -72,6 +68,31 @@ const EmployeesPage = () => {
         address: '',
         id_role: '',
     });
+
+    const [editData, setEditData] = useState<Employee | null>();
+    const [currentPage, setCurrentPage] = useState(1);
+    const employeesPerPage = 5;
+
+    const indexOfLastEmployee = currentPage * employeesPerPage;
+    const indexOfFirstEmployee = indexOfLastEmployee - employeesPerPage;
+    const currentEmployees = employees.slice(indexOfFirstEmployee, indexOfLastEmployee);
+
+    // Hitung total halaman
+    const totalPages = Math.ceil(employees.length / employeesPerPage);
+
+    // Fungsi navigasi
+    const goToNextPage = () => {
+        if (currentPage < totalPages) {
+            setCurrentPage(currentPage + 1);
+        }
+    };
+
+    const goToPrevPage = () => {
+        if (currentPage > 1) {
+            setCurrentPage(currentPage - 1);
+        }
+    };
+
 
     const togglePassword = () => {
         setShowPassword((prev: any) => !prev);
@@ -117,6 +138,58 @@ const EmployeesPage = () => {
         }
     }
 
+    const handleEdit = async (e: React.SyntheticEvent) => {
+        e.preventDefault();
+        setLoading(true);
+
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                localStorage.clear();
+                navigate('/login');
+                return;
+            }
+
+            if (!editData) {
+                toast.error("No employee selected for editing.");
+                return;
+            }
+
+            const toBase64 = (file: File): Promise<string> =>
+                new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.readAsDataURL(file);
+                    reader.onload = () => resolve(reader.result as string);
+                    reader.onerror = reject;
+                });
+
+            const profileBase64 = imageFile ? await toBase64(imageFile) : null;
+
+            const response = await employeeService.editEmployee(
+                editData.id,
+                editData.nric_fin_no,
+                editData.briefing_date,
+                profileBase64,
+                token
+            );
+
+            if (response.success) {
+                toast.success('Employee updated successfully');
+                fetchEmployees();
+                setEditEmployee(false);
+                setEditData(null);
+                setImageFile(null);
+            } else {
+                toast.error('Failed to update employee');
+            }
+        } catch (error: any) {
+            toast.error(error.message || 'Something went wrong');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+
     const fetchEmployees = async () => {
         try {
             const token = localStorage.getItem('token');
@@ -147,6 +220,13 @@ const EmployeesPage = () => {
             console.error(error)
         }
     }
+    const handleToggle = (index: number) => {
+        setSwitchStates(prev => ({
+            ...prev,
+            [index]: !prev[index]
+        }));
+    };
+
 
     useEffect(() => {
         fetchEmployees();
@@ -159,6 +239,15 @@ const EmployeesPage = () => {
         'Relief',
     ]
 
+    const filteredEmployees = searchTerm.trim()
+        ? employees.filter((emp) =>
+            emp.user?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            emp.user?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            emp.nric_fin_no?.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+        : [];
+
+
     const data = [
         'Applicant filled application form?',
         'Admin to check application form/other relevant documents?',
@@ -170,6 +259,25 @@ const EmployeesPage = () => {
         'HR manager files document?',
         'Applicant is deployed at site for OJT for 2-3?',
     ]
+
+    const handleDownload = () => {
+        const reportData = [
+            { name: 'John Doe', email: 'john@example.com', status: 'Active' },
+            { name: 'Jane Smith', email: 'jane@example.com', status: 'Inactive' },
+        ];
+
+        const header = Object.keys(reportData[0]).join(',');
+        const rows = reportData.map(row => Object.values(row).join(',')).join('\n');
+        const csvContent = `${header}\n${rows}`;
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', 'report.csv');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
 
     const handleDelete = async () => {
         try {
@@ -209,21 +317,26 @@ const EmployeesPage = () => {
                 <div className="flex flex-col flex-1 gap-10 bg-[#252C38] p-6 rounded-lg w-full h-full">
                     <div className="w-full flex justify-between items-center gap-4 flex-wrap">
                         <div className="flex items-end gap-4 w-fit flex-wrap md:flex-nowrap">
-                            <div className="max-w-[400px] w-full flex items-center bg-[#222834] border-b-[1px] border-b-[#98A1B3] rounded-[4px_4px_0px_0px]">
-                                <input
-                                    type={"text"}
-                                    className="w-full px-4 pt-[17.5px] pb-[10.5px] bg-[#222834] rounded-[4px_4px_0px_0px] text-[#F4F7FF] text-base placeholder:text-[#98A1B3]  placeholder:text-base active:outline-none focus-visible:outline-none"
-                                    placeholder="Search"
-                                />
-                                <button
-                                    type="button"
-                                    className="p-2 rounded-[4px_4px_0px_0px]"
-                                    tabIndex={-1}
-                                >
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="32" height="32" viewBox="0 0 32 32"><defs><clipPath id="master_svg0_247_12873"><rect x="0" y="0" width="32" height="32" rx="0" /></clipPath></defs><g clipPath="url(#master_svg0_247_12873)"><g><path d="M20.666698807907103,18.666700953674315L19.613298807907107,18.666700953674315L19.239998807907106,18.306700953674316C20.591798807907104,16.738700953674318,21.334798807907106,14.736900953674317,21.333298807907106,12.666670953674316C21.333298807907106,7.880200953674317,17.453098807907104,4.000000953674316,12.666668807907104,4.000000953674316C7.880198807907105,4.000000953674316,4.000000715257104,7.880200953674317,4.000000715257104,12.666670953674316C4.000000715257104,17.453100953674316,7.880198807907105,21.333300953674318,12.666668807907104,21.333300953674318C14.813298807907104,21.333300953674318,16.786698807907104,20.546700953674318,18.306698807907104,19.24000095367432L18.666698807907103,19.61330095367432L18.666698807907103,20.666700953674315L25.333298807907106,27.320000953674317L27.319998807907105,25.333300953674318L20.666698807907103,18.666700953674315ZM12.666668807907104,18.666700953674315C9.346668807907104,18.666700953674315,6.666668807907104,15.986700953674317,6.666668807907104,12.666670953674316C6.666668807907104,9.346670953674316,9.346668807907104,6.666670953674316,12.666668807907104,6.666670953674316C15.986698807907105,6.666670953674316,18.666698807907103,9.346670953674316,18.666698807907103,12.666670953674316C18.666698807907103,15.986700953674317,15.986698807907105,18.666700953674315,12.666668807907104,18.666700953674315Z" fill="#98A1B3" fill-opacity="1" /></g></g></svg>
-                                </button>
+                            <div className="flex flex-col gap-4 w-full">
+                                <div className="max-w-[400px] w-full flex items-center bg-[#222834] border-b-[1px] border-b-[#98A1B3] rounded-[4px_4px_0px_0px]">
+                                    <input
+                                        type="text"
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        className="w-full px-4 pt-[17.5px] pb-[10.5px] bg-[#222834] rounded-[4px_4px_0px_0px] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
+                                        placeholder="Search"
+                                    />
+                                    <button type="button" className="p-2 rounded-[4px_4px_0px_0px]" tabIndex={-1}>
+                                        {/* ikon search */}
+                                    </button>
+                                </div>
                             </div>
-                            <button className="font-medium text-sm min-w-[142px] text-[#EFBF04] px-4 py-[9.5px] border-[1px] border-[#EFBF04] rounded-full hover:bg-[#EFBF04] hover:text-[#252C38] transition-all">Download Report</button>
+                            <button
+                                onClick={handleDownload}
+                                className="font-medium text-sm min-w-[142px] text-[#EFBF04] px-4 py-[9.5px] border-[1px] border-[#EFBF04] rounded-full hover:bg-[#EFBF04] hover:text-[#252C38] transition-all"
+                            >
+                                Download Report
+                            </button>
                         </div>
                         <div className="min-w-[160px] max-w-[200px] w-fit">
                             <button onClick={() => setAddEmployee(true)} className="font-medium text-base text-[#181d26] px-7 py-[13.5px] border-[1px] border-[#EFBF04] bg-[#EFBF04] rounded-full hover:bg-[#181d26] hover:text-[#EFBF04] transition-all">Add employee</button>
@@ -243,13 +356,13 @@ const EmployeesPage = () => {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {employees.length > 0 && employees.map((data, index) => (
+                                    {(searchTerm.trim() !== '' ? filteredEmployees : employees).map((data, index) => (
                                         <tr className="border-b-[1px] border-b-[#98A1B3]" key={data.id}>
                                             <td className="text-[#F4F7FF] pt-6 pb-3">{index + 1}</td>
                                             <td className="text-[#F4F7FF] pt-6 pb-3 ">{data.nric_fin_no}</td>
                                             <td className="text-[#F4F7FF] pt-6 pb-3 ">{maskPhone(data.user.mobile)}</td>
                                             <td className="text-[#F4F7FF] pt-6 pb-3 ">{data.user.role.name}</td>
-                                            <td className="flex justify-center items-center pt-6 pb-3 ">
+                                            <td className="flex justify-center items-center dpt-6 pb-3 ">
                                                 <div className="font-medium text-sm text-[#19CE74] px-6 py-2 bg-[rgba(25,206,116,0.16)] border-[1px] border-[#19CE74] rounded-full w-fit">
                                                     Active
                                                 </div>
@@ -267,9 +380,25 @@ const EmployeesPage = () => {
                             </table>
                         </div>
                         <div className="grid grid-cols-3 w-[162px] absolute bottom-0 right-0">
-                            <button className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[8px_0px_0px_8px] bg-[#575F6F]">Prev</button>
-                            <button className="font-medium text-xs leading-[21px] text-[#181D26] py-1 px-3 bg-[#D4AB0B]">1</button>
-                            <button className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[0px_8px_8px_0px] bg-[#575F6F]">Next</button>
+                            <button
+                                onClick={goToPrevPage}
+                                disabled={currentPage === 1}
+                                className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[8px_0px_0px_8px] bg-[#575F6F] disabled:opacity-50"
+                            >
+                                Prev
+                            </button>
+                            <button
+                                className="font-medium text-xs leading-[21px] text-[#181D26] py-1 px-3 bg-[#D4AB0B]"
+                            >
+                                {currentPage}
+                            </button>
+                            <button
+                                onClick={goToNextPage}
+                                disabled={currentPage === totalPages}
+                                className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[0px_8px_8px_0px] bg-[#575F6F] disabled:opacity-50"
+                            >
+                                Next
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -338,7 +467,7 @@ const EmployeesPage = () => {
                                 />
                             </div>
                             <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Briefing conducted by</label>
+                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Briefing conducted</label>
                                 <select className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none" onChange={(e) => setAddData(prev => ({ ...prev, reporting_to: e.target.value }))}>
                                     <option value="">Select Emloyee</option>
                                     {reportingEmployees.length > 0 && reportingEmployees.map((item) => (
@@ -385,13 +514,35 @@ const EmployeesPage = () => {
                                 </div>
                             </div>
                             <div className="pt-3 flex flex-col gap-6">
-                                {data.map((item) => (
-                                    <div className="flex items-center justify-between">
-                                        <p className="leading-[21px] text-[#F4F7FF]">{item}</p>
-                                        <SwitchCustomStyleToggleable />
+                                {data.map((item, index) => (
+                                    <div key={index} className="flex flex-col gap-2">
+                                        <div className="flex items-center justify-between">
+                                            <p className="leading-[21px] text-[#F4F7FF]">{item}</p>
+                                            {/* <SwitchCustomStyleToggleable
+                                                // checked={switchStates[index] || false}
+                                                onChange={() => handleToggle(index)}
+                                            /> */}
+                                        </div>
+
+                                        {/* Tampilkan input alasan jika switch OFF (false) */}
+                                        {switchStates[index] === false && (
+                                            <input
+                                                type="text"
+                                                placeholder="Alasan"
+                                                value={reasons[index] || ''}
+                                                onChange={(e) =>
+                                                    setReasons((prev) => ({
+                                                        ...prev,
+                                                        [index]: e.target.value,
+                                                    }))
+                                                }
+                                                className="w-full px-4 py-2 border border-gray-300 rounded bg-white text-black"
+                                            />
+                                        )}
                                     </div>
                                 ))}
                             </div>
+
                             {/* <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
                     <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Remarks</label>
                     <input

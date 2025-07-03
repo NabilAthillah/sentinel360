@@ -19,6 +19,8 @@ import SitePage from '../pages/site/SitePage';
 import RoutePage from '../pages/site/RoutePage';
 import MapPage from '../pages/site/MapPage';
 import AllocationPage from '../pages/site/AllocationPage';
+import IncidentPageMaster from '../pages/setings/incident/IncidentPage';
+import IncidentFree from '../pages/incidentType/IncidentType';
 
 const AppRoutes = () => {
   return (
@@ -41,11 +43,12 @@ const AppRoutes = () => {
             <Route path='/settings/attendance' element={<SettingsAttendancePage />}/>
             <Route path='/settings/client-info' element={<ClientInfoPage />}/>
             <Route path='/settings/employee-document' element={<EmployeeDocumentPage />}/>
-            <Route path='/settings/incident' element={<ClientInfoPage />}/>
+            <Route path='/settings/incident' element={<IncidentPageMaster />}/>
             <Route path='/settings/occurrence-catg' element={<OccurrenceCatgPage />}/>
             <Route path='/settings/roles' element={<RolesPage />}/>
             <Route path='/settings/sop-document' element={<SopDocumentPage />}/>
             <Route path='/settings/profile' element={<ProfilePage />}/>
+            <Route path='/incidentfree' element={<IncidentFree />} />
         </Routes>
     </Router>
   )

@@ -23,6 +23,52 @@ const employeeService = {
         }
     },
 
+    editEmployee: async (
+    id, 
+    name,
+    nric_fin_no,
+    mobile,
+    email,
+    id_role,
+    reporting_to,
+    briefing_date,
+    birth,
+    address,
+    briefing_conducted,
+    profileBase64, 
+    token
+) => {
+    try {
+        const payload = {
+            name,
+            nric_fin_no,
+            mobile,
+            email,
+            id_role,
+            reporting_to,
+            briefing_date,
+            birth,
+            address,
+            briefing_conducted,
+        };
+
+        if (profileBase64) {
+            payload.profile = profileBase64;
+        }
+
+        const response = await api.put(`/employees/${id}`, payload, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+
+        return response.data;
+    } catch (error) {
+        throw error.response ? error.response.data : { message: 'Network error' };
+    }
+},
+
+
     getAllEmployee: async (token) => {
         try {
             const response = await api.get('/employees', {

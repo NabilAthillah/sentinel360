@@ -1,4 +1,4 @@
-export type EmployeeDocument = {
+export type Incident = {
     id: string;
     name: string;
     status: string;
