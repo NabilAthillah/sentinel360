@@ -5,7 +5,6 @@ import EmployeesPage from '../pages/employees/EmployeesPage';
 import AttendancePage from '../pages/attendance/AttendancePage';
 import OccurencePage from '../pages/occurence/OccurencePage';
 import LearningPage from '../pages/learning/LearningPage';
-import IncidentPage from '../pages/incident/IncidentPage';
 import LeaveManagementPage from '../pages/leaveManagement/LeaveManagementPage';
 import SettingsAttendancePage from '../pages/setings/attendance/SettingsAttendancePage';
 import ClientInfoPage from '../pages/setings/client/ClientInfoPage';
@@ -20,7 +19,8 @@ import RoutePage from '../pages/site/RoutePage';
 import MapPage from '../pages/site/MapPage';
 import AllocationPage from '../pages/site/AllocationPage';
 import IncidentPageMaster from '../pages/setings/incident/IncidentPage';
-import IncidentFree from '../pages/incidentType/IncidentType';
+import IncidentTypePage from '../pages/incident/IncidentPage';
+import IncidentPage from '../pages/incidentType/IncidentType';
 
 const AppRoutes = () => {
   return (
@@ -34,7 +34,7 @@ const AppRoutes = () => {
             <Route path='/e-occurrence' element={<OccurencePage />}/>
             <Route path='/e-learning' element={<LearningPage />}/>
             <Route path='/e-learning/history' element={<HistoryPage />}/>
-            <Route path='/incidents' element={<IncidentPage />}/>
+            <Route path='/incidents' element={< IncidentTypePage/>}/>
             <Route path='/leave-management' element={<LeaveManagementPage />}/>
             <Route path='/sites' element={<SitePage />}/>
             <Route path='/sites/map' element={<MapPage />}/>
@@ -48,7 +48,7 @@ const AppRoutes = () => {
             <Route path='/settings/roles' element={<RolesPage />}/>
             <Route path='/settings/sop-document' element={<SopDocumentPage />}/>
             <Route path='/settings/profile' element={<ProfilePage />}/>
-            <Route path='/incidentfree' element={<IncidentFree />} />
+            <Route path='/incidentfree' element={< IncidentPage />}/>
         </Routes>
     </Router>
   )

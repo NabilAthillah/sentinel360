@@ -1,45 +1,118 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import MainLayout from "../../layouts/MainLayout";
-
-interface Incident {
-    id: number;
-    date: string;
-    time: string;
-    siteName: string;
-    incident: string;
-    reportedBy: string;
-    image?: string;
-}
-
-const IncidentFree = () => {
-    const [incidentData, setIncidentData] = useState<Incident[]>([]);
+import { IncidentFree } from "../../types/incidentfree";
+import IncidentService from "../../services/incidentFreeService";
+import { Site } from "../../types/site";
+import { IncidentType } from "../../types/incidentType";
+const IncidentPage = () => {
+    const [incident, setIncident] = useState<IncidentFree[]>([]);
     const [viewImage, setViewImage] = useState<string | null>(null);
-    const [isLoading, setIsLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [reportingIncident, setReportingIndcident] = useState<IncidentFree[]>([]);
+    const [addData, setAddData] = useState<boolean>(false);
+    const [imageFile, setImageFile] = useState<File | null>(null);
+    const [incidentDate, setIncidentDate] = useState<string>('');
+    const [incidentTime, setIncidentTime] = useState<string>('');
+    const [siteName, setSiteName] = useState<string>('');
+    const [incidentTypes, setIncidentTypes] = useState<IncidentType[]>([]);
+    const [sites, setSites] = useState<Site[]>([]);
+    const [whatHappened, setWhatHappened] = useState<string>('');
+    const [whereHappened, setWhereHappened] = useState<string>('');  
+    const [whyItHappened, setWhyItHappened] = useState<string>('');  
+    const [personsInvolved, setPersonsInvolved] = useState<string>('');  
+    const [personsInjured, setPersonsInjured] = useState<string>('');  
+    const [incidentDetails, setIncidentDetails] = useState<string>('');  
+    const [opsIncharge, setOpsIncharge] = useState<string>('');  
+    const [reportedToManagement, setReportedToManagement] = useState<boolean>(false);  
+    const [reportedToPolice, setReportedToPolice] = useState<boolean>(false);  
+    const [propertyDamaged, setPropertyDamaged] = useState<boolean>(false);  
+    const [cctvImage, setCctvImage] = useState<string | null>(null);  
+    const imageInputRef = useRef<HTMLInputElement | null>(null);
 
-    const setAddIncident = (value: boolean) => {
-
-    }
     const fetchIncidents = async () => {
         setIsLoading(true);
         try {
+            const token = localStorage.getItem('token');
+            const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
 
-            const dummyData: Incident[] = [
-                {
-                    id: 1,
-                    date: "24/05/2025",
-                    time: "02:34 PM",
-                    siteName: "The Rainforest",
-                    incident: "Alarm activation",
-                    reportedBy: "Anson",
-                    image: "",
-                },
-            ];
-            setIncidentData(dummyData);
-        } catch (err) {
-            toast.error("Failed to fetch incident data");
+            const response = await IncidentService.getIncident(token);
+
+            if (response.success) {
+                setIncident(response.data);
+                const filtered = response.data.filter((emp: IncidentFree) => emp.user.id !== currentUser.id);
+                setReportingIndcident(filtered);
+            }
+        } catch (error) {
+            toast.error("Failed to load incidents");
+            console.error(error);
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const handleSubmit = async (e: React.SyntheticEvent) => {
+        e.preventDefault();
+        setIsLoading(true);
+
+        try {
+            const toBase64 = (file: File): Promise<string> =>
+                new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.readAsDataURL(file);
+                    reader.onload = () => resolve(reader.result as string);
+                    reader.onerror = reject;
+                });
+
+            const imageBase64 = imageFile ? await toBase64(imageFile) : null;
+
+            const payload = {
+                happened_at: `${incidentDate}T${incidentTime}`,
+                why_happened: whyItHappened,
+                how_happened: "Not provided",
+                persons_involved: personsInvolved,
+                persons_injured: personsInjured,
+                ops_incharge: opsIncharge,
+                reported_to_management: reportedToManagement,
+                management_report_note: "",
+                reported_to_police: reportedToPolice,
+                police_report_note: "",
+                property_damaged: propertyDamaged,
+                damage_note: "",
+                cctv_image: imageBase64,
+                site: { name: siteName },
+                incident_type: { id: 1 },
+                where_happened: whereHappened,
+                incident_details: incidentDetails
+            };
+
+            const token = localStorage.getItem('token');
+            const response = await IncidentService.addIncident(token, payload);
+
+            if (response.success) {
+                toast.success('Incident added successfully');
+                fetchIncidents();
+            }
+        } catch (error: any) {
+            toast.error(error.message);
+        } finally {
+            setIsLoading(false);
+            setAddData(false);
+            setIncidentDate('');
+            setIncidentTime('');
+            setSiteName('');
+            setWhatHappened('');
+            setWhereHappened('');
+            setWhyItHappened('');
+            setPersonsInvolved('');
+            setPersonsInjured('');
+            setIncidentDetails('');
+            setOpsIncharge('');
+            setReportedToManagement(false);
+            setReportedToPolice(false);
+            setPropertyDamaged(false);
+            setCctvImage(null);
+            setImageFile(null);
         }
     };
 
@@ -53,72 +126,160 @@ const IncidentFree = () => {
                 <h2 className="text-2xl leading-9 text-white font-noto">Incidents</h2>
                 <div className="w-full flex justify-end items-end gap-4 flex-wrap lg:flex-nowrap">
                     <div className="w-[200px]">
-                        <button onClick={() => setAddIncident(true)} className="font-medium text-base min-w-[200px] text-[#181d26] px-[46.5px] py-3 border-[1px] border-[#EFBF04] bg-[#EFBF04] rounded-full hover:bg-[#181d26] hover:text-[#EFBF04] transition-all">Add Incident</button>
+                        <button
+                            onClick={() => setAddData(true)}
+                            className="font-medium text-base min-w-[200px] text-[#181d26] px-[46.5px] py-3 border-[1px] border-[#EFBF04] bg-[#EFBF04] rounded-full hover:bg-[#181d26] hover:text-[#EFBF04] transition-all">
+                            Add Incident
+                        </button>
                     </div>
                 </div>
+
                 <div className="bg-[#252C38] p-6 rounded-lg w-full flex-1">
-                    {isLoading ? (
-                        <p className="text-white">Loading...</p>
-                    ) : (
-                        <div className="overflow-auto">
-                            <table className="min-w-[800px] w-full">
-                                <thead>
-                                    <tr>
-                                        <th className="text-left text-[#98A1B3]">S. no</th>
-                                        <th className="text-left text-[#98A1B3]">Date</th>
-                                        <th className="text-left text-[#98A1B3]">Time</th>
-                                        <th className="text-left text-[#98A1B3]">Site name</th>
-                                        <th className="text-left text-[#98A1B3]">What happened</th>
-                                        <th className="text-left text-[#98A1B3]">Reported by</th>
-                                        <th className="text-center text-[#98A1B3]">Actions</th>
+                    <div className="overflow-auto">
+                        <table className="min-w-[800px] w-full">
+                            <thead>
+                                <tr>
+                                    <th className="text-left text-[#98A1B3]">S. no</th>
+                                    <th className="text-left text-[#98A1B3]">Incident Date</th>
+                                    <th className="text-left text-[#98A1B3]">Incident Time</th>
+                                    <th className="text-left text-[#98A1B3]">Site Name</th>
+                                    <th className="text-left text-[#98A1B3]">What Happened</th>
+                                    <th className="text-left text-[#98A1B3]">Reported by</th>
+                                    <th className="text-center text-[#98A1B3]">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {incident.map((item, idx) => (
+                                    <tr key={item.id}>
+                                        <td className="text-white py-4">{idx + 1}</td>
+                                        <td className="text-white py-4">{item.happened_at.split('T')[0]}</td> 
+                                        <td className="text-white py-4">{item.happened_at.split('T')[1].split('.')[0]}</td> 
+                                        <td className="text-white py-4">{item.site.name}</td> 
+                                        <td className="text-white py-4">{item.why_happened}</td> 
+                                        <td className="text-white py-4">{item.user.name}</td> 
+                                        <td className="text-center">
+                                            
+                                        </td>
                                     </tr>
-                                </thead>
-                                <tbody>
-                                    {incidentData.map((item, idx) => (
-                                        <tr key={item.id}>
-                                            <td className="text-white py-4">{idx + 1}</td>
-                                            <td className="text-white py-4">{item.date}</td>
-                                            <td className="text-white py-4">{item.time}</td>
-                                            <td className="text-white py-4">{item.siteName}</td>
-                                            <td className="text-white py-4">{item.incident}</td>
-                                            <td className="text-white py-4">{item.reportedBy}</td>
-                                            <td className="text-center py-4">
-                                                {item.image ? (
-                                                    <button
-                                                        className="text-sm text-yellow-400 hover:underline"
-                                                        onClick={() => setViewImage(item.image!)}
-                                                    >
-                                                        View Image
-                                                    </button>
-                                                ) : (
-                                                    <span className="text-gray-500">No Image</span>
-                                                )}
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
-            {viewImage && (
-                <div className="fixed w-screen h-screen flex justify-center items-center top-0 left-0 z-50 bg-[rgba(0,0,0,0.5)]">
-                    <div className="flex flex-col gap-6 p-6 bg-[#252C38]">
-                        <h2 className="text-2xl text-white">View Image</h2>
-                        <img src={viewImage} alt="Incident" className="w-[400px] h-[300px] object-cover rounded-lg" />
-                        <button
-                            onClick={() => setViewImage(null)}
-                            className="px-6 py-2 text-sm text-white border border-white rounded hover:bg-white hover:text-black"
-                        >
-                            Close
-                        </button>
-                    </div>
+            {addData && (
+                <div className="fixed w-screen h-screen flex justify-end items-start top-0 left-0 z-50 bg-[rgba(0,0,0,0.5)]">
+                    <form onSubmit={handleSubmit} className="flex flex-col gap-6 p-6 bg-[#252C38] max-w-[568px] w-full max-h-screen overflow-auto h-full">
+                        <h2 className="text-2xl leading-[36px] text-white font-noto">Add Incident</h2>
+
+                        <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
+                            <label className="text-xs text-[#98A1B3]">Site Name</label>
+                            <select
+                                className="bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] outline-none"
+                                value={siteName}  
+                                onChange={(e) => {
+                                    setSiteName(e.target.value);  // Update siteName when an option is selected
+                                }}
+                            >
+                                <option value="" disabled>Select a site</option>
+                                {sites.map((site) => (
+                                    <option key={site.id} value={site.name}>
+                                        {site.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+
+                        {/* What Happened Dropdown */}
+                        <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
+                            <label className="text-xs leading-[21px] text-[#98A1B3]">What Happened</label>
+                            <select
+                                value={whatHappened}
+                                onChange={(e) => setWhatHappened(e.target.value)}
+                                className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
+                                required
+                            >
+                                <option value="">Select Incident Type</option>
+                                {incidentTypes.map((incidentType) => (
+                                    <option key={incidentType.id} value={incidentType.name}>{incidentType.name}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {/* New fields based on the form */}
+                        <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
+                            <label className="text-xs leading-[21px] text-[#98A1B3]">Where Happened</label>
+                            <input
+                                type="text"
+                                value={whereHappened}
+                                onChange={(e) => setWhereHappened(e.target.value)}
+                                className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
+                            />
+                        </div>
+
+                        <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
+                            <label className="text-xs leading-[21px] text-[#98A1B3]">Why It Happened</label>
+                            <input
+                                type="text"
+                                value={whyItHappened}
+                                onChange={(e) => setWhyItHappened(e.target.value)}
+                                className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
+                            />
+                        </div>
+
+                        <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
+                            <label className="text-xs leading-[21px] text-[#98A1B3]">Persons Involved</label>
+                            <input
+                                type="text"
+                                value={personsInvolved}
+                                onChange={(e) => setPersonsInvolved(e.target.value)}
+                                className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
+                            />
+                        </div>
+
+                        <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
+                            <label className="text-xs leading-[21px] text-[#98A1B3]">Persons Injured</label>
+                            <input
+                                type="text"
+                                value={personsInjured}
+                                onChange={(e) => setPersonsInjured(e.target.value)}
+                                className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
+                            />
+                        </div>
+
+                        <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
+                            <label className="text-xs leading-[21px] text-[#98A1B3]">Details of Incident</label>
+                            <input
+                                type="text"
+                                value={incidentDetails}
+                                onChange={(e) => setIncidentDetails(e.target.value)}
+                                className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
+                            />
+                        </div>
+
+                        {/* Add more fields as needed here */}
+                        {/* ... */}
+
+                        <div className="pt-3 flex gap-4 flex-wrap">
+                            <button
+                                type="submit"
+                                className="flex justify-center items-center font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">
+                                {isLoading ? "Saving..." : "Save Incident"}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setAddData(false)}
+                                className="font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border-[1px] border-[#868686] rounded-full transition-all hover:bg-[#868686] hover:text-[#252C38]">
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
                 </div>
             )}
         </MainLayout>
     );
 };
 
-export default IncidentFree;
+export default IncidentPage;

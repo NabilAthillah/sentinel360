@@ -282,19 +282,6 @@ const EmployeesPage = () => {
         'Applicant is deployed at site for OJT for 2-3?',
     ]
 
-    const getProfileImageURL = () => {
-        if (imageFile) {
-            return URL.createObjectURL(imageFile);
-        } else if (editData?.user?.profile_image) {
-            // Cek apakah path-nya sudah lengkap atau masih relatif
-            return editData.user.profile_image.startsWith('http')
-                ? editData.user.profile_image
-                : `${baseURL || 'http://localhost:8000'}/storage/${editData.user.profile_image}`;
-        } else {
-            return "/images/Avatar.png";
-        }
-    };
-
     const handleDownload = () => {
         if (employees.length === 0) {
             toast.warning('No employee data to export.');
@@ -795,7 +782,7 @@ const EmployeesPage = () => {
                                                     name: selectedRole.name,
                                                 },
                                             },
-                                        } as Employee; // <-- ini yang penting
+                                        } as Employee; 
                                     });
                                 }}
 

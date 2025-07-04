@@ -3,8 +3,8 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "../../../components/Navbar";
 import { Switch } from "@material-tailwind/react";
 import MainLayout from "../../../layouts/MainLayout";
-import IncidentTypesService from "../../../services/incidentService";
-import { Incident } from "../../../types/incident";
+import IncidentTypesService from "../../../services/incidentTypeService";
+import { IncidentType } from "../../../types/incidentType";
 import { toast } from "react-toastify";
 import Loader from "../../../components/Loader";
 const IncidentPageMaster = () => {
@@ -13,10 +13,10 @@ const IncidentPageMaster = () => {
     const [data2, setData2] = useState(false);
     const [addIncident, setAddIncident] = useState(false);
     const [editIncident, setEditIncident] = useState(false);
-    const [editData, setEditData] = useState<Incident| null>();
+    const [editData, setEditData] = useState<IncidentType| null>();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
-    const [datas, setDatas] = useState<Incident[]>([]);
+    const [datas, setDatas] = useState<IncidentType[]>([]);
     const [name, setName] = useState('');
     const fetchIncidentTypes = async () => {
         try {

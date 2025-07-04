@@ -3,7 +3,7 @@ import { toast } from "react-toastify";
 import { SwitchCustomStyleToggleable } from "../../components/SwitchCustomStyleToggleable";
 import MainLayout from "../../layouts/MainLayout";
 
-const IncidentPage = () => {
+const IncidentTypePage = () => {
     const [sidebar, setSidebar] = useState(false);
     const [view, setView] = useState(false);
     const [edit, setEdit] = useState(false);
@@ -234,4 +234,4 @@ const IncidentPage = () => {
     )
 }
 
-export default IncidentPage
+export default IncidentTypePage
