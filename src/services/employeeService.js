@@ -1,7 +1,7 @@
 import api from "../utils/api";
 
 const employeeService = {
-    addEmployee: async (name, nric_fin_no, mobile, email, id_role, reporting_to, briefing_date, address, token) => {
+    addEmployee: async (name, nric_fin_no, mobile, email, id_role, reporting_to, briefing_date, address, briefing_conducted, token) => {
         try {
             const response = await api.post('/employees', {
                 name,
@@ -11,7 +11,8 @@ const employeeService = {
                 id_role,
                 reporting_to,
                 briefing_date,
-                address
+                address,
+                briefing_conducted,
             }, {
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -24,7 +25,7 @@ const employeeService = {
     },
 
     editEmployee: async (
-    id, 
+    id,
     name,
     nric_fin_no,
     mobile,
@@ -35,7 +36,7 @@ const employeeService = {
     birth,
     address,
     briefing_conducted,
-    profileBase64, 
+    profile, // ✅ pastikan ini ada
     token
 ) => {
     try {
@@ -52,8 +53,8 @@ const employeeService = {
             briefing_conducted,
         };
 
-        if (profileBase64) {
-            payload.profile = profileBase64;
+        if (profile) {
+            payload.profile = profile; // ✅ tambahkan profile base64 jika ada
         }
 
         const response = await api.put(`/employees/${id}`, payload, {
@@ -67,6 +68,7 @@ const employeeService = {
         throw error.response ? error.response.data : { message: 'Network error' };
     }
 },
+
 
 
     getAllEmployee: async (token) => {

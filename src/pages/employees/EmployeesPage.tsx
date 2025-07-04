@@ -11,7 +11,7 @@ import employeeService from "../../services/employeeService";
 import roleService from "../../services/roleService";
 import { RootState } from "../../store";
 import { Employee } from "../../types/employee";
-
+import { Switch } from "@material-tailwind/react";
 
 type User = {
     id: string;
@@ -67,20 +67,21 @@ const EmployeesPage = () => {
         mobile: '',
         address: '',
         id_role: '',
+        briefing_conducted: '',
     });
 
     const [editData, setEditData] = useState<Employee | null>();
     const [currentPage, setCurrentPage] = useState(1);
     const employeesPerPage = 5;
 
+    const baseURL = new URL(process.env.REACT_APP_API_URL || '');
+    baseURL.pathname = baseURL.pathname.replace(/\/api$/, '');
     const indexOfLastEmployee = currentPage * employeesPerPage;
     const indexOfFirstEmployee = indexOfLastEmployee - employeesPerPage;
     const currentEmployees = employees.slice(indexOfFirstEmployee, indexOfLastEmployee);
 
-    // Hitung total halaman
     const totalPages = Math.ceil(employees.length / employeesPerPage);
 
-    // Fungsi navigasi
     const goToNextPage = () => {
         if (currentPage < totalPages) {
             setCurrentPage(currentPage + 1);
@@ -114,6 +115,7 @@ const EmployeesPage = () => {
                 addData.reporting_to,
                 addData.briefing_date,
                 addData.address,
+                addData.briefing_conducted,
                 token);
 
             if (response.success) {
@@ -133,6 +135,7 @@ const EmployeesPage = () => {
                 email: '',
                 mobile: '',
                 address: '',
+                briefing_conducted: '',
                 id_role: '',
             })
         }
@@ -145,30 +148,43 @@ const EmployeesPage = () => {
         try {
             const token = localStorage.getItem('token');
             if (!token) {
+                toast.error("Token not found. Redirecting to login.");
                 localStorage.clear();
                 navigate('/login');
                 return;
             }
 
-            if (!editData) {
-                toast.error("No employee selected for editing.");
+            if (!editData || !editData.user || !editData.user.role?.id) {
+                toast.error("Invalid employee or user data.");
                 return;
             }
 
-            const toBase64 = (file: File): Promise<string> =>
-                new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.readAsDataURL(file);
-                    reader.onload = () => resolve(reader.result as string);
-                    reader.onerror = reject;
-                });
+            // Convert image to base64
+            let profileBase64: string | null = null;
+            if (imageFile) {
+                const toBase64 = (file: File): Promise<string> =>
+                    new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.readAsDataURL(file);
+                        reader.onload = () => resolve(reader.result as string);
+                        reader.onerror = () => reject("Failed to read image file.");
+                    });
 
-            const profileBase64 = imageFile ? await toBase64(imageFile) : null;
+                profileBase64 = await toBase64(imageFile);
+            }
 
             const response = await employeeService.editEmployee(
                 editData.id,
+                editData.user.name,
                 editData.nric_fin_no,
-                editData.briefing_date,
+                editData.user.mobile,
+                editData.user.email,
+                editData.user.role.id,
+                editData.reporting || null,
+                editData.briefing_date || null,
+                editData.birth || null,
+                editData.user.address || '',
+                editData.briefing_conducted ?? null,
                 profileBase64,
                 token
             );
@@ -183,11 +199,19 @@ const EmployeesPage = () => {
                 toast.error('Failed to update employee');
             }
         } catch (error: any) {
-            toast.error(error.message || 'Something went wrong');
+            if (error.response?.data?.message) {
+                toast.error(`Server Error: ${error.response.data.message}`);
+            } else if (error.message) {
+                toast.error(`Error: ${error.message}`);
+            } else {
+                toast.error("Unexpected error occurred.");
+            }
         } finally {
             setLoading(false);
         }
     };
+
+
 
 
     const fetchEmployees = async () => {
@@ -260,24 +284,57 @@ const EmployeesPage = () => {
         'Applicant is deployed at site for OJT for 2-3?',
     ]
 
-    const handleDownload = () => {
-        const reportData = [
-            { name: 'John Doe', email: 'john@example.com', status: 'Active' },
-            { name: 'Jane Smith', email: 'jane@example.com', status: 'Inactive' },
-        ];
+    const getProfileImageURL = () => {
+        if (imageFile) {
+            return URL.createObjectURL(imageFile);
+        } else if (editData?.user?.profile_image) {
+            // Cek apakah path-nya sudah lengkap atau masih relatif
+            return editData.user.profile_image.startsWith('http')
+                ? editData.user.profile_image
+                : `${baseURL || 'http://localhost:8000'}/storage/${editData.user.profile_image}`;
+        } else {
+            return "/images/Avatar.png";
+        }
+    };
 
-        const header = Object.keys(reportData[0]).join(',');
-        const rows = reportData.map(row => Object.values(row).join(',')).join('\n');
-        const csvContent = `${header}\n${rows}`;
+    const handleDownload = () => {
+        if (employees.length === 0) {
+            toast.warning('No employee data to export.');
+            return;
+        }
+
+        const headers = ['S. No', 'NRIC/FIN', 'Name', 'Mobile', 'Email', 'Role', 'Status'];
+
+        const rows = employees.map((emp, index) => [
+            index + 1,
+            emp.nric_fin_no || '',
+            emp.user?.name || '',
+            emp.user?.mobile || '',
+            emp.user?.email || '',
+            emp.user?.role?.name || '',
+            emp.user?.status || '',
+        ]);
+
+        const csvContent = [headers, ...rows]
+            .map(row =>
+                row.map(field => `"${String(field).replace(/"/g, '""')}"`).join(';') // GANTI ke titik koma
+            )
+            .join('\n');
+
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
+
         const link = document.createElement('a');
         link.href = url;
-        link.setAttribute('download', 'report.csv');
+        link.setAttribute('download', 'employees_report.csv');
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
     };
+
+
+
+
 
     const handleDelete = async () => {
         try {
@@ -362,15 +419,18 @@ const EmployeesPage = () => {
                                             <td className="text-[#F4F7FF] pt-6 pb-3 ">{data.nric_fin_no}</td>
                                             <td className="text-[#F4F7FF] pt-6 pb-3 ">{maskPhone(data.user.mobile)}</td>
                                             <td className="text-[#F4F7FF] pt-6 pb-3 ">{data.user.role.name}</td>
-                                            <td className="flex justify-center items-center dpt-6 pb-3 ">
+                                            <td className="flex justify-center items-center pt-6 pb-3 ">
                                                 <div className="font-medium text-sm text-[#19CE74] px-6 py-2 bg-[rgba(25,206,116,0.16)] border-[1px] border-[#19CE74] rounded-full w-fit">
-                                                    Active
+                                                    {data.user.status}
                                                 </div>
                                             </td>
                                             <td className="pt-6 pb-3">
                                                 <div className="flex gap-6 items-center justify-center">
                                                     <svg className="cursor-pointer" onClick={() => setUploadEmployee(true)} xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="28" height="28" viewBox="0 0 28 28"><defs><clipPath id="master_svg0_247_14305"><rect x="0" y="0" width="28" height="28" rx="0" /></clipPath></defs><g><g clipPath="url(#master_svg0_247_14305)"><g><path d="M11.46283298828125,19.6719859375L16.76641298828125,19.6719859375C17.495712988281248,19.6719859375,18.09231298828125,19.0752859375,18.09231298828125,18.3460859375L18.09231298828125,11.7165359375L20.20051298828125,11.7165359375C21.38061298828125,11.7165359375,21.97721298828125,10.2845659375,21.14191298828125,9.449245937499999L15.05601298828125,3.3633379375C14.54009298828125,2.8463349375,13.70246298828125,2.8463349375,13.18651298828125,3.3633379375L7.1006129882812505,9.449245937499999C6.26529298828125,10.2845659375,6.84869298828125,11.7165359375,8.02874298828125,11.7165359375L10.136932988281249,11.7165359375L10.136932988281249,18.3460859375C10.136932988281249,19.0752859375,10.73359298828125,19.6719859375,11.46283298828125,19.6719859375ZM6.15921298828125,22.3237859375L22.07011298828125,22.3237859375C22.79931298828125,22.3237859375,23.39601298828125,22.9203859375,23.39601298828125,23.6496859375C23.39601298828125,24.3788859375,22.79931298828125,24.9755859375,22.07011298828125,24.9755859375L6.15921298828125,24.9755859375C5.42996998828125,24.9755859375,4.83331298828125,24.3788859375,4.83331298828125,23.6496859375C4.83331298828125,22.9203859375,5.42996998828125,22.3237859375,6.15921298828125,22.3237859375Z" fill="#F4F7FF" fill-opacity="1" /></g></g></g></svg>
-                                                    <svg className="cursor-pointer" onClick={() => setEditEmployee(true)} xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="28" height="28" viewBox="0 0 28 28"><defs><clipPath id="master_svg0_247_14308"><rect x="0" y="0" width="28" height="28" rx="0" /></clipPath></defs><g><g clipPath="url(#master_svg0_247_14308)"><g><path d="M3.5,20.124948752212525L3.5,24.499948752212525L7.875,24.499948752212525L20.7783,11.596668752212524L16.4033,7.2216687522125245L3.5,20.124948752212525ZM24.1617,8.213328752212524C24.6166,7.759348752212524,24.6166,7.0223187522125246,24.1617,6.568328752212524L21.4317,3.8383337522125243C20.9777,3.3834207522125244,20.2406,3.3834207522125244,19.7867,3.8383337522125243L17.651699999999998,5.973328752212524L22.0267,10.348338752212523L24.1617,8.213328752212524Z" fill="#F4F7FF" fill-opacity="1" /></g></g></g></svg>
+                                                    <svg className="cursor-pointer" onClick={() => {
+                                                        setEditEmployee(true);
+                                                        setEditData(data);
+                                                    }} xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="28" height="28" viewBox="0 0 28 28"><defs><clipPath id="master_svg0_247_14308"><rect x="0" y="0" width="28" height="28" rx="0" /></clipPath></defs><g><g clipPath="url(#master_svg0_247_14308)"><g><path d="M3.5,20.124948752212525L3.5,24.499948752212525L7.875,24.499948752212525L20.7783,11.596668752212524L16.4033,7.2216687522125245L3.5,20.124948752212525ZM24.1617,8.213328752212524C24.6166,7.759348752212524,24.6166,7.0223187522125246,24.1617,6.568328752212524L21.4317,3.8383337522125243C20.9777,3.3834207522125244,20.2406,3.3834207522125244,19.7867,3.8383337522125243L17.651699999999998,5.973328752212524L22.0267,10.348338752212523L24.1617,8.213328752212524Z" fill="#F4F7FF" fill-opacity="1" /></g></g></g></svg>
                                                     <svg className="cursor-pointer" onClick={() => { setDeleteEmployee(true); setDeleteId(data?.id) }} xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="28" height="28" viewBox="0 0 28 28"><defs><clipPath id="master_svg0_247_14302"><rect x="0" y="0" width="28" height="28" rx="0" /></clipPath></defs><g><g clipPath="url(#master_svg0_247_14302)"><g><path d="M6.9996778125,24.5L20.9997078125,24.5L20.9997078125,8.16667L6.9996778125,8.16667L6.9996778125,24.5ZM22.1663078125,4.66667L18.0830078125,4.66667L16.9163078125,3.5L11.0830078125,3.5L9.9163378125,4.66667L5.8330078125,4.66667L5.8330078125,7L22.1663078125,7L22.1663078125,4.66667Z" fill="#F4F7FF" fill-opacity="1" /></g></g></g></svg>
                                                 </div>
                                             </td>
@@ -467,14 +527,19 @@ const EmployeesPage = () => {
                                 />
                             </div>
                             <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Briefing conducted</label>
-                                <select className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none" onChange={(e) => setAddData(prev => ({ ...prev, reporting_to: e.target.value }))}>
-                                    <option value="">Select Emloyee</option>
-                                    {reportingEmployees.length > 0 && reportingEmployees.map((item) => (
-                                        <option key={item.id} value={item.id}>{item.user?.name}</option>
-                                    ))}
-                                </select>
+                                <label htmlFor="briefing_conducted" className="text-xs leading-[21px] text-[#98A1B3]">Briefing conducted</label>
+                                <input
+                                    type="text"
+                                    id="briefing_conducted"
+                                    placeholder="Briefing conducted"
+                                    value={addData.briefing_conducted || ""}
+                                    onChange={(e) =>
+                                        setAddData((prev) => ({ ...prev, briefing_conducted: e.target.value }))
+                                    }
+                                    className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
+                                />
                             </div>
+
                             {/* {Object.entries(roles[1]).map(([category, roles]) => (
                     <div className="flex flex-col gap-2">
                         <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">{category}</label>
@@ -518,10 +583,21 @@ const EmployeesPage = () => {
                                     <div key={index} className="flex flex-col gap-2">
                                         <div className="flex items-center justify-between">
                                             <p className="leading-[21px] text-[#F4F7FF]">{item}</p>
-                                            <SwitchCustomStyleToggleable
-                                                checked={switchStates[index] || false}
-                                                onChange={() => handleToggle(index)}
-                                            />
+                                            {/* <Switch
+                                                id={`custom-switch-component-${item.id}`}
+                                                ripple={false}
+                                                checked={switchStates[item.id]}
+                                                onChange={(e) => handleToggle(item.id)}
+                                                className="h-full w-full checked:bg-[#446FC7]"
+                                                containerProps={{
+                                                    className: "w-11 h-6",
+                                                }}
+                                                circleProps={{
+                                                    className: "before:hidden left-0.5 border-none",
+                                                }} onResize={undefined} onResizeCapture={undefined} onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} crossOrigin={undefined} /> */}
+                                            {/* <p className={`font-medium text-sm capitalize ${switchStates[employeeDocument.id] ? 'text-[#19CE74]' : 'text-[#FF7E6A]'}`}>
+                                                {switchStates[item.id] ? 'active' : 'inactive'}
+                                            </p> */}
                                         </div>
 
                                         {/* Tampilkan input alasan jika switch OFF (false) */}
@@ -560,191 +636,261 @@ const EmployeesPage = () => {
                     </div>
                 )
             }
+            {editEmployee && editData && (
+                <div className="fixed w-screen h-screen flex justify-end items-start top-0 left-0 z-50 bg-[rgba(0,0,0,0.5)]">
+                    <div className="flex flex-col gap-6 p-6 bg-[#252C38] max-w-[568px] w-full max-h-screen overflow-auto h-full">
+                        <h2 className="text-2xl leading-[36px] text-white font-noto">Edit employee details</h2>
+
+                        <div className="relative">
+                            <img
+                                src={getProfileImageURL()}
+                                alt="Profile"
+                                className="w-[120px] h-[120px] object-cover rounded-full"
+                            />
+                            <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) setImageFile(file);
+                                }}
+                                className="mt-2 text-sm text-white"
+                            />
+                        </div>
+
+                        {/* Name */}
+                        <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
+                            <label className="text-xs text-[#98A1B3]">Name</label>
+                            <input
+                                type="text"
+                                className="bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3]"
+                                placeholder="Name"
+                                value={editData.user?.name ?? ''}
+                                onChange={(e) =>
+                                    setEditData((prev) =>
+                                        prev ? { ...prev, user: { ...prev.user, name: e.target.value } } : null
+                                    )
+                                }
+                            />
+                        </div>
+
+                        {/* NRIC/FIN */}
+                        <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
+                            <label className="text-xs text-[#98A1B3]">NRIC/FIN</label>
+                            <input
+                                type="text"
+                                className="bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3]"
+                                placeholder="NRIC/FIN"
+                                value={editData.nric_fin_no ?? ''}
+                                onChange={(e) =>
+                                    setEditData((prev) =>
+                                        prev ? { ...prev, nric_fin_no: e.target.value } : null
+                                    )
+                                }
+                            />
+                        </div>
+
+                        {/* Mobile */}
+                        <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
+                            <label className="text-xs text-[#98A1B3]">Mobile</label>
+                            <input
+                                type="text"
+                                className="bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3]"
+                                placeholder="Mobile"
+                                value={editData.user?.mobile ?? ''}
+                                onChange={(e) =>
+                                    setEditData((prev) =>
+                                        prev ? { ...prev, user: { ...prev.user, mobile: e.target.value } } : null
+                                    )
+                                }
+                            />
+                        </div>
+
+                        {/* Email */}
+                        <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
+                            <label className="text-xs text-[#98A1B3]">Email</label>
+                            <input
+                                type="text"
+                                className="bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3]"
+                                placeholder="Email"
+                                value={editData.user?.email ?? ''}
+                                onChange={(e) =>
+                                    setEditData((prev) =>
+                                        prev ? { ...prev, user: { ...prev.user, email: e.target.value } } : null
+                                    )
+                                }
+                            />
+                        </div>
+
+                        {/* Address */}
+                        <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
+                            <label className="text-xs text-[#98A1B3]">Address</label>
+                            <input
+                                type="text"
+                                className="bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3]"
+                                placeholder="Address"
+                                value={editData.user?.address ?? ''}
+                                onChange={(e) =>
+                                    setEditData((prev) =>
+                                        prev ? { ...prev, user: { ...prev.user, address: e.target.value } } : null
+                                    )
+                                }
+                            />
+                        </div>
+
+                        {/* Role */}
+                        <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
+                            <label className="text-xs text-[#98A1B3]">Role</label>
+                            <input
+                                type="text"
+                                className="bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3]"
+                                placeholder="Role"
+                                value={editData.user?.role?.name ?? ''}
+                                onChange={(e) =>
+                                    setEditData((prev) =>
+                                        prev
+                                            ? {
+                                                ...prev,
+                                                user: {
+                                                    ...prev.user,
+                                                    role: { ...prev.user.role, name: e.target.value },
+                                                },
+                                            }
+                                            : null
+                                    )
+                                }
+                            />
+                        </div>
+
+                        {/* Briefing Date */}
+                        <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
+                            <label className="text-xs text-[#98A1B3]">Briefing Date</label>
+                            <input
+                                type="datetime-local"
+                                className="bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3]"
+                                placeholder="Briefing Date"
+                                value={
+                                    editData.briefing_date
+                                        ? new Date(editData.briefing_date).toISOString().slice(0, 16)
+                                        : ''
+                                }
+                                onChange={(e) =>
+                                    setEditData((prev) =>
+                                        prev ? { ...prev, briefing_date: new Date(e.target.value) } : null
+                                    )
+                                }
+                            />
+                        </div>
+
+                        {/* Buttons */}
+                        <div className="flex gap-4 flex-wrap">
+                            <button
+                                onClick={handleEdit}
+                                className="font-medium text-base bg-[#EFBF04] px-12 py-3 border border-[#EFBF04] rounded-full hover:bg-[#181D26] hover:text-[#EFBF04]"
+                            >
+                                Save
+                            </button>
+                            <button
+                                onClick={() => setEditEmployee(false)}
+                                className="font-medium text-base text-[#868686] bg-[#252C38] px-12 py-3 border border-[#868686] rounded-full hover:bg-[#868686] hover:text-[#252C38]"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {
-                editEmployee && (
-                    <div className="fixed w-screen h-screen flex justify-end items-start top-0 left-0 z-50 bg-[rgba(0,0,0,0.5)]">
-                        <div className="flex flex-col gap-6 p-6 bg-[#252C38] max-w-[568px] w-full max-h-screen overflow-auto h-full">
-                            <h2 className='text-2xl leading-[36px] text-white font-noto'>Edit employee details</h2>
-                            <div className="relative">
-                                <img src="/images/Avatar.png" alt="" />
-                            </div>
-                            <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Name</label>
-                                <input
-                                    type={"text"}
-                                    className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
-                                    placeholder='Name'
-                                    value='Michael Yeow'
-                                />
-                            </div>
-                            <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">NRIC/FIN</label>
-                                <input
-                                    type={"text"}
-                                    className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
-                                    placeholder='NRIC/FIN'
-                                    value='S8934554F'
-                                />
-                            </div>
-                            <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Mobile</label>
-                                <input
-                                    type={"text"}
-                                    className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
-                                    placeholder='Mobile'
-                                    value='90044587'
-                                />
-                            </div>
-                            <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Email</label>
-                                <input
-                                    type={"text"}
-                                    className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
-                                    placeholder='Email'
-                                    value='mich.yeow@gmail.com'
-                                />
-                            </div>
-                            <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Briefing conducted by</label>
-                                <input
-                                    type={"text"}
-                                    className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
-                                    placeholder='Briefing conducted by'
-                                    value='David'
-                                />
-                            </div>
-                            <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Briefing date</label>
-                                <input
-                                    type={"text"}
-                                    className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
-                                    placeholder='Briefing date'
-                                    value='24/05/2025'
-                                />
-                            </div>
-                            {/* {Object.entries(roles[1]).map(([category, roles]) => (
-                                <div className="flex flex-col gap-2">
-                                    <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">{category}</label>
-                                    <div className="flex flex-wrap gap-x-3 gap-y-[14px]">
-                                        {roles.map((role: any) => {
-                                            const isSelected = selectedDatas.includes(role);
-                                            return (
-                                                <button
-                                                    key={role}
-                                                    onClick={() => toggleData(role)}
-                                                    className={`font-medium text-sm leading-[20px] w-fit px-4 py-2 rounded-full bg-[#303847] text-[#F4F7FF]
-                ${isSelected ? 'bg-[#446FC7] text-[#F4F7FF]' : 'bg-[#303847] text-[#F4F7FF] hover:bg-[#446FC7] hover:text-[#F4F7FF]'}`}
-                                                >
-                                                    {role}
-                                                </button>
-                                            );
-                                        })}
+                deleteEmployee && (
+                    <div className="fixed w-screen h-screen flex justify-center items-center top-0 left-0 z-50 bg-[rgba(0,0,0,0.5)]">
+                        <DeleteModal setModal={setDeleteEmployee} handleDelete={handleDelete} />
+                    </div>
+                )
+            }
+            {
+                uploadEmployee && (
+                    <div>
+                        <div className="fixed w-screen h-screen flex justify-end items-start top-0 left-0 z-50 bg-[rgba(0,0,0,0.5)]">
+                            <div className="flex flex-col gap-6 p-6 bg-[#252C38] max-w-[568px] w-full max-h-screen overflow-auto h-full">
+                                <h2 className='text-2xl leading-[36px] text-white font-noto'>Edit employee details</h2>
+                                <div className="relative flex gap-10 w-full">
+                                    <img src="/images/Avatar2.png" alt="" className="w-[104px] h-[104px]" />
+                                    <div className="flex flex-col gap-4">
+                                        <p className="font-medium text-xl leading-[20px] text-[#F4F7FF]">Michella Yeow</p>
+                                        <div className="flex gap-16">
+                                            <div className="flex flex-col gap-1">
+                                                <p className="text-xs leading-[16px] text-[#98A1B3]">NRIC/FIN</p>
+                                                <p className="leading-[20px] text-[#F4F7FF]">***304F</p>
+                                            </div>
+                                            <div className="flex flex-col gap-1">
+                                                <p className="text-xs leading-[16px] text-[#98A1B3]">Mobile</p>
+                                                <p className="leading-[20px] text-[#F4F7FF]">***5672</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex flex-col gap-1">
+                                            <p className="text-xs leading-[16px] text-[#98A1B3]">Email</p>
+                                            <p className="leading-[20px] text-[#F4F7FF]">mi******ow@gmail.com</p>
+                                        </div>
                                     </div>
                                 </div>
-                            ))} */}
-                            {/* <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Remarks</label>
-                                <input
-                                    type={"text"}
-                                    className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
-                                    placeholder='Remarks'
-                                    value='Will settle it by end of the week'
-                                />
-                            </div> */}
-                            <div className="flex gap-4 flex-wrap">
-                                <button onClick={() => { setEditEmployee(false); toast.success('Employee edited successfully') }} className="font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">Save</button>
-                                <button onClick={() => setEditEmployee(false)} className="font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border-[1px] border-[#868686] rounded-full transition-all hover:bg-[#868686] hover:text-[#252C38]">Cancel</button>
+                                <div className="flex w-full pl-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834]">
+                                    <div className="flex flex-col w-full">
+                                        <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Password</label>
+                                        <input
+                                            type={showPassword ? "text" : "password"}
+                                            className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
+                                            placeholder="Masukkan password"
+                                            value={'●●●●●●●●●●'}
+                                        />
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={togglePassword}
+                                        className="p-2 rounded-[4px_4px_0px_0px]"
+                                        tabIndex={-1}
+                                    >
+                                        {showPassword ? (
+                                            <EyeOff size={20} color="#98A1B3" style={{ backgroundColor: "#222834", borderRadius: "4px" }} />
+                                        ) : (
+                                            <Eye size={20} color="#98A1B3" style={{ backgroundColor: "#222834", borderRadius: "4px" }} />
+                                        )}
+                                    </button>
+                                </div>
+                                <div className="flex flex-col gap-3">
+                                    <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Lorem ipsum</label>
+                                    <button className="font-medium text-sm leading-[21px] text-[#EFBF04] px-5 py-2 border-[1px] border-[#EFBF04] rounded-full cursor-pointer w-fit transition-all hover:bg-[#EFBF04] hover:text-[#252C38]">Upload file</button>
+                                </div>
+                                <div className="flex flex-col gap-3">
+                                    <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">PLRD license</label>
+                                    <button className="font-medium text-sm leading-[21px] text-[#EFBF04] px-5 py-2 border-[1px] border-[#EFBF04] rounded-full cursor-pointer w-fit transition-all hover:bg-[#EFBF04] hover:text-[#252C38]">Upload file</button>
+                                </div>
+                                <div className="flex flex-col gap-3">
+                                    <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Employment letter</label>
+                                    <button className="font-medium text-sm leading-[21px] text-[#EFBF04] px-5 py-2 border-[1px] border-[#EFBF04] rounded-full cursor-pointer w-fit transition-all hover:bg-[#EFBF04] hover:text-[#252C38]">Upload file</button>
+                                </div>
+                                <div className="flex flex-col gap-3">
+                                    <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Resume</label>
+                                    <button className="font-medium text-sm leading-[21px] text-[#EFBF04] px-5 py-2 border-[1px] border-[#EFBF04] rounded-full cursor-pointer w-fit transition-all hover:bg-[#EFBF04] hover:text-[#252C38]">Upload file</button>
+                                </div>
+                                <div className="flex flex-col gap-3">
+                                    <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Certifications</label>
+                                    <button className="font-medium text-sm leading-[21px] text-[#EFBF04] px-5 py-2 border-[1px] border-[#EFBF04] rounded-full cursor-pointer w-fit transition-all hover:bg-[#EFBF04] hover:text-[#252C38]">Upload file</button>
+                                </div>
+                                <div className="flex flex-col gap-3">
+                                    <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Qualifications</label>
+                                    <button className="font-medium text-sm leading-[21px] text-[#EFBF04] px-5 py-2 border-[1px] border-[#EFBF04] rounded-full cursor-pointer w-fit transition-all hover:bg-[#EFBF04] hover:text-[#252C38]">Upload file</button>
+                                </div>
+                                <div className="flex gap-4 flex-wrap">
+                                    <button onClick={() => { setUploadEmployee(false); toast.success('Employee document uploaded successfully') }} className="font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">Save</button>
+                                    <button onClick={() => setUploadEmployee(false)} className="font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border-[1px] border-[#868686] rounded-full transition-all hover:bg-[#868686] hover:text-[#252C38]">Cancel</button>
+                                </div>
                             </div>
                         </div>
                     </div>
                 )
             }
-            {deleteEmployee && (
-                <div className="fixed w-screen h-screen flex justify-center items-center top-0 left-0 z-50 bg-[rgba(0,0,0,0.5)]">
-                    <DeleteModal setModal={setDeleteEmployee} handleDelete={handleDelete} />
-                </div>
-            )}
-            {uploadEmployee && (
-                <div>
-                    <div className="fixed w-screen h-screen flex justify-end items-start top-0 left-0 z-50 bg-[rgba(0,0,0,0.5)]">
-                        <div className="flex flex-col gap-6 p-6 bg-[#252C38] max-w-[568px] w-full max-h-screen overflow-auto h-full">
-                            <h2 className='text-2xl leading-[36px] text-white font-noto'>Edit employee details</h2>
-                            <div className="relative flex gap-10 w-full">
-                                <img src="/images/Avatar2.png" alt="" className="w-[104px] h-[104px]" />
-                                <div className="flex flex-col gap-4">
-                                    <p className="font-medium text-xl leading-[20px] text-[#F4F7FF]">Michella Yeow</p>
-                                    <div className="flex gap-16">
-                                        <div className="flex flex-col gap-1">
-                                            <p className="text-xs leading-[16px] text-[#98A1B3]">NRIC/FIN</p>
-                                            <p className="leading-[20px] text-[#F4F7FF]">***304F</p>
-                                        </div>
-                                        <div className="flex flex-col gap-1">
-                                            <p className="text-xs leading-[16px] text-[#98A1B3]">Mobile</p>
-                                            <p className="leading-[20px] text-[#F4F7FF]">***5672</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex flex-col gap-1">
-                                        <p className="text-xs leading-[16px] text-[#98A1B3]">Email</p>
-                                        <p className="leading-[20px] text-[#F4F7FF]">mi******ow@gmail.com</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="flex w-full pl-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834]">
-                                <div className="flex flex-col w-full">
-                                    <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Password</label>
-                                    <input
-                                        type={showPassword ? "text" : "password"}
-                                        className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
-                                        placeholder="Masukkan password"
-                                        value={'●●●●●●●●●●'}
-                                    />
-                                </div>
-                                <button
-                                    type="button"
-                                    onClick={togglePassword}
-                                    className="p-2 rounded-[4px_4px_0px_0px]"
-                                    tabIndex={-1}
-                                >
-                                    {showPassword ? (
-                                        <EyeOff size={20} color="#98A1B3" style={{ backgroundColor: "#222834", borderRadius: "4px" }} />
-                                    ) : (
-                                        <Eye size={20} color="#98A1B3" style={{ backgroundColor: "#222834", borderRadius: "4px" }} />
-                                    )}
-                                </button>
-                            </div>
-                            <div className="flex flex-col gap-3">
-                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Lorem ipsum</label>
-                                <button className="font-medium text-sm leading-[21px] text-[#EFBF04] px-5 py-2 border-[1px] border-[#EFBF04] rounded-full cursor-pointer w-fit transition-all hover:bg-[#EFBF04] hover:text-[#252C38]">Upload file</button>
-                            </div>
-                            <div className="flex flex-col gap-3">
-                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">PLRD license</label>
-                                <button className="font-medium text-sm leading-[21px] text-[#EFBF04] px-5 py-2 border-[1px] border-[#EFBF04] rounded-full cursor-pointer w-fit transition-all hover:bg-[#EFBF04] hover:text-[#252C38]">Upload file</button>
-                            </div>
-                            <div className="flex flex-col gap-3">
-                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Employment letter</label>
-                                <button className="font-medium text-sm leading-[21px] text-[#EFBF04] px-5 py-2 border-[1px] border-[#EFBF04] rounded-full cursor-pointer w-fit transition-all hover:bg-[#EFBF04] hover:text-[#252C38]">Upload file</button>
-                            </div>
-                            <div className="flex flex-col gap-3">
-                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Resume</label>
-                                <button className="font-medium text-sm leading-[21px] text-[#EFBF04] px-5 py-2 border-[1px] border-[#EFBF04] rounded-full cursor-pointer w-fit transition-all hover:bg-[#EFBF04] hover:text-[#252C38]">Upload file</button>
-                            </div>
-                            <div className="flex flex-col gap-3">
-                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Certifications</label>
-                                <button className="font-medium text-sm leading-[21px] text-[#EFBF04] px-5 py-2 border-[1px] border-[#EFBF04] rounded-full cursor-pointer w-fit transition-all hover:bg-[#EFBF04] hover:text-[#252C38]">Upload file</button>
-                            </div>
-                            <div className="flex flex-col gap-3">
-                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Qualifications</label>
-                                <button className="font-medium text-sm leading-[21px] text-[#EFBF04] px-5 py-2 border-[1px] border-[#EFBF04] rounded-full cursor-pointer w-fit transition-all hover:bg-[#EFBF04] hover:text-[#252C38]">Upload file</button>
-                            </div>
-                            <div className="flex gap-4 flex-wrap">
-                                <button onClick={() => { setUploadEmployee(false); toast.success('Employee document uploaded successfully') }} className="font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">Save</button>
-                                <button onClick={() => setUploadEmployee(false)} className="font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border-[1px] border-[#868686] rounded-full transition-all hover:bg-[#868686] hover:text-[#252C38]">Cancel</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-        </MainLayout>
+        </MainLayout >
     )
 }
 

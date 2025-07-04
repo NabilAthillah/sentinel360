@@ -187,17 +187,11 @@ const SitePage = () => {
         }
     }
     const handleCheckIn = () => {
-        // Ganti dengan logika Check In sesungguhnya
         console.log("✅ Checked In");
-        // Contoh: panggil API atau update state
-        // await fetch("/api/check-in", { method: "POST" });
     };
 
     const handleCheckOut = () => {
-        // Ganti dengan logika Check Out sesungguhnya
         console.log("⛔ Checked Out");
-        // Contoh: panggil API atau update state
-        // await fetch("/api/check-out", { method: "POST" });
     };
 
     const fetchSites = async () => {

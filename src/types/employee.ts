@@ -6,6 +6,8 @@ export type Employee = {
     nric_fin_no: string;
     briefing_date: Date;
     user: User;
+    birth? : string;
+    briefing_conducted?: string;
     reporting: User;
     site?: Site;
     

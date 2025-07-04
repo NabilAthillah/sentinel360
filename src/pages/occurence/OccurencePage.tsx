@@ -9,7 +9,7 @@ import siteService from "../../services/siteService";
 import { Occurrence } from "../../types/occurrence";
 import { OccurrenceCategory } from "../../types/occurrenceCategory";
 import { Site } from "../../types/site";
-
+import { Employee } from "../../types/employee";
 interface OccurrenceInput {
     id_site: string;
     id_category: string;
@@ -25,6 +25,7 @@ const OccurencePage = () => {
     const navigate = useNavigate();
 
     const [sites, setSites] = useState<Site[]>([]);
+    const [employee, setEmployee] = useState<Employee[]>([]);
     const [categories, setCategories] = useState<OccurrenceCategory[]>([]);
     const [occurrences, setOccurrences] = useState<Occurrence[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
@@ -34,13 +35,27 @@ const OccurencePage = () => {
 
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = (searchTerm ? filteredOccurrence : occurrences).slice(indexOfFirstItem, indexOfLastItem);
 
     const [site, setSite] = useState('');
     const [category, setCategory] = useState('');
 
     const totalItems = searchTerm ? filteredOccurrence.length : sites.length;
     const totalPages = Math.ceil(totalItems / itemsPerPage);
+    const filteredItems = occurrences.filter((occurrence) => {
+        const matchSite = site ? occurrence.site.id === site : true;
+        const matchCategory = category ? occurrence.category.id === category : true;
+
+        const matchSearchTerm = searchTerm
+            ? occurrence.site.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            occurrence.category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            occurrence.reported_by.name.toLowerCase().includes(searchTerm.toLowerCase())
+            : true;
+
+        return matchSite && matchCategory && matchSearchTerm;
+    });
+
+
+    const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
 
     const handlePrev = () => {
         if (currentPage > 1) setCurrentPage(currentPage - 1);
@@ -173,6 +188,40 @@ const OccurencePage = () => {
         fetchSites();
         fetchCategories();
     }, [])
+    const handleDownload = () => {
+        if (occurrences.length === 0) {
+            toast.warning('No occurrence data to export.');
+            return;
+        }
+
+        const headers = ['S. No', 'Date', 'Time', 'Site Name', 'Category', 'Reported By'];
+
+        const rows = occurrences.map((occ, index) => [
+            index + 1,
+            occ.date,
+            occ.time,
+            occ.site?.name || '',
+            occ.category?.name || '',
+            occ.reported_by?.name || '',
+        ]);
+
+        const csvContent = [headers, ...rows]
+            .map(row =>
+                row.map(field => `"${String(field).replace(/"/g, '""')}"`).join(';') // pakai delimiter titik koma
+            )
+            .join('\n');
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', 'occurrence_report.csv');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
 
     useEffect(() => {
         const filtered = occurrences.filter((occurrence) =>
@@ -191,52 +240,74 @@ const OccurencePage = () => {
                             <div className="flex items-end gap-4 w-full flex-wrap md:flex-nowrap">
                                 <div className="max-w-[400px] w-full flex items-center bg-[#222834] border-b-[1px] border-b-[#98A1B3] rounded-[4px_4px_0px_0px]">
                                     <input
-                                        type={"text"}
-                                        className="w-full px-4 pt-[17.5px] pb-[10.5px] bg-[#222834] rounded-[4px_4px_0px_0px] text-[#F4F7FF] text-base placeholder:text-[#98A1B3]  placeholder:text-base active:outline-none focus-visible:outline-none"
-                                        placeholder="Search"
+                                        type="text"
+                                        className="w-full px-4 pt-[17.5px] pb-[10.5px] bg-[#222834] rounded-[4px_4px_0px_0px] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] border-b-[1px] border-b-[#98A1B3] active:outline-none focus-visible:outline-none"
+                                        placeholder="Search by employee"
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
-                                        onKeyDown={(e) => {
-                                            if (e.key === 'Enter') handleSearch();
-                                        }}
                                     />
+
                                     <button
                                         type="button"
                                         className="p-2 rounded-[4px_4px_0px_0px]"
                                         tabIndex={-1}
-                                        onClick={handleSearch}
                                     >
                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="32" height="32" viewBox="0 0 32 32"><defs><clipPath id="master_svg0_247_12873"><rect x="0" y="0" width="32" height="32" rx="0" /></clipPath></defs><g clip-path="url(#master_svg0_247_12873)"><g><path d="M20.666698807907103,18.666700953674315L19.613298807907107,18.666700953674315L19.239998807907106,18.306700953674316C20.591798807907104,16.738700953674318,21.334798807907106,14.736900953674317,21.333298807907106,12.666670953674316C21.333298807907106,7.880200953674317,17.453098807907104,4.000000953674316,12.666668807907104,4.000000953674316C7.880198807907105,4.000000953674316,4.000000715257104,7.880200953674317,4.000000715257104,12.666670953674316C4.000000715257104,17.453100953674316,7.880198807907105,21.333300953674318,12.666668807907104,21.333300953674318C14.813298807907104,21.333300953674318,16.786698807907104,20.546700953674318,18.306698807907104,19.24000095367432L18.666698807907103,19.61330095367432L18.666698807907103,20.666700953674315L25.333298807907106,27.320000953674317L27.319998807907105,25.333300953674318L20.666698807907103,18.666700953674315ZM12.666668807907104,18.666700953674315C9.346668807907104,18.666700953674315,6.666668807907104,15.986700953674317,6.666668807907104,12.666670953674316C6.666668807907104,9.346670953674316,9.346668807907104,6.666670953674316,12.666668807907104,6.666670953674316C15.986698807907105,6.666670953674316,18.666698807907103,9.346670953674316,18.666698807907103,12.666670953674316C18.666698807907103,15.986700953674317,15.986698807907105,18.666700953674315,12.666668807907104,18.666700953674315Z" fill="#98A1B3" fill-opacity="1" /></g></g></svg>
                                     </button>
                                 </div>
-                                <button className="font-medium text-sm min-w-[142px] text-[#EFBF04] px-4 py-[9.5px] border-[1px] border-[#EFBF04] rounded-full hover:bg-[#EFBF04] hover:text-[#252C38] transition-all">Download Report</button>
+                                <button onClick={handleDownload} className="font-medium text-sm min-w-[142px] text-[#EFBF04] px-4 py-[9.5px] border-[1px] border-[#EFBF04] rounded-full hover:bg-[#EFBF04] hover:text-[#252C38] transition-all">Download Report</button>
                             </div>
                             <div className="w-[210px]">
                                 <button onClick={() => setAddData(true)} className="font-medium text-base min-w-[210px] text-[#181d26] px-[46.5px] py-3 border-[1px] border-[#EFBF04] bg-[#EFBF04] rounded-full hover:bg-[#181d26] hover:text-[#EFBF04] transition-all">Add occurrence</button>
                             </div>
                         </div>
                         <div className="flex flex-wrap items-end gap-4 w-full xl:grid xl:grid-cols-4">
-                            <input
-                                type={"text"}
-                                className="max-w-[400px] w-full px-4 pt-[17.5px] pb-[10.5px] bg-[#222834] rounded-[4px_4px_0px_0px] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] border-b-[1px] border-b-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
-                                placeholder="All sites"
-                            />
-                            <input
-                                type={"text"}
-                                className="max-w-[400px] w-full px-4 pt-[17.5px] pb-[10.5px] bg-[#222834] rounded-[4px_4px_0px_0px] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] border-b-[1px] border-b-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
-                                placeholder="All employees"
-                            />
-                            <input
-                                type={"text"}
-                                className="max-w-[400px] w-full px-4 pt-[17.5px] pb-[10.5px] bg-[#222834] rounded-[4px_4px_0px_0px] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] border-b-[1px] border-b-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
-                                placeholder="All categories"
-                            />
+                            {/* All Sites */}
+                            <select
+                                className="max-w-[400px] w-full px-4 pt-[17.5px] pb-[10.5px] bg-[#222834] rounded-[4px_4px_0px_0px] text-[#F4F7FF] text-base border-b-[1px] border-b-[#98A1B3] active:outline-none focus-visible:outline-none"
+                                value={site}
+                                onChange={(e) => setSite(e.target.value)}
+                            >
+                                <option value="">All sites</option>
+                                {sites.map((siteItem) => (
+                                    <option key={siteItem.id} value={siteItem.id}>
+                                        {siteItem.name}
+                                    </option>
+                                ))}
+                            </select>
+                            <select
+                                className="max-w-[400px] w-full px-4 pt-[17.5px] pb-[10.5px] bg-[#222834] rounded-[4px_4px_0px_0px] text-[#F4F7FF] text-base border-b-[1px] border-b-[#98A1B3] active:outline-none focus-visible:outline-none"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            >
+                                <option value="">All employees</option>
+                                {employee.map((occ) => (
+                                    <option key={occ.id} value={occ.user.name}>
+                                        {occ.user.name}
+                                    </option>
+                                ))}
+                            </select>
+                            <select
+                                className="max-w-[400px] w-full px-4 pt-[17.5px] pb-[10.5px] bg-[#222834] rounded-[4px_4px_0px_0px] text-[#F4F7FF] text-base border-b-[1px] border-b-[#98A1B3] active:outline-none focus-visible:outline-none"
+                                value={category}
+                                onChange={(e) => setCategory(e.target.value)}
+                            >
+                                <option value="">All categories</option>
+                                {categories.map((cat) => (
+                                    <option key={cat.id} value={cat.id}>
+                                        {cat.name}
+                                    </option>
+                                ))}
+                            </select>
+
+                            {/* Date Range Input (Tetap input text atau gunakan date picker) */}
                             <input
                                 type={"text"}
                                 className="max-w-[400px] w-full px-4 pt-[17.5px] pb-[10.5px] bg-[#222834] rounded-[4px_4px_0px_0px] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] border-b-[1px] border-b-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
                                 placeholder="Date range"
                             />
                         </div>
+
                     </div>
                     <div className="w-full h-full relative flex flex-1 pb-10">
                         <div className="w-full h-fit overflow-auto pb-5">
