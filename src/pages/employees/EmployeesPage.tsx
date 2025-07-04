@@ -74,14 +74,14 @@ const EmployeesPage = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const employeesPerPage = 5;
 
-    const baseURL = new URL(process.env.REACT_APP_API_URL || '');
-    baseURL.pathname = baseURL.pathname.replace(/\/api$/, '');
+
     const indexOfLastEmployee = currentPage * employeesPerPage;
     const indexOfFirstEmployee = indexOfLastEmployee - employeesPerPage;
     const currentEmployees = employees.slice(indexOfFirstEmployee, indexOfLastEmployee);
 
     const totalPages = Math.ceil(employees.length / employeesPerPage);
-
+    const baseURL = new URL(process.env.REACT_APP_API_URL || '');
+    baseURL.pathname = baseURL.pathname.replace(/\/api$/, '');
     const goToNextPage = () => {
         if (currentPage < totalPages) {
             setCurrentPage(currentPage + 1);
@@ -154,12 +154,10 @@ const EmployeesPage = () => {
                 return;
             }
 
-            if (!editData || !editData.user || !editData.user.role?.id) {
+            if (!editData || !editData.user || !editData.user.role || !editData.user.role.name) {
                 toast.error("Invalid employee or user data.");
                 return;
             }
-
-            // Convert image to base64
             let profileBase64: string | null = null;
             if (imageFile) {
                 const toBase64 = (file: File): Promise<string> =>
@@ -581,30 +579,44 @@ const EmployeesPage = () => {
                             <div className="pt-3 flex flex-col gap-6">
                                 {data.map((item, index) => (
                                     <div key={index} className="flex flex-col gap-2">
-                                        <div className="flex items-center justify-between">
-                                            <p className="leading-[21px] text-[#F4F7FF]">{item}</p>
-                                            {/* <Switch
-                                                id={`custom-switch-component-${item.id}`}
-                                                ripple={false}
-                                                checked={switchStates[item.id]}
-                                                onChange={(e) => handleToggle(item.id)}
-                                                className="h-full w-full checked:bg-[#446FC7]"
-                                                containerProps={{
-                                                    className: "w-11 h-6",
-                                                }}
-                                                circleProps={{
-                                                    className: "before:hidden left-0.5 border-none",
-                                                }} onResize={undefined} onResizeCapture={undefined} onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} crossOrigin={undefined} /> */}
-                                            {/* <p className={`font-medium text-sm capitalize ${switchStates[employeeDocument.id] ? 'text-[#19CE74]' : 'text-[#FF7E6A]'}`}>
-                                                {switchStates[item.id] ? 'active' : 'inactive'}
-                                            </p> */}
+                                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 py-2">
+                                            {/* Label pertanyaan */}
+                                            <p className="text-[#F4F7FF] text-sm flex-1">{item}</p>
+
+                                            {/* Switch + status */}
+                                            <div className="flex items-center gap-3 min-w-[120px] justify-end">
+                                                <Switch
+                                                    id={`custom-switch-${index}`}
+                                                    ripple={false}
+                                                    checked={switchStates[index] || false}
+                                                    onChange={() => handleToggle(index)}
+                                                    className="h-full w-full checked:bg-[#446FC7]"
+                                                    containerProps={{
+                                                        className: "w-11 h-6",
+                                                    }}
+                                                    circleProps={{
+                                                        className: "left-0.5 border-none",
+                                                    }}
+                                                    onResize={() => { }}
+                                                    onResizeCapture={() => { }}
+                                                    onPointerEnterCapture={() => { }}
+                                                    onPointerLeaveCapture={() => { }}
+                                                    crossOrigin=""
+                                                />
+                                                <p
+                                                    className={`text-sm font-medium capitalize ${switchStates[index] ? 'text-[#19CE74]' : 'text-[#FF7E6A]'
+                                                        }`}
+                                                >
+                                                    {switchStates[index] ? 'Active' : 'Inactive'}
+                                                </p>
+                                            </div>
                                         </div>
 
-                                        {/* Tampilkan input alasan jika switch OFF (false) */}
-                                        {switchStates[index] === false && (
+                                        {/* Input alasan jika switch OFF */}
+                                        {!switchStates[index] && (
                                             <input
                                                 type="text"
-                                                placeholder="Alasan"
+                                                placeholder="Reason"
                                                 value={reasons[index] || ''}
                                                 onChange={(e) =>
                                                     setReasons((prev) => ({
@@ -642,11 +654,27 @@ const EmployeesPage = () => {
                         <h2 className="text-2xl leading-[36px] text-white font-noto">Edit employee details</h2>
 
                         <div className="relative">
-                            <img
-                                src={getProfileImageURL()}
-                                alt="Profile"
-                                className="w-[120px] h-[120px] object-cover rounded-full"
-                            />
+                            {imageFile ? (
+                                <img
+                                    src={URL.createObjectURL(imageFile)}
+                                    alt="Preview"
+                                    className="w-[120px] h-[120px] object-cover rounded-full"
+                                />
+                            ) : editData?.user?.profile_image ? (
+                                <img
+                                    src={`${baseURL.toString() != '' ? baseURL.toString() : 'http://localhost:8000/'}storage/${editData.user.profile_image}`}
+                                    alt="Profile"
+                                    className="w-[120px] h-[120px] object-cover rounded-full"
+                                />
+                            ) : (
+                                <img
+                                    src="/images/Avatar.png"
+                                    alt="Default"
+                                    className="w-[120px] h-[120px] object-cover rounded-full"
+                                />
+                            )}
+
+
                             <input
                                 type="file"
                                 accept="image/*"
@@ -658,7 +686,6 @@ const EmployeesPage = () => {
                             />
                         </div>
 
-                        {/* Name */}
                         <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
                             <label className="text-xs text-[#98A1B3]">Name</label>
                             <input
@@ -674,7 +701,20 @@ const EmployeesPage = () => {
                             />
                         </div>
 
-                        {/* NRIC/FIN */}
+                        <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
+                            <label className="text-xs text-[#98A1B3]">Birth Date</label>
+                            <input
+                                type="date"
+                                className="bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3]"
+                                placeholder="Birth date"
+                                value={editData?.birth ? editData.birth.substring(0, 10) : ''}
+                                onChange={(e) =>
+                                    setEditData((prev) =>
+                                        prev ? { ...prev, birth: e.target.value } : null
+                                    )
+                                }
+                            />
+                        </div>
                         <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
                             <label className="text-xs text-[#98A1B3]">NRIC/FIN</label>
                             <input
@@ -690,7 +730,6 @@ const EmployeesPage = () => {
                             />
                         </div>
 
-                        {/* Mobile */}
                         <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
                             <label className="text-xs text-[#98A1B3]">Mobile</label>
                             <input
@@ -706,7 +745,6 @@ const EmployeesPage = () => {
                             />
                         </div>
 
-                        {/* Email */}
                         <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
                             <label className="text-xs text-[#98A1B3]">Email</label>
                             <input
@@ -722,7 +760,6 @@ const EmployeesPage = () => {
                             />
                         </div>
 
-                        {/* Address */}
                         <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
                             <label className="text-xs text-[#98A1B3]">Address</label>
                             <input
@@ -737,32 +774,43 @@ const EmployeesPage = () => {
                                 }
                             />
                         </div>
-
-                        {/* Role */}
                         <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
                             <label className="text-xs text-[#98A1B3]">Role</label>
-                            <input
-                                type="text"
-                                className="bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3]"
-                                placeholder="Role"
-                                value={editData.user?.role?.name ?? ''}
-                                onChange={(e) =>
-                                    setEditData((prev) =>
-                                        prev
-                                            ? {
-                                                ...prev,
-                                                user: {
-                                                    ...prev.user,
-                                                    role: { ...prev.user.role, name: e.target.value },
+                            <select
+                                className="bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] outline-none"
+                                value={editData?.user?.role?.id || ''}
+                                onChange={(e) => {
+                                    setEditData((prev) => {
+                                        if (!prev || !prev.user) return prev;
+
+                                        const selectedRole = roles.find((r) => r.id === e.target.value);
+                                        if (!selectedRole) return prev;
+
+                                        return {
+                                            ...prev,
+                                            user: {
+                                                ...prev.user,
+                                                role: {
+                                                    id: selectedRole.id,
+                                                    name: selectedRole.name,
                                                 },
-                                            }
-                                            : null
-                                    )
-                                }
-                            />
+                                            },
+                                        } as Employee; // <-- ini yang penting
+                                    });
+                                }}
+
+
+                            >
+                                <option value="" disabled>Select role</option>
+                                {roles.map((role) => (
+                                    <option key={role.id} value={role.id}>
+                                        {role.name}
+                                    </option>
+                                ))}
+                            </select>
                         </div>
 
-                        {/* Briefing Date */}
+
                         <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
                             <label className="text-xs text-[#98A1B3]">Briefing Date</label>
                             <input
@@ -782,6 +830,22 @@ const EmployeesPage = () => {
                             />
                         </div>
 
+                        <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
+                            <label className="text-xs text-[#98A1B3]">Briefing Conducted By</label>
+                            <input
+                                type="text"
+                                className="bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] outline-none"
+                                placeholder="Briefing Conducted By"
+                                value={editData?.briefing_conducted || ''}
+                                onChange={(e) =>
+                                    setEditData((prev) =>
+                                        prev ? { ...prev, briefing_conducted: e.target.value } : null
+                                    )
+                                }
+                            />
+                        </div>
+
+
                         {/* Buttons */}
                         <div className="flex gap-4 flex-wrap">
                             <button
@@ -799,7 +863,8 @@ const EmployeesPage = () => {
                         </div>
                     </div>
                 </div>
-            )}
+            )
+            }
 
             {
                 deleteEmployee && (

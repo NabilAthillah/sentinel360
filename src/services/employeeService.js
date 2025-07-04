@@ -30,13 +30,13 @@ const employeeService = {
     nric_fin_no,
     mobile,
     email,
-    id_role,
+    role,
     reporting_to,
     briefing_date,
     birth,
     address,
     briefing_conducted,
-    profile, // ✅ pastikan ini ada
+    profile, 
     token
 ) => {
     try {
@@ -45,7 +45,7 @@ const employeeService = {
             nric_fin_no,
             mobile,
             email,
-            id_role,
+            id_role: role,
             reporting_to,
             briefing_date,
             birth,
@@ -54,7 +54,7 @@ const employeeService = {
         };
 
         if (profile) {
-            payload.profile = profile; // ✅ tambahkan profile base64 jika ada
+            payload.profile = profile; 
         }
 
         const response = await api.put(`/employees/${id}`, payload, {
