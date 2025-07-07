@@ -242,7 +242,7 @@ const AllocationDnD = ({ sites, setLoading, allocationType, shiftType, date }: {
         if (dropId.startsWith("site-")) {
             const siteId = dropId.replace("site-", "");
 
-            setEmployees((prev) => prev.filter((e) => e.id.toString() !== employeeId));
+            setEmployees((prev) => prev.filter((e) => e.id.toString() != employeeId));
 
             try {
                 const token = localStorage.getItem('token');
@@ -265,8 +265,8 @@ const AllocationDnD = ({ sites, setLoading, allocationType, shiftType, date }: {
             }
         } else if (dropId === "employee-dropzone") {
             const matchedAssignments = assignments.filter((a) => {
-                if (a.employee.id !== employeeId) return false;
-                if (a.shift !== shiftType) return false;
+                if (a.employee.id != employeeId) return false;
+                if (a.shift != shiftType) return false;
 
                 if (allocationType === "bydate") {
                     return a.date === date;

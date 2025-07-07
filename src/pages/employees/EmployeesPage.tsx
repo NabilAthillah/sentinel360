@@ -46,6 +46,10 @@ const EmployeesPage = () => {
     const [reasons, setReasons] = useState<{ [key: number]: string }>({});
     const [searchTerm, setSearchTerm] = useState('');
 
+    const profileInputRef = useRef<HTMLInputElement | null>(null);
+    const [profileName, setProfileName] = useState<string | null>(null);
+    const [profileFile, setProfileFile] = useState<File | null>(null);
+
     const [showPassword, setShowPassword] = useState(false);
     const [name, setName] = useState('');
     const [no, setNo] = useState('');
@@ -232,7 +236,7 @@ const EmployeesPage = () => {
 
             if (response.success) {
                 setEmployees(response.data);
-                const filtered = response.data.filter((emp: Employee) => emp.user.id !== currentUser.id);
+                const filtered = response.data.filter((emp: Employee) => emp.user.id != currentUser.id);
                 setReportingEmployees(filtered);
             }
         } catch (error) {
@@ -409,10 +413,10 @@ const EmployeesPage = () => {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {(searchTerm.trim() !== '' ? filteredEmployees : employees).map((data, index) => (
+                                    {(searchTerm.trim() != '' ? filteredEmployees : employees).map((data, index) => (
                                         <tr className="border-b-[1px] border-b-[#98A1B3]" key={data.id}>
                                             <td className="text-[#F4F7FF] pt-6 pb-3">{index + 1}</td>
-                                            <td className="text-[#F4F7FF] pt-6 pb-3 ">{data.nric_fin_no}</td>
+                                            <td className="text-[#F4F7FF] pt-6 pb-3 ">{maskPhone(data.nric_fin_no)}</td>
                                             <td className="text-[#F4F7FF] pt-6 pb-3 ">{maskPhone(data.user.mobile)}</td>
                                             <td className="text-[#F4F7FF] pt-6 pb-3 ">{data.user.role.name}</td>
                                             <td className="flex justify-center items-center pt-6 pb-3 ">
@@ -683,10 +687,21 @@ const EmployeesPage = () => {
                                     alt="Default"
                                     className="w-[120px] h-[120px] object-cover rounded-full"
                                 />
-                            )}
+                            )} */}
+                            <div className="relative">
+                                <img
+                                    src="/images/Image@1x.png"
+                                    alt="Default"
+                                    className="w-[104px] h-[104px] object-cover rounded-full"
+                                />
+                                <img
+                                    src="/images/icon@1x.png"
+                                    alt="Default"
+                                    className="w-[104px] h-[104px] object-cover rounded-full"
+                                />
+                            </div>
 
-
-                            <input
+                            {/* <input
                                 type="file"
                                 accept="image/*"
                                 onChange={(e) => {
@@ -694,7 +709,48 @@ const EmployeesPage = () => {
                                     if (file) setImageFile(file);
                                 }}
                                 className="mt-2 text-sm text-white"
-                            />
+                            /> */}
+
+                            <div className="flex flex-col gap-3">
+                                <label className="text-xs leading-[21px] text-[#98A1B3]">Profile image <span className='text-xs'>(Max file size: 5MB)</span><span className='text-red-500 text-[10px]'>* Do not upload if you don't want to make changes</span></label>
+                                <div className="flex items-center gap-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => imageInputRef.current?.click()}
+                                        className="font-medium text-sm leading-[21px] text-[#EFBF04] px-5 py-2 border-[1px] border-[#EFBF04] rounded-full cursor-pointer w-fit transition-all hover:bg-[#EFBF04] hover:text-[#252C38]"
+                                    >
+                                        Upload file
+                                    </button>
+                                    {imageName && (
+                                        <span className="text-sm text-[#98A1B3]">{imageName}</span>
+                                    )}
+                                </div>
+                                {editData.user.profile_image && (
+                                    <img src={`${baseURL.toString() != '' ? baseURL.toString() : 'http://localhost:8000/'}storage/${editData.user.profile_image}`} alt="Image" className='h-14 w-fit' />
+                                )}
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    ref={imageInputRef}
+                                    onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        console.log("Selected image file:", file);
+                                        if (file) {
+                                            const maxSizeInBytes = 5 * 1024 * 1024;
+
+                                            if (file.size > maxSizeInBytes) {
+                                                alert("Maximum image size is 5MB!");
+                                                e.target.value = "";
+                                                return;
+                                            }
+
+                                            setImageName(file.name);
+                                            setImageFile(file)
+                                        }
+                                    }}
+                                    className="hidden"
+                                />
+                            </div>
                         </div>
 
                         <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">

@@ -16,7 +16,7 @@ const Upload = () => {
 
     return (
         <div className="flex flex-col gap-3">
-            <label className="text-xs leading-[21px] text-[#98A1B3]">Video</label>
+            <label className="text-xs leading-[21px] text-[#98A1B3]">Video <span className='text-xs'>(Max file size: 5MB)</span></label>
             <div className="flex items-center gap-4">
                 <button
                     type="button"
