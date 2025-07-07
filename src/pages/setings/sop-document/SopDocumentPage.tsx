@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import DeleteModal from "../../../components/DeleteModal";
-import Loader from "../../../components/Loader";
 import Navbar from "../../../components/Navbar";
 import MainLayout from "../../../layouts/MainLayout";
 import sopDocumentService from "../../../services/sopDocumentService";
 import { SopDocument } from "../../../types/sopDocument";
+import Loader from "../../../components/Loader";
+import { useNavigate } from "react-router-dom";
 const SopDocumentPage = () => {
     const [deleteModal, setDeleteModal] = useState(false);
     const [viewDoc, setViewDoc] = useState(false);
@@ -176,9 +176,9 @@ const SopDocumentPage = () => {
 
     return (
         <MainLayout>
-            <div className='flex flex-col gap-4 px-6 pb-20 w-full h-full flex-1'>
+            <div className='flex flex-col gap-4 px-6 pb-20 w-full h-full'>
                 <h2 className='text-2xl leading-9 text-white font-noto'>Settings</h2>
-                <div className="flex flex-col gap-8 w-full h-full flex-1">
+                <div className="flex flex-col gap-8 w-full h-full">
                     <Navbar />
                     <div className="flex flex-col gap-10 bg-[#252C38] p-6 rounded-lg w-full h-full">
                         <div className="w-full flex justify-between items-center gap-4 flex-wrap lg:flex-nowrap">
@@ -202,8 +202,8 @@ const SopDocumentPage = () => {
                                 <button onClick={() => setAddDoc(true)} className="font-medium text-base min-w-[200px] text-[#181d26] px-[46.5px] py-3 border-[1px] border-[#EFBF04] bg-[#EFBF04] rounded-full hover:bg-[#181d26] hover:text-[#EFBF04] transition-all">Add document</button>
                             </div>
                         </div>
-                        <div className="w-full h-full relative flex flex-1 pb-10">
-                            <div className="w-full h-fit overflow-auto pb-5 flex-1">
+                        <div className="w-full h-full relative">
+                            <div className="w-full h-fit overflow-auto pb-5">
                                 <table className="w-full min-w-[500px]">
                                     <thead>
                                         <tr>
@@ -284,7 +284,7 @@ const SopDocumentPage = () => {
 
                         <div className="w-[394px] h-[289px] rounded-lg">
                             <img
-                                src={`${baseURL.toString() != '' ? baseURL.toString() : 'http://localhost:8000/'}storage/${sop.document}`}
+                                src={`${baseURL.toString() !== '' ? baseURL.toString() : 'http://localhost:8000/'}storage/${sop.document}`}
                                 alt="SOP Document"
                                 className="mx-auto max-h-[400px] object-contain"
                             />
@@ -316,7 +316,7 @@ const SopDocumentPage = () => {
                             />
                         </div>
                         <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                            <label className="text-xs leading-[21px] text-[#98A1B3]">SOP Document image <span className='text-xs'>(Max file size: 5MB)</span></label>
+                            <label className="text-xs leading-[21px] text-[#98A1B3]">SOP Document image</label>
                             <div className="flex items-center gap-4">
                                 <button
                                     type="button"
@@ -337,14 +337,6 @@ const SopDocumentPage = () => {
                                     const file = e.target.files?.[0];
                                     console.log("Selected image file:", file);
                                     if (file) {
-                                        const maxSizeInBytes = 5 * 1024 * 1024;
-
-                                        if (file.size > maxSizeInBytes) {
-                                            alert("Maximum image size is 5MB!");
-                                            e.target.value = "";
-                                            return;
-                                        }
-
                                         setImageName(file.name);
                                         setImageFile(file)
                                     }
@@ -376,7 +368,7 @@ const SopDocumentPage = () => {
                             />
                         </div>
                         <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                            <label className="text-xs leading-[21px] text-[#98A1B3]">Site image <span className='text-xs'>(Max file size: 5MB)</span></label>
+                            <label className="text-xs leading-[21px] text-[#98A1B3]">Site image</label>
                             <div className="flex items-center gap-4">
                                 <button
                                     type="button"
@@ -397,14 +389,6 @@ const SopDocumentPage = () => {
                                     const file = e.target.files?.[0];
                                     console.log("Selected image file:", file);
                                     if (file) {
-                                        const maxSizeInBytes = 5 * 1024 * 1024;
-
-                                        if (file.size > maxSizeInBytes) {
-                                            alert("Maximum image size is 5MB!");
-                                            e.target.value = "";
-                                            return;
-                                        }
-
                                         setImageName(file.name);
                                         setImageFile(file)
                                     }

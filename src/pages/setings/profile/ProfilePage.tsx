@@ -1,11 +1,12 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import Loader from "../../../components/Loader";
-import { setUser } from "../../../features/user/userSlice";
 import MainLayout from "../../../layouts/MainLayout";
 import authService from "../../../services/authService";
 import { RootState } from "../../../store";
+import { setUser } from "../../../features/user/userSlice";
+import { useRef } from "react";
 
 
 const ProfilePage = () => {
@@ -25,7 +26,7 @@ const ProfilePage = () => {
         email: user?.email,
         old_password: '',
         new_password: '',
-
+        
     });
 
     const handleSubmit = async (e: React.SyntheticEvent) => {
@@ -156,7 +157,7 @@ const ProfilePage = () => {
                         </div>
                         <div className="flex flex-col gap-3">
                             <label className="text-xs leading-[21px] text-[#98A1B3]">
-                                Profile photo <span className='text-xs'>(Max file size: 5MB)</span><span className='text-red-500 text-[10px]'>* Do not upload if you don't want to make changes</span>
+                                Profile photo <span className='text-red-500 text-[10px]'>* Do not upload if you don't want to make changes</span>
                             </label>
 
                             <div className="flex items-center gap-4">
@@ -180,7 +181,7 @@ const ProfilePage = () => {
                                     className="h-14 w-auto rounded"
                                 />
                             ) : user ? (
-                                <img src={`${baseURL.toString() != '' ? baseURL.toString() : 'http://localhost:8000/'}storage/${user.profile_image}`} alt="Image" className='h-14 w-fit' />
+                                    <img src={`${baseURL.toString() != '' ? baseURL.toString() : 'http://localhost:8000/'}storage/${user.profile_image}`} alt="Image" className='h-14 w-fit' />
                             ) : null}
 
                             <input
@@ -191,14 +192,6 @@ const ProfilePage = () => {
                                 onChange={(e) => {
                                     const file = e.target.files?.[0];
                                     if (file) {
-                                        const maxSizeInBytes = 5 * 1024 * 1024;
-
-                                        if (file.size > maxSizeInBytes) {
-                                            alert("Maximum image size is 5MB!");
-                                            e.target.value = "";
-                                            return;
-                                        }
-
                                         setImageName(file.name);
                                         setImageFile(file);
                                     }

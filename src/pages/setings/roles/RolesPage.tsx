@@ -56,7 +56,7 @@ const RolesPage = () => {
 
     const togglePermission = (id: string) => {
         setSelectedPermissions((prev) =>
-            prev.includes(id) ? prev.filter((p) => p != id) : [...prev, id]
+            prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
         );
     };
 
@@ -64,7 +64,7 @@ const RolesPage = () => {
         if (!editedRole) return;
 
         const updatedPermissions = editedRole.permissions.some(p => p.id === id)
-            ? editedRole.permissions.filter(p => p.id != id)
+            ? editedRole.permissions.filter(p => p.id !== id)
             : [...editedRole.permissions, permissionsFlat.find(p => p.id === id)!];
 
         setEditedRole({ ...editedRole, permissions: updatedPermissions });

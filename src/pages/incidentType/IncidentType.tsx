@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import MainLayout from "../../layouts/MainLayout";
-import IncidentService from "../../services/incidentFreeService";
 import { IncidentFree } from "../../types/incidentfree";
-import { IncidentType } from "../../types/incidentType";
+import IncidentService from "../../services/incidentFreeService";
 import { Site } from "../../types/site";
+import { IncidentType } from "../../types/incidentType";
 const IncidentPage = () => {
     const [incident, setIncident] = useState<IncidentFree[]>([]);
     const [viewImage, setViewImage] = useState<string | null>(null);
@@ -40,7 +40,7 @@ const IncidentPage = () => {
 
             if (response.success) {
                 setIncident(response.data);
-                const filtered = response.data.filter((emp: IncidentFree) => emp.user.id != currentUser.id);
+                const filtered = response.data.filter((emp: IncidentFree) => emp.user.id !== currentUser.id);
                 setReportingIndcident(filtered);
             }
         } catch (error) {
@@ -116,7 +116,7 @@ const IncidentPage = () => {
         }
     };
     console.log("Sites: ", sites);
-    console.log("IncidentTypes: ", incidentTypes);
+console.log("IncidentTypes: ", incidentTypes);
 
     useEffect(() => {
         fetchIncidents();
