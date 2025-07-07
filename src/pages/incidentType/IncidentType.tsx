@@ -18,16 +18,16 @@ const IncidentPage = () => {
     const [incidentTypes, setIncidentTypes] = useState<IncidentType[]>([]);
     const [sites, setSites] = useState<Site[]>([]);
     const [whatHappened, setWhatHappened] = useState<string>('');
-    const [whereHappened, setWhereHappened] = useState<string>('');  
-    const [whyItHappened, setWhyItHappened] = useState<string>('');  
-    const [personsInvolved, setPersonsInvolved] = useState<string>('');  
-    const [personsInjured, setPersonsInjured] = useState<string>('');  
-    const [incidentDetails, setIncidentDetails] = useState<string>('');  
-    const [opsIncharge, setOpsIncharge] = useState<string>('');  
-    const [reportedToManagement, setReportedToManagement] = useState<boolean>(false);  
-    const [reportedToPolice, setReportedToPolice] = useState<boolean>(false);  
-    const [propertyDamaged, setPropertyDamaged] = useState<boolean>(false);  
-    const [cctvImage, setCctvImage] = useState<string | null>(null);  
+    const [whereHappened, setWhereHappened] = useState<string>('');
+    const [whyItHappened, setWhyItHappened] = useState<string>('');
+    const [personsInvolved, setPersonsInvolved] = useState<string>('');
+    const [personsInjured, setPersonsInjured] = useState<string>('');
+    const [incidentDetails, setIncidentDetails] = useState<string>('');
+    const [opsIncharge, setOpsIncharge] = useState<string>('');
+    const [reportedToManagement, setReportedToManagement] = useState<boolean>(false);
+    const [reportedToPolice, setReportedToPolice] = useState<boolean>(false);
+    const [propertyDamaged, setPropertyDamaged] = useState<boolean>(false);
+    const [cctvImage, setCctvImage] = useState<string | null>(null);
     const imageInputRef = useRef<HTMLInputElement | null>(null);
 
     const fetchIncidents = async () => {
@@ -115,6 +115,8 @@ const IncidentPage = () => {
             setImageFile(null);
         }
     };
+    console.log("Sites: ", sites);
+console.log("IncidentTypes: ", incidentTypes);
 
     useEffect(() => {
         fetchIncidents();
@@ -152,13 +154,13 @@ const IncidentPage = () => {
                                 {incident.map((item, idx) => (
                                     <tr key={item.id}>
                                         <td className="text-white py-4">{idx + 1}</td>
-                                        <td className="text-white py-4">{item.happened_at.split('T')[0]}</td> 
-                                        <td className="text-white py-4">{item.happened_at.split('T')[1].split('.')[0]}</td> 
-                                        <td className="text-white py-4">{item.site.name}</td> 
-                                        <td className="text-white py-4">{item.why_happened}</td> 
-                                        <td className="text-white py-4">{item.user.name}</td> 
+                                        <td className="text-white py-4">{item.happened_at.split('T')[0]}</td>
+                                        <td className="text-white py-4">{item.happened_at.split('T')[1].split('.')[0]}</td>
+                                        <td className="text-white py-4">{item.site.name}</td>
+                                        <td className="text-white py-4">{item.why_happened}</td>
+                                        <td className="text-white py-4">{item.user.name}</td>
                                         <td className="text-center">
-                                            
+
                                         </td>
                                     </tr>
                                 ))}
@@ -177,22 +179,20 @@ const IncidentPage = () => {
                             <label className="text-xs text-[#98A1B3]">Site Name</label>
                             <select
                                 className="bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] outline-none"
-                                value={siteName}  
+                                value={siteName}
                                 onChange={(e) => {
-                                    setSiteName(e.target.value);  // Update siteName when an option is selected
+                                    setSiteName(e.target.value);
                                 }}
                             >
                                 <option value="" disabled>Select a site</option>
-                                {sites.map((site) => (
-                                    <option key={site.id} value={site.name}>
-                                        {site.name}
-                                    </option>
+                                {sites?.length > 0 && sites.map(site => (
+                                    <option key={site.id} value={site.name}>{site.name}</option>
                                 ))}
+
                             </select>
                         </div>
 
 
-                        {/* What Happened Dropdown */}
                         <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
                             <label className="text-xs leading-[21px] text-[#98A1B3]">What Happened</label>
                             <select
@@ -208,7 +208,6 @@ const IncidentPage = () => {
                             </select>
                         </div>
 
-                        {/* New fields based on the form */}
                         <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
                             <label className="text-xs leading-[21px] text-[#98A1B3]">Where Happened</label>
                             <input
