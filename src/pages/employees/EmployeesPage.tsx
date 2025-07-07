@@ -12,6 +12,7 @@ import employeeService from "../../services/employeeService";
 import roleService from "../../services/roleService";
 import { RootState } from "../../store";
 import { Employee } from "../../types/employee";
+import EmployeeDocumentPivot from "./EmployeesDocumentPivot";
 
 type User = {
     id: string;
@@ -950,88 +951,17 @@ const EmployeesPage = () => {
                     </div>
                 )
             }
-            {
-                uploadEmployee && (
-                    <div>
-                        <div className="fixed w-screen h-screen flex justify-end items-start top-0 left-0 z-50 bg-[rgba(0,0,0,0.5)]">
-                            <div className="flex flex-col gap-6 p-6 bg-[#252C38] max-w-[568px] w-full max-h-screen overflow-auto h-full">
-                                <h2 className='text-2xl leading-[36px] text-white font-noto'>Edit employee details</h2>
-                                <div className="relative flex gap-10 w-full">
-                                    <img src="/images/Avatar2.png" alt="" className="w-[104px] h-[104px]" />
-                                    <div className="flex flex-col gap-4">
-                                        <p className="font-medium text-xl leading-[20px] text-[#F4F7FF]">Michella Yeow</p>
-                                        <div className="flex gap-16">
-                                            <div className="flex flex-col gap-1">
-                                                <p className="text-xs leading-[16px] text-[#98A1B3]">NRIC/FIN</p>
-                                                <p className="leading-[20px] text-[#F4F7FF]">***304F</p>
-                                            </div>
-                                            <div className="flex flex-col gap-1">
-                                                <p className="text-xs leading-[16px] text-[#98A1B3]">Mobile</p>
-                                                <p className="leading-[20px] text-[#F4F7FF]">***5672</p>
-                                            </div>
-                                        </div>
-                                        <div className="flex flex-col gap-1">
-                                            <p className="text-xs leading-[16px] text-[#98A1B3]">Email</p>
-                                            <p className="leading-[20px] text-[#F4F7FF]">mi******ow@gmail.com</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                {/* <div className="flex w-full pl-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834]">
-                                    <div className="flex flex-col w-full">
-                                        <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Password</label>
-                                        <input
-                                            type={showPassword ? "text" : "password"}
-                                            className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
-                                            placeholder="Masukkan password"
-                                            value={'●●●●●●●●●●'}
-                                        />
-                                    </div>
-                                    <button
-                                        type="button"
-                                        onClick={togglePassword}
-                                        className="p-2 rounded-[4px_4px_0px_0px]"
-                                        tabIndex={-1}
-                                    >
-                                        {showPassword ? (
-                                            <EyeOff size={20} color="#98A1B3" style={{ backgroundColor: "#222834", borderRadius: "4px" }} />
-                                        ) : (
-                                            <Eye size={20} color="#98A1B3" style={{ backgroundColor: "#222834", borderRadius: "4px" }} />
-                                        )}
-                                    </button>
-                                </div> */}
-                                <div className="flex flex-col gap-3">
-                                    <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Lorem ipsum</label>
-                                    <button className="font-medium text-sm leading-[21px] text-[#EFBF04] px-5 py-2 border-[1px] border-[#EFBF04] rounded-full cursor-pointer w-fit transition-all hover:bg-[#EFBF04] hover:text-[#252C38]">Upload file</button>
-                                </div>
-                                <div className="flex flex-col gap-3">
-                                    <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">PLRD license</label>
-                                    <button className="font-medium text-sm leading-[21px] text-[#EFBF04] px-5 py-2 border-[1px] border-[#EFBF04] rounded-full cursor-pointer w-fit transition-all hover:bg-[#EFBF04] hover:text-[#252C38]">Upload file</button>
-                                </div>
-                                <div className="flex flex-col gap-3">
-                                    <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Employment letter</label>
-                                    <button className="font-medium text-sm leading-[21px] text-[#EFBF04] px-5 py-2 border-[1px] border-[#EFBF04] rounded-full cursor-pointer w-fit transition-all hover:bg-[#EFBF04] hover:text-[#252C38]">Upload file</button>
-                                </div>
-                                <div className="flex flex-col gap-3">
-                                    <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Resume</label>
-                                    <button className="font-medium text-sm leading-[21px] text-[#EFBF04] px-5 py-2 border-[1px] border-[#EFBF04] rounded-full cursor-pointer w-fit transition-all hover:bg-[#EFBF04] hover:text-[#252C38]">Upload file</button>
-                                </div>
-                                <div className="flex flex-col gap-3">
-                                    <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Certifications</label>
-                                    <button className="font-medium text-sm leading-[21px] text-[#EFBF04] px-5 py-2 border-[1px] border-[#EFBF04] rounded-full cursor-pointer w-fit transition-all hover:bg-[#EFBF04] hover:text-[#252C38]">Upload file</button>
-                                </div>
-                                <div className="flex flex-col gap-3">
-                                    <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Qualifications</label>
-                                    <button className="font-medium text-sm leading-[21px] text-[#EFBF04] px-5 py-2 border-[1px] border-[#EFBF04] rounded-full cursor-pointer w-fit transition-all hover:bg-[#EFBF04] hover:text-[#252C38]">Upload file</button>
-                                </div>
-                                <div className="flex gap-4 flex-wrap">
-                                    <button onClick={() => { setUploadEmployee(false); toast.success('Employee document uploaded successfully') }} className="font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">Save</button>
-                                    <button onClick={() => setUploadEmployee(false)} className="font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border-[1px] border-[#868686] rounded-full transition-all hover:bg-[#868686] hover:text-[#252C38]">Cancel</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )
-            }
+            {uploadEmployee && user?.employee?.id && (
+                <EmployeeDocumentPivot
+                    employeeId={user.employee.id}
+                    token={localStorage.getItem("token") || ""}
+                    fetchEmployees={fetchEmployees}
+                    user={user}
+                    onClose={() => setUploadEmployee(false)}
+                />
+            )}
+
+
         </MainLayout >
     )
 }

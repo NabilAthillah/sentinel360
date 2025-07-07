@@ -37,7 +37,7 @@ const RolesPage = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [filteredRoles, setFilteredRoles] = useState<Role[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 10;
+    const itemsPerPage = 5;
 
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -199,7 +199,7 @@ const RolesPage = () => {
                                     <tbody>
                                         {currentItems.map((data, index) => (
                                             <tr>
-                                                <td className="text-[#F4F7FF] pt-6 pb-3">{index + 1}</td>
+                                                <td className="text-[#F4F7FF] pt-6 pb-3">{indexOfFirstItem + index + 1}</td>
                                                 <td className="text-[#F4F7FF] pt-6 pb-3 ">{data.name}</td>
                                                 <td className="pt-6 pb-3">
                                                     <div className="flex gap-6 items-center justify-center">

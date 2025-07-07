@@ -21,7 +21,7 @@ const OccurrenceCatgPage = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [filteredCategories, setFilteredCategories] = useState<OccurrenceCategory[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 10;
+    const itemsPerPage = 5;
 
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -240,7 +240,7 @@ const OccurrenceCatgPage = () => {
                                     <tbody>
                                         {currentItems.map((category, index) => (
                                             <tr key={index}>
-                                                <td className="text-[#F4F7FF] pt-6 pb-3">{index + 1}</td>
+                                                <td className="text-[#F4F7FF] pt-6 pb-3">{indexOfFirstItem + index + 1}</td>
                                                 <td className="text-[#F4F7FF] pt-6 pb-3 ">{category.name}</td>
                                                 <td className="text-[#F4F7FF] pt-6 pb-3 ">
                                                     <div className="flex items-center gap-4 w-40">
