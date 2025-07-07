@@ -17,7 +17,7 @@ const AttendancePage = () => {
     const toggleData = (data: string) => {
         setSelectedDatas((prev) =>
             prev.includes(data)
-                ? prev.filter((p) => p !== data)
+                ? prev.filter((p) => p != data)
                 : [...prev, data]
         );
     };

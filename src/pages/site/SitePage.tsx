@@ -450,7 +450,7 @@ const SitePage = () => {
                                 </div>
                             </div>
                             <div className="flex flex-col gap-3">
-                                <label className="text-xs leading-[21px] text-[#98A1B3]">Site image <span className='text-red-500 text-[10px]'>* Do not upload if you don't want to make changes</span></label>
+                                <label className="text-xs leading-[21px] text-[#98A1B3]">Site image <span className='text-xs'>(Max file size: 5MB)</span><span className='text-red-500 text-[10px]'>* Do not upload if you don't want to make changes</span></label>
                                 <div className="flex items-center gap-4">
                                     <button
                                         type="button"
@@ -474,6 +474,14 @@ const SitePage = () => {
                                         const file = e.target.files?.[0];
                                         console.log("Selected image file:", file);
                                         if (file) {
+                                            const maxSizeInBytes = 5 * 1024 * 1024;
+
+                                            if (file.size > maxSizeInBytes) {
+                                                alert("Maximum image size is 5MB!");
+                                                e.target.value = "";
+                                                return;
+                                            }
+
                                             setImageName(file.name);
                                             setImageFile(file)
                                         }
@@ -482,7 +490,7 @@ const SitePage = () => {
                                 />
                             </div>
                             <div className="flex flex-col gap-3">
-                                <label className="text-xs leading-[21px] text-[#98A1B3]">Organisation chart <span className='text-red-500 text-[10px]'>* Do not upload if you don't want to make changes</span></label>
+                                <label className="text-xs leading-[21px] text-[#98A1B3]">Organisation chart <span className='text-xs'>(Max file size: 5MB)</span><span className='text-red-500 text-[10px]'>* Do not upload if you don't want to make changes</span></label>
                                 <div className="flex items-center gap-4">
                                     <button
                                         type="button"
@@ -505,6 +513,14 @@ const SitePage = () => {
                                         const file = e.target.files?.[0];
                                         console.log("Selected image file:", file);
                                         if (file) {
+                                            const maxSizeInBytes = 5 * 1024 * 1024;
+
+                                            if (file.size > maxSizeInBytes) {
+                                                alert("Maximum image size is 5MB!");
+                                                e.target.value = "";
+                                                return;
+                                            }
+
                                             setChartName(file.name);
                                             setChartFile(file)
                                         }
@@ -641,7 +657,7 @@ const SitePage = () => {
                                 </div>
                             </div>
                             <div className="flex flex-col gap-3">
-                                <label className="text-xs leading-[21px] text-[#98A1B3]">Site image</label>
+                                <label className="text-xs leading-[21px] text-[#98A1B3]">Site image <span className='text-xs'>(Max file size: 5MB)</span></label>
                                 <div className="flex items-center gap-4">
                                     <button
                                         type="button"
@@ -662,6 +678,14 @@ const SitePage = () => {
                                         const file = e.target.files?.[0];
                                         console.log("Selected image file:", file);
                                         if (file) {
+                                            const maxSizeInBytes = 5 * 1024 * 1024;
+
+                                            if (file.size > maxSizeInBytes) {
+                                                alert("Maximum image size is 5MB!");
+                                                e.target.value = "";
+                                                return;
+                                            }
+
                                             setImageName(file.name);
                                             setImageFile(file)
                                         }
@@ -670,7 +694,7 @@ const SitePage = () => {
                                 />
                             </div>
                             <div className="flex flex-col gap-3">
-                                <label className="text-xs leading-[21px] text-[#98A1B3]">Organisation chart</label>
+                                <label className="text-xs leading-[21px] text-[#98A1B3]">Organisation chart <span className='text-xs'>(Max file size: 5MB)</span></label>
                                 <div className="flex items-center gap-4">
                                     <button
                                         type="button"
@@ -690,6 +714,14 @@ const SitePage = () => {
                                         const file = e.target.files?.[0];
                                         console.log("Selected image file:", file);
                                         if (file) {
+                                            const maxSizeInBytes = 5 * 1024 * 1024;
+
+                                            if (file.size > maxSizeInBytes) {
+                                                alert("Maximum image size is 5MB!");
+                                                e.target.value = "";
+                                                return;
+                                            }
+
                                             setChartName(file.name);
                                             setChartFile(file)
                                         }

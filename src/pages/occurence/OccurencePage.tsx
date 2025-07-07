@@ -6,10 +6,10 @@ import MainLayout from "../../layouts/MainLayout";
 import occurrenceCatgService from "../../services/occurrenceCatgService";
 import occurrenceService from "../../services/occurrenceService";
 import siteService from "../../services/siteService";
+import { Employee } from "../../types/employee";
 import { Occurrence } from "../../types/occurrence";
 import { OccurrenceCategory } from "../../types/occurrenceCategory";
 import { Site } from "../../types/site";
-import { Employee } from "../../types/employee";
 interface OccurrenceInput {
     id_site: string;
     id_category: string;
@@ -437,7 +437,7 @@ const OccurencePage = () => {
 
                                     return (
                                         <div key={realIndex} className="flex flex-col gap-6">
-                                            {formData.length > 1 && realIndex !== formData.length - 1 && (
+                                            {formData.length > 1 && realIndex != formData.length - 1 && (
                                                 <button
                                                     type="button"
                                                     onClick={() => handleRemove(realIndex)}
