@@ -11,3 +11,39 @@
 .font-open {
     font-family: "Open Sans", sans-serif;
 }
+
+.react-tel-input .flag-dropdown {
+  background-color: #222834 !important;
+  background: #222834 !important;
+  border: none !important;
+}
+
+.react-tel-input .selected-flag:hover,
+.react-tel-input .flag-dropdown.open .selected-flag,
+.react-tel-input .flag-dropdown.open {
+  background-color: #222834 !important;
+  background: #222834 !important;
+}
+
+.react-tel-input .country-list {
+  background-color: #222834 !important;
+  background: #222834 !important;
+  color: #F4F7FF !important;
+}
+
+.react-tel-input .country-list .country:hover {
+  background-color: #3a3f4e !important;
+  background: #3a3f4e !important;
+}
+
+.react-tel-input .country-list .country.highlight {
+  background-color: #4a5162 !important;
+  background: #4a5162 !important;
+}
+
+.react-tel-input .selected-flag:hover, .react-tel-input .selected-flag:focus
+ {
+    background-color: #222834;
+    background: #222834 !important;
+}
+

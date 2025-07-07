@@ -1,17 +1,17 @@
-import { Eye, EyeOff } from "lucide-react";
-import { use, useEffect, useState } from "react";
+import { Switch } from "@material-tailwind/react";
+import { useEffect, useRef, useState } from "react";
+import PhoneInput from "react-phone-input-2";
+import 'react-phone-input-2/lib/style.css';
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import DeleteModal from "../../components/DeleteModal";
 import Loader from "../../components/Loader";
-import { SwitchCustomStyleToggleable } from "../../components/SwitchCustomStyleToggleable";
 import MainLayout from "../../layouts/MainLayout";
 import employeeService from "../../services/employeeService";
 import roleService from "../../services/roleService";
 import { RootState } from "../../store";
 import { Employee } from "../../types/employee";
-import { Switch } from "@material-tailwind/react";
 
 type User = {
     id: string;
@@ -45,6 +45,10 @@ const EmployeesPage = () => {
     const [switchStates, setSwitchStates] = useState<{ [key: number]: boolean }>({});
     const [reasons, setReasons] = useState<{ [key: number]: string }>({});
     const [searchTerm, setSearchTerm] = useState('');
+
+    const profileInputRef = useRef<HTMLInputElement | null>(null);
+    const [profileName, setProfileName] = useState<string | null>(null);
+    const [profileFile, setProfileFile] = useState<File | null>(null);
 
     const [showPassword, setShowPassword] = useState(false);
     const [name, setName] = useState('');
@@ -352,6 +356,10 @@ const EmployeesPage = () => {
         }
     }, [user])
 
+    useEffect(() => {
+        console.log(addData.mobile)
+    }, [addData.mobile])
+
     return (
         <MainLayout>
             <div className='flex flex-col gap-6 px-6 pb-20 w-full min-h-[calc(100vh-91px)] h-full'>
@@ -485,11 +493,41 @@ const EmployeesPage = () => {
                             </div>
                             <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
                                 <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Mobile</label>
-                                <input
+                                {/* <input
                                     type={"text"}
                                     className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
                                     placeholder='Mobile'
                                     onChange={(e) => setAddData(prev => ({ ...prev, mobile: e.target.value }))}
+                                /> */}
+                                <PhoneInput
+                                    country={'sg'} // default Indonesia
+                                    value={addData.mobile}
+                                    onChange={(phone) => {
+                                        const onlyNumbers = phone.replace(/\s/g, '');
+                                        const withPlus = `+${onlyNumbers}`;
+                                        setAddData((prev) => ({ ...prev, mobile: withPlus }));
+                                    }}
+                                    inputProps={{
+                                        inputMode: 'tel',
+                                    }}
+                                    inputStyle={{
+                                        backgroundColor: '#222834',
+                                        color: '#F4F7FF',
+                                        border: 'none',
+                                        width: '100%',
+                                    }}
+                                    buttonStyle={{
+                                        backgroundColor: '#222834',
+                                        border: 'none',
+                                    }}
+                                    containerStyle={{
+                                        backgroundColor: '#222834',
+                                    }}
+                                    dropdownStyle={{
+                                        backgroundColor: '#2f3644',
+                                        color: '#fff',
+                                    }}
+                                    placeholder="Mobile"
                                 />
                             </div>
                             <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
@@ -641,7 +679,7 @@ const EmployeesPage = () => {
                         <h2 className="text-2xl leading-[36px] text-white font-noto">Edit employee details</h2>
 
                         <div className="relative">
-                            {imageFile ? (
+                            {/* {imageFile ? (
                                 <img
                                     src={URL.createObjectURL(imageFile)}
                                     alt="Preview"
@@ -659,8 +697,19 @@ const EmployeesPage = () => {
                                     alt="Default"
                                     className="w-[120px] h-[120px] object-cover rounded-full"
                                 />
-                            )}
-
+                            )} */}
+                            <div className="relative">
+                                <img
+                                    src="/images/Image@1x.png"
+                                    alt="Default"
+                                    className="w-[104px] h-[104px] object-cover rounded-full"
+                                />
+                                <img
+                                    src="/images/icon@1x.png"
+                                    alt="Default"
+                                    className="w-[104px] h-[104px] object-cover rounded-full"
+                                />
+                            </div>
 
                             <input
                                 type="file"
@@ -719,7 +768,7 @@ const EmployeesPage = () => {
 
                         <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
                             <label className="text-xs text-[#98A1B3]">Mobile</label>
-                            <input
+                            {/* <input
                                 type="text"
                                 className="bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3]"
                                 placeholder="Mobile"
@@ -729,6 +778,38 @@ const EmployeesPage = () => {
                                         prev ? { ...prev, user: { ...prev.user, mobile: e.target.value } } : null
                                     )
                                 }
+                            /> */}
+                            <PhoneInput
+                                country={'sg'}
+                                value={editData.user?.mobile ?? ''}
+                                onChange={(phone) => {
+                                    const cleaned = phone.replace(/[^\d+]/g, '');
+                                    setEditData((prev) =>
+                                        prev ? { ...prev, user: { ...prev.user, mobile: cleaned } } : null
+                                    );
+                                }}
+                                inputProps={{
+                                    inputMode: 'numeric',
+                                    pattern: '[0-9]*',
+                                }}
+                                inputStyle={{
+                                    backgroundColor: '#222834',
+                                    color: '#F4F7FF',
+                                    border: 'none',
+                                    width: '100%',
+                                }}
+                                buttonStyle={{
+                                    backgroundColor: '#222834',
+                                    border: 'none',
+                                }}
+                                containerStyle={{
+                                    backgroundColor: '#222834',
+                                }}
+                                dropdownStyle={{
+                                    backgroundColor: '#2f3644',
+                                    color: '#fff',
+                                }}
+                                placeholder="Mobile"
                             />
                         </div>
 
@@ -782,7 +863,7 @@ const EmployeesPage = () => {
                                                     name: selectedRole.name,
                                                 },
                                             },
-                                        } as Employee; 
+                                        } as Employee;
                                     });
                                 }}
 
@@ -886,7 +967,7 @@ const EmployeesPage = () => {
                                         </div>
                                     </div>
                                 </div>
-                                <div className="flex w-full pl-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834]">
+                                {/* <div className="flex w-full pl-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834]">
                                     <div className="flex flex-col w-full">
                                         <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Password</label>
                                         <input
@@ -908,7 +989,7 @@ const EmployeesPage = () => {
                                             <Eye size={20} color="#98A1B3" style={{ backgroundColor: "#222834", borderRadius: "4px" }} />
                                         )}
                                     </button>
-                                </div>
+                                </div> */}
                                 <div className="flex flex-col gap-3">
                                     <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Lorem ipsum</label>
                                     <button className="font-medium text-sm leading-[21px] text-[#EFBF04] px-5 py-2 border-[1px] border-[#EFBF04] rounded-full cursor-pointer w-fit transition-all hover:bg-[#EFBF04] hover:text-[#252C38]">Upload file</button>
