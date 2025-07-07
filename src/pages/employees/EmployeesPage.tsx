@@ -110,17 +110,26 @@ const EmployeesPage = () => {
         try {
             const token = localStorage.getItem('token');
 
-            const response = await employeeService.addEmployee(
-                addData.name,
-                addData.nric_fin_no,
-                addData.mobile,
-                addData.email,
-                addData.id_role,
-                addData.reporting_to,
-                addData.briefing_date,
-                addData.address,
-                addData.briefing_conducted,
-                token);
+            const checklistMapped = data.reduce((acc, question, index) => {
+                acc[`q${index + 1}`] = question;
+                acc[`a${index + 1}`] = switchStates[index] ? 1 : 0;
+                return acc;
+            }, {} as Record<string, any>);
+
+            const payload = {
+                name: addData.name,
+                nric_fin_no: addData.nric_fin_no,
+                mobile: addData.mobile,
+                email: addData.email,
+                id_role: addData.id_role,
+                reporting_to: addData.reporting_to,
+                briefing_date: addData.briefing_date,
+                address: addData.address,
+                briefing_conducted: addData.briefing_conducted,
+                ...checklistMapped,
+            };
+
+            const response = await employeeService.addEmployee(payload, token);
 
             if (response.success) {
                 toast.success('Employee added successfully')
@@ -493,13 +502,13 @@ const EmployeesPage = () => {
                             </div>
                             <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
                                 <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Mobile</label>
-                                {/* <input
+                                <input
                                     type={"text"}
                                     className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
                                     placeholder='Mobile'
                                     onChange={(e) => setAddData(prev => ({ ...prev, mobile: e.target.value }))}
-                                /> */}
-                                <PhoneInput
+                                />
+                                {/* <PhoneInput
                                     country={'sg'} // default Indonesia
                                     value={addData.mobile}
                                     onChange={(phone) => {
@@ -528,7 +537,7 @@ const EmployeesPage = () => {
                                         color: '#fff',
                                     }}
                                     placeholder="Mobile"
-                                />
+                                /> */}
                             </div>
                             <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
                                 <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Address</label>
@@ -768,7 +777,7 @@ const EmployeesPage = () => {
 
                         <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
                             <label className="text-xs text-[#98A1B3]">Mobile</label>
-                            {/* <input
+                            <input
                                 type="text"
                                 className="bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3]"
                                 placeholder="Mobile"
@@ -778,8 +787,8 @@ const EmployeesPage = () => {
                                         prev ? { ...prev, user: { ...prev.user, mobile: e.target.value } } : null
                                     )
                                 }
-                            /> */}
-                            <PhoneInput
+                            />
+                            {/* <PhoneInput
                                 country={'sg'}
                                 value={editData.user?.mobile ?? ''}
                                 onChange={(phone) => {
@@ -810,7 +819,7 @@ const EmployeesPage = () => {
                                     color: '#fff',
                                 }}
                                 placeholder="Mobile"
-                            />
+                            /> */}
                         </div>
 
                         <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
