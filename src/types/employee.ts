@@ -9,5 +9,5 @@ export type Employee = {
     briefing_conducted?: string;
     reporting: User;
     site?: Site;
-    
+    date_joined?: string;
 }

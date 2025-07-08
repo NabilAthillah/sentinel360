@@ -3,7 +3,7 @@ import { Eye, EyeOff } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
+import { Bounce, toast, ToastContainer } from 'react-toastify';
 import Loader from '../../components/Loader';
 import { setUser } from '../../features/user/userSlice';
 import authService from '../../services/authService';
@@ -35,8 +35,8 @@ const LoginPage: React.FC = () => {
         dispatch(setUser(response.data.user));
         localStorage.setItem('token', response.data.token);
         localStorage.setItem('user', JSON.stringify(response.data.user));
-        navigate('/dashboard');
         toast.success('Login successfully');
+        navigate('/dashboard');
       } else {
         toast.error(response.message);
       }
@@ -100,6 +100,19 @@ const LoginPage: React.FC = () => {
 
   return (
     <div className='max-w-screen w-full h-screen bg-[#181D26] flex flex-col justify-center items-center gap-32 px-5 sm:px-0'>
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick={false}
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="dark"
+        transition={Bounce}
+      />
       <img src={client?.logo ? (`${baseURL.toString() != '' ? baseURL.toString() : 'http://localhost:8000/'}storage/${client.logo}`) : "/images/logo.png"} alt="" className='max-w-60 w-full' />
       <form className='max-w-[400px] w-full flex flex-col gap-6' onSubmit={handleSubmit}>
         <input

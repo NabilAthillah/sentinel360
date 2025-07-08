@@ -63,6 +63,9 @@ const EmployeesPage = () => {
     const [reportingEmployees, setReportingEmployees] = useState<Employee[]>([]);
     const [role, setRole] = useState<string>();
 
+    const imageInputRef = useRef<HTMLInputElement | null>(null);
+    const [imageName, setImageName] = useState<string | null>(null);
+
     const [addData, setAddData] = useState({
         nric_fin_no: '',
         briefing_date: '',
@@ -73,6 +76,7 @@ const EmployeesPage = () => {
         address: '',
         id_role: '',
         briefing_conducted: '',
+        date_joined: ''
     });
 
     const [editData, setEditData] = useState<Employee | null>();
@@ -112,8 +116,8 @@ const EmployeesPage = () => {
             const token = localStorage.getItem('token');
 
             const checklistMapped = data.reduce((acc, question, index) => {
-                acc[`q${index + 1}`] = question;
-                acc[`a${index + 1}`] = switchStates[index] ? 1 : 0;
+                acc[`q${index + 1}`] = switchStates[index] ? '1' : '0';
+                acc[`a${index + 1}`] = switchStates[index] ? '' : (reasons[index] || '');
                 return acc;
             }, {} as Record<string, any>);
 
@@ -127,6 +131,7 @@ const EmployeesPage = () => {
                 briefing_date: addData.briefing_date,
                 address: addData.address,
                 briefing_conducted: addData.briefing_conducted,
+                date_joined: addData.date_joined,
                 ...checklistMapped,
             };
 
@@ -151,6 +156,7 @@ const EmployeesPage = () => {
                 address: '',
                 briefing_conducted: '',
                 id_role: '',
+                date_joined: ''
             })
         }
     }
@@ -201,6 +207,7 @@ const EmployeesPage = () => {
                 editData.birth || null,
                 editData.user.address || '',
                 editData.briefing_conducted ?? null,
+                editData.date_joined ?? null,
                 profileBase64,
                 token
             );
@@ -412,6 +419,7 @@ const EmployeesPage = () => {
                                 <thead>
                                     <tr>
                                         <th className="font-semibold text-[#98A1B3] text-start">S. no</th>
+                                        <th className="font-semibold text-[#98A1B3] text-start">Name</th>
                                         <th className="font-semibold text-[#98A1B3] text-start">NIRC/FIN</th>
                                         <th className="font-semibold text-[#98A1B3] text-start">Mobile</th>
                                         <th className="font-semibold text-[#98A1B3] text-start">Role</th>
@@ -423,7 +431,8 @@ const EmployeesPage = () => {
                                     {(searchTerm.trim() !== '' ? filteredEmployees : employees).map((data, index) => (
                                         <tr className="border-b-[1px] border-b-[#98A1B3]" key={data.id}>
                                             <td className="text-[#F4F7FF] pt-6 pb-3">{index + 1}</td>
-                                            <td className="text-[#F4F7FF] pt-6 pb-3 ">{data.nric_fin_no}</td>
+                                            <td className="text-[#F4F7FF] pt-6 pb-3 ">{data.user.name}</td>
+                                            <td className="text-[#F4F7FF] pt-6 pb-3 ">{maskPhone(data.nric_fin_no)}</td>
                                             <td className="text-[#F4F7FF] pt-6 pb-3 ">{maskPhone(data.user.mobile)}</td>
                                             <td className="text-[#F4F7FF] pt-6 pb-3 ">{data.user.role.name}</td>
                                             <td className="flex justify-center items-center pt-6 pb-3 ">
@@ -507,20 +516,20 @@ const EmployeesPage = () => {
                             </div>
                             <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
                                 <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Mobile</label>
-                                <input
+                                {/* <input
                                     type={"text"}
                                     className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
                                     placeholder='Mobile'
                                     onChange={(e) => setAddData(prev => ({ ...prev, mobile: e.target.value }))}
-                                />
-                                {/* <PhoneInput
-                                    country={'sg'} // default Indonesia
-                                    value={addData.mobile}
+                                /> */}
+                                <PhoneInput
+                                    country={'sg'}
                                     onChange={(phone) => {
                                         const onlyNumbers = phone.replace(/\s/g, '');
                                         const withPlus = `+${onlyNumbers}`;
                                         setAddData((prev) => ({ ...prev, mobile: withPlus }));
                                     }}
+                                    enableLongNumbers={true}
                                     inputProps={{
                                         inputMode: 'tel',
                                     }}
@@ -542,7 +551,7 @@ const EmployeesPage = () => {
                                         color: '#fff',
                                     }}
                                     placeholder="Mobile"
-                                /> */}
+                                />
                             </div>
                             <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
                                 <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Address</label>
@@ -560,6 +569,16 @@ const EmployeesPage = () => {
                                     className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
                                     placeholder='Briefing date'
                                     onChange={(e) => setAddData(prev => ({ ...prev, briefing_date: e.target.value }))}
+                                    required
+                                />
+                            </div>
+                            <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
+                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Date joined</label>
+                                <input
+                                    type={"date"}
+                                    className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
+                                    placeholder='Date joined'
+                                    onChange={(e) => setAddData(prev => ({ ...prev, date_joined: e.target.value }))}
                                     required
                                 />
                             </div>
@@ -692,6 +711,54 @@ const EmployeesPage = () => {
                     <div className="flex flex-col gap-6 p-6 bg-[#252C38] max-w-[568px] w-full max-h-screen overflow-auto h-full">
                         <h2 className="text-2xl leading-[36px] text-white font-noto">Edit employee details</h2>
 
+                        <div className="flex flex-col gap-3">
+                            {imageFile ? (
+                                <img src={URL.createObjectURL(imageFile)} alt="Image" className='w-[120px] h-[120px] rounded-full object-cover object-center' />
+                            ) : (user?.profile_image ? (
+                                <img src={`${baseURL.toString() != '' ? baseURL.toString() : 'http://localhost:8000/'}storage/${user?.profile_image}`} alt="Image" className='w-[120px] h-[120px] rounded-full object-cover object-center' />
+                            ) : (
+                                <img
+                                    src="/images/Avatar.png"
+                                    alt="Default"
+                                    className="w-[120px] h-[120px] object-cover"
+                                />
+                            ))}
+                            <input
+                                type="file"
+                                accept="image/*"
+                                ref={imageInputRef}
+                                onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                        const maxSizeInBytes = 5 * 1024 * 1024;
+
+                                        if (file.size > maxSizeInBytes) {
+                                            toast.warning('Maximum file size is 5MB!');
+                                            e.target.value = "";
+                                            return;
+                                        }
+
+                                        setImageName(file.name);
+                                        setImageFile(file);
+                                    }
+                                }}
+                                className="hidden"
+                            />
+                            <label className="text-xs leading-[21px] text-[#98A1B3]">Profile image <span className='text-xs'>(Maximum image size is 5MB!)</span></label>
+                            <div className="flex items-center gap-4">
+                                <button
+                                    type="button"
+                                    onClick={() => imageInputRef.current?.click()}
+                                    className="font-medium text-sm leading-[21px] text-[#EFBF04] px-5 py-2 border-[1px] border-[#EFBF04] rounded-full cursor-pointer w-fit transition-all hover:bg-[#EFBF04] hover:text-[#252C38]"
+                                >
+                                    Upload file
+                                </button>
+                                {imageName && (
+                                    <span className="text-sm text-[#98A1B3]">{imageName}</span>
+                                )}
+                            </div>
+                        </div>
+
                         <div className="relative">
                             {/* {imageFile ? (
                                 <img
@@ -712,7 +779,7 @@ const EmployeesPage = () => {
                                     className="w-[120px] h-[120px] object-cover rounded-full"
                                 />
                             )} */}
-                            <div className="relative">
+                            {/* <div className="relative">
                                 <img
                                     src="/images/Image@1x.png"
                                     alt="Default"
@@ -733,7 +800,7 @@ const EmployeesPage = () => {
                                     if (file) setImageFile(file);
                                 }}
                                 className="mt-2 text-sm text-white"
-                            />
+                            /> */}
                         </div>
 
                         <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
@@ -782,7 +849,7 @@ const EmployeesPage = () => {
 
                         <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
                             <label className="text-xs text-[#98A1B3]">Mobile</label>
-                            <input
+                            {/* <input
                                 type="text"
                                 className="bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3]"
                                 placeholder="Mobile"
@@ -792,19 +859,20 @@ const EmployeesPage = () => {
                                         prev ? { ...prev, user: { ...prev.user, mobile: e.target.value } } : null
                                     )
                                 }
-                            />
-                            {/* <PhoneInput
+                            /> */}
+                            <PhoneInput
                                 country={'sg'}
                                 value={editData.user?.mobile ?? ''}
                                 onChange={(phone) => {
-                                    const cleaned = phone.replace(/[^\d+]/g, '');
+                                    const onlyNumbers = phone.replace(/\s/g, '');
+                                    const withPlus = `+${onlyNumbers}`;
                                     setEditData((prev) =>
-                                        prev ? { ...prev, user: { ...prev.user, mobile: cleaned } } : null
-                                    );
+                                        prev ? { ...prev, user: { ...prev.user, mobile: withPlus } } : null
+                                    )
                                 }}
+                                enableLongNumbers={true}
                                 inputProps={{
-                                    inputMode: 'numeric',
-                                    pattern: '[0-9]*',
+                                    inputMode: 'tel',
                                 }}
                                 inputStyle={{
                                     backgroundColor: '#222834',
@@ -824,7 +892,7 @@ const EmployeesPage = () => {
                                     color: '#fff',
                                 }}
                                 placeholder="Mobile"
-                            /> */}
+                            />
                         </div>
 
                         <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
@@ -913,11 +981,30 @@ const EmployeesPage = () => {
                         </div>
 
                         <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
-                            <label className="text-xs text-[#98A1B3]">Briefing Conducted By</label>
+                            <label className="text-xs text-[#98A1B3]">Date Joined</label>
+                            <input
+                                type="datetime-local"
+                                className="bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3]"
+                                placeholder="Date Joined"
+                                value={
+                                    editData.date_joined
+                                        ? new Date(editData.date_joined).toISOString().slice(0, 16)
+                                        : ''
+                                }
+                                onChange={(e) =>
+                                    setEditData((prev) =>
+                                        prev ? { ...prev, date_joined: new Date(e.target.value).toString() } : null
+                                    )
+                                }
+                            />
+                        </div>
+
+                        <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
+                            <label className="text-xs text-[#98A1B3]">Briefing Conducted</label>
                             <input
                                 type="text"
                                 className="bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] outline-none"
-                                placeholder="Briefing Conducted By"
+                                placeholder="Briefing Conducted"
                                 value={editData?.briefing_conducted || ''}
                                 onChange={(e) =>
                                     setEditData((prev) =>
@@ -934,7 +1021,7 @@ const EmployeesPage = () => {
                                 onClick={handleEdit}
                                 className="font-medium text-base bg-[#EFBF04] px-12 py-3 border border-[#EFBF04] rounded-full hover:bg-[#181D26] hover:text-[#EFBF04]"
                             >
-                                Save
+                                {loading ? <Loader /> : 'Save'}
                             </button>
                             <button
                                 onClick={() => setEditEmployee(false)}

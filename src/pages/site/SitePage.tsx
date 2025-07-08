@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import PhoneInput from 'react-phone-input-2';
 import { Link, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import DeleteModal from '../../components/DeleteModal';
@@ -345,12 +346,43 @@ const SitePage = () => {
                             </div>
                             <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
                                 <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Mobile</label>
-                                <input
+                                {/* <input
                                     type={"text"}
                                     className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
                                     placeholder='Mobile'
                                     value={mobile}
                                     onChange={(e) => setMobile(e.target.value)}
+                                /> */}
+                                <PhoneInput
+                                    country={'sg'}
+                                    value={mobile}
+                                    enableLongNumbers={true}
+                                    onChange={(phone) => {
+                                        const onlyNumbers = phone.replace(/\s/g, '');
+                                        const withPlus = `+${onlyNumbers}`;
+                                        setMobile(withPlus);
+                                    }}
+                                    inputProps={{
+                                        inputMode: 'tel',
+                                    }}
+                                    inputStyle={{
+                                        backgroundColor: '#222834',
+                                        color: '#F4F7FF',
+                                        border: 'none',
+                                        width: '100%',
+                                    }}
+                                    buttonStyle={{
+                                        backgroundColor: '#222834',
+                                        border: 'none',
+                                    }}
+                                    containerStyle={{
+                                        backgroundColor: '#222834',
+                                    }}
+                                    dropdownStyle={{
+                                        backgroundColor: '#2f3644',
+                                        color: '#fff',
+                                    }}
+                                    placeholder="Mobile"
                                 />
                             </div>
                             <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
@@ -450,7 +482,7 @@ const SitePage = () => {
                                 </div>
                             </div>
                             <div className="flex flex-col gap-3">
-                                <label className="text-xs leading-[21px] text-[#98A1B3]">Site image <span className='text-red-500 text-[10px]'>* Do not upload if you don't want to make changes</span></label>
+                                <label className="text-xs leading-[21px] text-[#98A1B3]">Site image <span className='text-xs'>(Maximum image size is 5MB!)</span> <span className='text-red-500 text-[10px]'>* Do not upload if you don't want to make changes</span></label>
                                 <div className="flex items-center gap-4">
                                     <button
                                         type="button"
@@ -472,17 +504,24 @@ const SitePage = () => {
                                     ref={imageInputRef}
                                     onChange={(e) => {
                                         const file = e.target.files?.[0];
-                                        console.log("Selected image file:", file);
                                         if (file) {
+                                            const maxSizeInBytes = 5 * 1024 * 1024;
+
+                                            if (file.size > maxSizeInBytes) {
+                                                toast.warning('Maximum file size is 5MB!');
+                                                e.target.value = "";
+                                                return;
+                                            }
+
                                             setImageName(file.name);
-                                            setImageFile(file)
+                                            setImageFile(file);
                                         }
                                     }}
                                     className="hidden"
                                 />
                             </div>
                             <div className="flex flex-col gap-3">
-                                <label className="text-xs leading-[21px] text-[#98A1B3]">Organisation chart <span className='text-red-500 text-[10px]'>* Do not upload if you don't want to make changes</span></label>
+                                <label className="text-xs leading-[21px] text-[#98A1B3]">Organisation chart <span className='text-xs'>(Maximum image size is 5MB!)</span> <span className='text-red-500 text-[10px]'>* Do not upload if you don't want to make changes</span></label>
                                 <div className="flex items-center gap-4">
                                     <button
                                         type="button"
@@ -501,14 +540,21 @@ const SitePage = () => {
                                 <input
                                     type="file"
                                     ref={chartInputRef}
-                                    onChange={(e) => {
-                                        const file = e.target.files?.[0];
-                                        console.log("Selected image file:", file);
-                                        if (file) {
-                                            setChartName(file.name);
-                                            setChartFile(file)
+                                onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                        const maxSizeInBytes = 5 * 1024 * 1024;
+
+                                        if (file.size > maxSizeInBytes) {
+                                            toast.warning('Maximum file size is 5MB!');
+                                            e.target.value = "";
+                                            return;
                                         }
-                                    }}
+
+                                        setChartName(file.name);
+                                        setChartFile(file);
+                                    }
+                                }}
                                     className="hidden"
                                 />
                             </div>
@@ -546,11 +592,41 @@ const SitePage = () => {
                             </div>
                             <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
                                 <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Mobile</label>
-                                <input
+                                {/* <input
                                     type={"text"}
                                     className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
                                     placeholder='Mobile'
                                     onChange={(e) => setMobile(e.target.value)}
+                                /> */}
+                                <PhoneInput
+                                    country={'sg'}
+                                    enableLongNumbers={true}
+                                    onChange={(phone) => {
+                                        const onlyNumbers = phone.replace(/\s/g, '');
+                                        const withPlus = `+${onlyNumbers}`;
+                                        setMobile(withPlus);
+                                    }}
+                                    inputProps={{
+                                        inputMode: 'tel',
+                                    }}
+                                    inputStyle={{
+                                        backgroundColor: '#222834',
+                                        color: '#F4F7FF',
+                                        border: 'none',
+                                        width: '100%',
+                                    }}
+                                    buttonStyle={{
+                                        backgroundColor: '#222834',
+                                        border: 'none',
+                                    }}
+                                    containerStyle={{
+                                        backgroundColor: '#222834',
+                                    }}
+                                    dropdownStyle={{
+                                        backgroundColor: '#2f3644',
+                                        color: '#fff',
+                                    }}
+                                    placeholder="Mobile"
                                 />
                             </div>
                             <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
@@ -641,7 +717,7 @@ const SitePage = () => {
                                 </div>
                             </div>
                             <div className="flex flex-col gap-3">
-                                <label className="text-xs leading-[21px] text-[#98A1B3]">Site image</label>
+                                <label className="text-xs leading-[21px] text-[#98A1B3]">Site image <span className='text-xs'>(Maximum image size is 5MB!)</span></label>
                                 <div className="flex items-center gap-4">
                                     <button
                                         type="button"
@@ -658,19 +734,26 @@ const SitePage = () => {
                                     type="file"
                                     accept="image/*"
                                     ref={imageInputRef}
-                                    onChange={(e) => {
-                                        const file = e.target.files?.[0];
-                                        console.log("Selected image file:", file);
-                                        if (file) {
-                                            setImageName(file.name);
-                                            setImageFile(file)
+                                onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                        const maxSizeInBytes = 5 * 1024 * 1024;
+
+                                        if (file.size > maxSizeInBytes) {
+                                            toast.warning('Maximum file size is 5MB!');
+                                            e.target.value = "";
+                                            return;
                                         }
-                                    }}
+
+                                        setImageName(file.name);
+                                        setImageFile(file);
+                                    }
+                                }}
                                     className="hidden"
                                 />
                             </div>
                             <div className="flex flex-col gap-3">
-                                <label className="text-xs leading-[21px] text-[#98A1B3]">Organisation chart</label>
+                                <label className="text-xs leading-[21px] text-[#98A1B3]">Organisation chart <span className='text-xs'>(Maximum image size is 5MB!)</span></label>
                                 <div className="flex items-center gap-4">
                                     <button
                                         type="button"
@@ -686,14 +769,21 @@ const SitePage = () => {
                                 <input
                                     type="file"
                                     ref={chartInputRef}
-                                    onChange={(e) => {
-                                        const file = e.target.files?.[0];
-                                        console.log("Selected image file:", file);
-                                        if (file) {
-                                            setChartName(file.name);
-                                            setChartFile(file)
+                                onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                        const maxSizeInBytes = 5 * 1024 * 1024;
+
+                                        if (file.size > maxSizeInBytes) {
+                                            toast.warning('Maximum file size is 5MB!');
+                                            e.target.value = "";
+                                            return;
                                         }
-                                    }}
+
+                                        setChartName(file.name);
+                                        setChartFile(file);
+                                    }
+                                }}
                                     className="hidden"
                                 />
                             </div>

@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import DeleteModal from "../../../components/DeleteModal";
+import Loader from "../../../components/Loader";
 import Navbar from "../../../components/Navbar";
 import MainLayout from "../../../layouts/MainLayout";
 import sopDocumentService from "../../../services/sopDocumentService";
 import { SopDocument } from "../../../types/sopDocument";
-import Loader from "../../../components/Loader";
-import { useNavigate } from "react-router-dom";
 const SopDocumentPage = () => {
     const [deleteModal, setDeleteModal] = useState(false);
     const [viewDoc, setViewDoc] = useState(false);
@@ -198,11 +198,11 @@ const SopDocumentPage = () => {
 
     return (
         <MainLayout>
-            <div className='flex flex-col gap-4 px-6 pb-20 w-full h-full'>
+            <div className='flex flex-col gap-4 px-6 pb-20 w-full h-full flex-1'>
                 <h2 className='text-2xl leading-9 text-white font-noto'>Settings</h2>
-                <div className="flex flex-col gap-8 w-full h-full">
+                <div className="flex flex-col gap-8 w-full h-full flex-1">
                     <Navbar />
-                    <div className="flex flex-col gap-10 bg-[#252C38] p-6 rounded-lg w-full h-full">
+                    <div className="flex flex-col gap-10 bg-[#252C38] p-6 rounded-lg w-full h-full flex-1">
                         <div className="w-full flex justify-between items-center gap-4 flex-wrap lg:flex-nowrap">
                             <div className="flex items-end gap-4 w-full">
                                 <div className="max-w-[400px] w-full flex items-center bg-[#222834] border-b-[1px] border-b-[#98A1B3] rounded-[4px_4px_0px_0px]">
@@ -228,9 +228,9 @@ const SopDocumentPage = () => {
                                 <button onClick={() => setAddDoc(true)} className="font-medium text-base min-w-[200px] text-[#181d26] px-[46.5px] py-3 border-[1px] border-[#EFBF04] bg-[#EFBF04] rounded-full hover:bg-[#181d26] hover:text-[#EFBF04] transition-all">Add document</button>
                             </div>
                         </div>
-                        <div className="w-full h-full relative">
-                            <div className="w-full h-fit overflow-auto pb-5">
-                                <table className="w-full min-w-[500px]">
+                        <div className="w-full h-full relative pb-10 flex flex-1">
+                            <div className="w-full h-full overflow-auto pb-5 flex flex-1">
+                                <table className="min-w-[700px] w-full">
                                     <thead>
                                         <tr>
                                             <th className="font-semibold text-[#98A1B3] text-start">S. no</th>
@@ -243,47 +243,47 @@ const SopDocumentPage = () => {
                                             paginatedData.map((Sop, index) => (
                                                 <tr>
                                                     <td className="text-[#F4F7FF] pt-6 pb-3">{(currentPage - 1) * itemsPerPage + index + 1}</td>
-                                                        <td className="text-[#F4F7FF] pt-6 pb-3">{Sop.name}</td>
-                                                        <td className="pt-6 pb-3">
-                                                            <div className="flex gap-6 items-center justify-center">
-                                                                {/* <svg xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="28" height="28" viewBox="0 0 28 28"><defs><clipPath id="master_svg0_247_14305"><rect x="0" y="0" width="28" height="28" rx="0"/></clipPath></defs><g><g clip-path="url(#master_svg0_247_14305)"><g><path d="M11.46283298828125,19.6719859375L16.76641298828125,19.6719859375C17.495712988281248,19.6719859375,18.09231298828125,19.0752859375,18.09231298828125,18.3460859375L18.09231298828125,11.7165359375L20.20051298828125,11.7165359375C21.38061298828125,11.7165359375,21.97721298828125,10.2845659375,21.14191298828125,9.449245937499999L15.05601298828125,3.3633379375C14.54009298828125,2.8463349375,13.70246298828125,2.8463349375,13.18651298828125,3.3633379375L7.1006129882812505,9.449245937499999C6.26529298828125,10.2845659375,6.84869298828125,11.7165359375,8.02874298828125,11.7165359375L10.136932988281249,11.7165359375L10.136932988281249,18.3460859375C10.136932988281249,19.0752859375,10.73359298828125,19.6719859375,11.46283298828125,19.6719859375ZM6.15921298828125,22.3237859375L22.07011298828125,22.3237859375C22.79931298828125,22.3237859375,23.39601298828125,22.9203859375,23.39601298828125,23.6496859375C23.39601298828125,24.3788859375,22.79931298828125,24.9755859375,22.07011298828125,24.9755859375L6.15921298828125,24.9755859375C5.42996998828125,24.9755859375,4.83331298828125,24.3788859375,4.83331298828125,23.6496859375C4.83331298828125,22.9203859375,5.42996998828125,22.3237859375,6.15921298828125,22.3237859375Z" fill="#F4F7FF" fill-opacity="1"/></g></g></g></svg> */}
-                                                                <svg onClick={() => { setViewDoc(true); setSop(Sop) }} className="cursor-pointer" xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="28" height="28" viewBox="0 0 28 28"><defs><clipPath id="master_svg0_247_10443"><rect x="0" y="0" width="28" height="28" rx="0" /></clipPath></defs><g><g clip-path="url(#master_svg0_247_10443)"><g>
-                                                                    <path d="M14.0002921875,5.25C8.1669921875,5.25,3.1853221875,8.87833,1.1669921875,14C3.1853221875,19.1217,8.1669921875,22.75,14.0002921875,22.75C19.8336921875,22.75,24.8152921875,19.1217,26.8336921875,14C24.8152921875,8.87833,19.8336921875,5.25,14.0002921875,5.25ZM14.0002921875,19.8333C10.7803221875,19.8333,8.1669921875,17.22,8.1669921875,14C8.1669921875,10.780000000000001,10.7803221875,8.16667,14.0002921875,8.16667C17.2202921875,8.16667,19.8336921875,10.780000000000001,19.8336921875,14C19.8336921875,17.22,17.2202921875,19.8333,14.0002921875,19.8333ZM14.0002921875,10.5C12.0636921875,10.5,10.5003221875,12.06333,10.5003221875,14C10.5003221875,15.9367,12.0636921875,17.5,14.0002921875,17.5C15.9369921875,17.5,17.5002921875,15.9367,17.5002921875,14C17.5002921875,12.06333,15.9369921875,10.5,14.0002921875,10.5Z" fill="#F4F7FF" fill-opacity="1" /></g></g></g>
-                                                                </svg>
-                                                                <svg onClick={() => {
-                                                                    setEditDoc(true);
-                                                                    setEditData(Sop); // ← penting!
-                                                                    setName(Sop.name);
-                                                                    setDocument(Sop.document); // agar document tidak kosong saat update
-                                                                }} className="cursor-pointer" xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="28" height="28" viewBox="0 0 28 28"><defs><clipPath id="master_svg0_247_14308"><rect x="0" y="0" width="28" height="28" rx="0" /></clipPath></defs><g><g clip-path="url(#master_svg0_247_14308)"><g><path d="M3.5,20.124948752212525L3.5,24.499948752212525L7.875,24.499948752212525L20.7783,11.596668752212524L16.4033,7.2216687522125245L3.5,20.124948752212525ZM24.1617,8.213328752212524C24.6166,7.759348752212524,24.6166,7.0223187522125246,24.1617,6.568328752212524L21.4317,3.8383337522125243C20.9777,3.3834207522125244,20.2406,3.3834207522125244,19.7867,3.8383337522125243L17.651699999999998,5.973328752212524L22.0267,10.348338752212523L24.1617,8.213328752212524Z" fill="#F4F7FF" fill-opacity="1" /></g></g></g></svg>
-                                                                <svg
-                                                                    onClick={() => {
-                                                                        console.log('Selected sop.id:', Sop.id);
-                                                                        setSelectedId(Sop.id);
-                                                                        setDeleteModal(true);
-                                                                    }}
-                                                                    className="cursor-pointer"
-                                                                    xmlns="http://www.w3.org/2000/svg"
-                                                                    fill="none"
-                                                                    version="1.1"
-                                                                    width="28"
-                                                                    height="28"
-                                                                    viewBox="0 0 28 28"
-                                                                >
-                                                                    <defs>
-                                                                        <clipPath id="delete_icon_clip">
-                                                                            <rect x="0" y="0" width="28" height="28" rx="0" />
-                                                                        </clipPath>
-                                                                    </defs>
-                                                                    <g clipPath="url(#delete_icon_clip)">
-                                                                        <path
-                                                                            d="M6.9997,24.5H21V8.16667H6.9997V24.5ZM22.1663,4.66667H18.083L16.9163,3.5H11.083L9.9163,4.66667H5.833V7H22.1663V4.66667Z"
-                                                                            fill="#F4F7FF"
-                                                                            fillOpacity="1"
-                                                                        />
-                                                                    </g>
-                                                                </svg></div>
-                                                        </td>
+                                                    <td className="text-[#F4F7FF] pt-6 pb-3">{Sop.name}</td>
+                                                    <td className="pt-6 pb-3">
+                                                        <div className="flex gap-6 items-center justify-center">
+                                                            {/* <svg xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="28" height="28" viewBox="0 0 28 28"><defs><clipPath id="master_svg0_247_14305"><rect x="0" y="0" width="28" height="28" rx="0"/></clipPath></defs><g><g clip-path="url(#master_svg0_247_14305)"><g><path d="M11.46283298828125,19.6719859375L16.76641298828125,19.6719859375C17.495712988281248,19.6719859375,18.09231298828125,19.0752859375,18.09231298828125,18.3460859375L18.09231298828125,11.7165359375L20.20051298828125,11.7165359375C21.38061298828125,11.7165359375,21.97721298828125,10.2845659375,21.14191298828125,9.449245937499999L15.05601298828125,3.3633379375C14.54009298828125,2.8463349375,13.70246298828125,2.8463349375,13.18651298828125,3.3633379375L7.1006129882812505,9.449245937499999C6.26529298828125,10.2845659375,6.84869298828125,11.7165359375,8.02874298828125,11.7165359375L10.136932988281249,11.7165359375L10.136932988281249,18.3460859375C10.136932988281249,19.0752859375,10.73359298828125,19.6719859375,11.46283298828125,19.6719859375ZM6.15921298828125,22.3237859375L22.07011298828125,22.3237859375C22.79931298828125,22.3237859375,23.39601298828125,22.9203859375,23.39601298828125,23.6496859375C23.39601298828125,24.3788859375,22.79931298828125,24.9755859375,22.07011298828125,24.9755859375L6.15921298828125,24.9755859375C5.42996998828125,24.9755859375,4.83331298828125,24.3788859375,4.83331298828125,23.6496859375C4.83331298828125,22.9203859375,5.42996998828125,22.3237859375,6.15921298828125,22.3237859375Z" fill="#F4F7FF" fill-opacity="1"/></g></g></g></svg> */}
+                                                            <svg onClick={() => { setViewDoc(true); setSop(Sop) }} className="cursor-pointer" xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="28" height="28" viewBox="0 0 28 28"><defs><clipPath id="master_svg0_247_10443"><rect x="0" y="0" width="28" height="28" rx="0" /></clipPath></defs><g><g clip-path="url(#master_svg0_247_10443)"><g>
+                                                                <path d="M14.0002921875,5.25C8.1669921875,5.25,3.1853221875,8.87833,1.1669921875,14C3.1853221875,19.1217,8.1669921875,22.75,14.0002921875,22.75C19.8336921875,22.75,24.8152921875,19.1217,26.8336921875,14C24.8152921875,8.87833,19.8336921875,5.25,14.0002921875,5.25ZM14.0002921875,19.8333C10.7803221875,19.8333,8.1669921875,17.22,8.1669921875,14C8.1669921875,10.780000000000001,10.7803221875,8.16667,14.0002921875,8.16667C17.2202921875,8.16667,19.8336921875,10.780000000000001,19.8336921875,14C19.8336921875,17.22,17.2202921875,19.8333,14.0002921875,19.8333ZM14.0002921875,10.5C12.0636921875,10.5,10.5003221875,12.06333,10.5003221875,14C10.5003221875,15.9367,12.0636921875,17.5,14.0002921875,17.5C15.9369921875,17.5,17.5002921875,15.9367,17.5002921875,14C17.5002921875,12.06333,15.9369921875,10.5,14.0002921875,10.5Z" fill="#F4F7FF" fill-opacity="1" /></g></g></g>
+                                                            </svg>
+                                                            <svg onClick={() => {
+                                                                setEditDoc(true);
+                                                                setEditData(Sop); // ← penting!
+                                                                setName(Sop.name);
+                                                                setDocument(Sop.document); // agar document tidak kosong saat update
+                                                            }} className="cursor-pointer" xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="28" height="28" viewBox="0 0 28 28"><defs><clipPath id="master_svg0_247_14308"><rect x="0" y="0" width="28" height="28" rx="0" /></clipPath></defs><g><g clip-path="url(#master_svg0_247_14308)"><g><path d="M3.5,20.124948752212525L3.5,24.499948752212525L7.875,24.499948752212525L20.7783,11.596668752212524L16.4033,7.2216687522125245L3.5,20.124948752212525ZM24.1617,8.213328752212524C24.6166,7.759348752212524,24.6166,7.0223187522125246,24.1617,6.568328752212524L21.4317,3.8383337522125243C20.9777,3.3834207522125244,20.2406,3.3834207522125244,19.7867,3.8383337522125243L17.651699999999998,5.973328752212524L22.0267,10.348338752212523L24.1617,8.213328752212524Z" fill="#F4F7FF" fill-opacity="1" /></g></g></g></svg>
+                                                            <svg
+                                                                onClick={() => {
+                                                                    console.log('Selected sop.id:', Sop.id);
+                                                                    setSelectedId(Sop.id);
+                                                                    setDeleteModal(true);
+                                                                }}
+                                                                className="cursor-pointer"
+                                                                xmlns="http://www.w3.org/2000/svg"
+                                                                fill="none"
+                                                                version="1.1"
+                                                                width="28"
+                                                                height="28"
+                                                                viewBox="0 0 28 28"
+                                                            >
+                                                                <defs>
+                                                                    <clipPath id="delete_icon_clip">
+                                                                        <rect x="0" y="0" width="28" height="28" rx="0" />
+                                                                    </clipPath>
+                                                                </defs>
+                                                                <g clipPath="url(#delete_icon_clip)">
+                                                                    <path
+                                                                        d="M6.9997,24.5H21V8.16667H6.9997V24.5ZM22.1663,4.66667H18.083L16.9163,3.5H11.083L9.9163,4.66667H5.833V7H22.1663V4.66667Z"
+                                                                        fill="#F4F7FF"
+                                                                        fillOpacity="1"
+                                                                    />
+                                                                </g>
+                                                            </svg></div>
+                                                    </td>
                                                 </tr>
                                             ))
                                         ) : (<tr>
@@ -365,7 +365,7 @@ const SopDocumentPage = () => {
                             />
                         </div>
                         <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                            <label className="text-xs leading-[21px] text-[#98A1B3]">SOP Document image</label>
+                            <label className="text-xs leading-[21px] text-[#98A1B3]">SOP Document image <span className='text-xs'>(Maximum image size is 5MB!)</span></label>
                             <div className="flex items-center gap-4">
                                 <button
                                     type="button"
@@ -384,10 +384,17 @@ const SopDocumentPage = () => {
                                 ref={imageInputRef}
                                 onChange={(e) => {
                                     const file = e.target.files?.[0];
-                                    console.log("Selected image file:", file);
                                     if (file) {
+                                        const maxSizeInBytes = 5 * 1024 * 1024;
+
+                                        if (file.size > maxSizeInBytes) {
+                                            toast.warning('Maximum file size is 5MB!');
+                                            e.target.value = "";
+                                            return;
+                                        }
+
                                         setImageName(file.name);
-                                        setImageFile(file)
+                                        setImageFile(file);
                                     }
                                 }}
                                 className="hidden"
@@ -417,7 +424,7 @@ const SopDocumentPage = () => {
                             />
                         </div>
                         <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                            <label className="text-xs leading-[21px] text-[#98A1B3]">Site image</label>
+                            <label className="text-xs leading-[21px] text-[#98A1B3]">Site image <span className='text-xs'>(Maximum image size is 5MB!)</span></label>
                             <div className="flex items-center gap-4">
                                 <button
                                     type="button"
@@ -436,10 +443,17 @@ const SopDocumentPage = () => {
                                 ref={imageInputRef}
                                 onChange={(e) => {
                                     const file = e.target.files?.[0];
-                                    console.log("Selected image file:", file);
                                     if (file) {
+                                        const maxSizeInBytes = 5 * 1024 * 1024;
+
+                                        if (file.size > maxSizeInBytes) {
+                                            toast.warning('Maximum file size is 5MB!');
+                                            e.target.value = "";
+                                            return;
+                                        }
+
                                         setImageName(file.name);
-                                        setImageFile(file)
+                                        setImageFile(file);
                                     }
                                 }}
                                 className="hidden"

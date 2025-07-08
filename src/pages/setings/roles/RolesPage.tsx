@@ -160,7 +160,7 @@ const RolesPage = () => {
                 <h2 className='text-2xl leading-9 text-white font-noto'>Settings</h2>
                 <div className="flex flex-col gap-8 w-full h-full flex-1">
                     <Navbar />
-                    <div className="flex flex-col gap-10 bg-[#252C38] p-6 rounded-lg w-full h-full">
+                    <div className="flex flex-col gap-10 bg-[#252C38] p-6 rounded-lg w-full h-full flex-1">
                         <div className="w-full flex justify-between items-center gap-4 flex-wrap lg:flex-nowrap">
                             <div className="max-w-[400px] w-full flex items-center bg-[#222834] border-b-[1px] border-b-[#98A1B3] rounded-[4px_4px_0px_0px]">
                                 <input
@@ -186,9 +186,9 @@ const RolesPage = () => {
                                 <button onClick={() => setAddRole(true)} className="font-medium text-base min-w-[200px] text-[#181d26] px-[46.5px] py-3 border-[1px] border-[#EFBF04] bg-[#EFBF04] rounded-full hover:bg-[#181d26] hover:text-[#EFBF04] transition-all">Add role</button>
                             </div>
                         </div>
-                        <div className="w-full h-full relative flex flex-1 pb-10">
-                            <div className="w-full h-fit overflow-auto pb-5 flex-1">
-                                <table className="w-full min-w-[500px]">
+                        <div className="w-full h-full relative pb-10 flex flex-1">
+                            <div className="w-full h-full overflow-auto pb-5 flex flex-1">
+                                <table className="min-w-[700px] w-full">
                                     <thead>
                                         <tr>
                                             <th className="font-semibold text-[#98A1B3] text-start">S. no</th>

@@ -1,12 +1,12 @@
+import { Switch } from "@material-tailwind/react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import Loader from "../../../components/Loader";
 import Navbar from "../../../components/Navbar";
-import { Switch } from "@material-tailwind/react";
 import MainLayout from "../../../layouts/MainLayout";
 import IncidentTypesService from "../../../services/incidentTypeService";
 import { IncidentType } from "../../../types/incidentType";
-import { toast } from "react-toastify";
-import Loader from "../../../components/Loader";
 const IncidentPageMaster = () => {
     const [sidebar, setSidebar] = useState(false);
     const [data1, setData1] = useState(true);
@@ -178,11 +178,11 @@ const IncidentPageMaster = () => {
 
     return (
         <MainLayout>
-            <div className='flex flex-col gap-4 px-6 pb-20 w-full h-full'>
+            <div className='flex flex-col gap-4 px-6 pb-20 w-full h-full flex-1'>
                 <h2 className='text-2xl leading-9 text-white font-noto'>Settings</h2>
-                <div className="flex flex-col gap-8 w-full h-full">
+                <div className="flex flex-col gap-8 w-full h-full flex-1">
                     <Navbar />
-                    <div className="flex flex-col gap-10 bg-[#252C38] p-6 rounded-lg w-full h-full">
+                    <div className="flex flex-col gap-10 bg-[#252C38] p-6 rounded-lg w-full h-full flex-1">
                         <div className="w-full flex justify-between items-center gap-4 flex-wrap lg:flex-nowrap">
                             <div className="flex items-end gap-4 w-full">
                                 <div className="max-w-[400px] w-full flex items-center bg-[#222834] border-b-[1px] border-b-[#98A1B3] rounded-[4px_4px_0px_0px]">
@@ -209,9 +209,9 @@ const IncidentPageMaster = () => {
                                 <button onClick={() => setAddIncident(true)} className="font-medium text-base min-w-[200px] text-[#181d26] px-[46.5px] py-3 border-[1px] border-[#EFBF04] bg-[#EFBF04] rounded-full hover:bg-[#181d26] hover:text-[#EFBF04] transition-all">Add Incident</button>
                             </div>
                         </div>
-                        <div className="w-full h-full relative">
-                            <div className="w-full h-fit overflow-auto pb-5">
-                                <table className="w-full min-w-[500px]">
+                        <div className="w-full h-full relative pb-10 flex flex-1">
+                            <div className="w-full h-full overflow-auto pb-5 flex flex-1">
+                                <table className="min-w-[700px] w-full">
                                     <thead>
                                         <tr>
                                             <th className="font-semibold text-[#98A1B3] text-start">S. no</th>
@@ -305,7 +305,7 @@ const IncidentPageMaster = () => {
                                         Next
                                     </button>
                                 </div>
-                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

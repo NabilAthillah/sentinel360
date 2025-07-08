@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import employeeDocumentService from "../../services/employeeDocumentService";
-import employeeDocumentPivotService from "../../services/employeDocumenPivot";
-import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import employeeDocumentPivotService from "../../services/employeDocumenPivot";
+import employeeDocumentService from "../../services/employeeDocumentService";
 import { EmployeeDocument } from "../../types/employeeDocument";
 
 interface Props {
@@ -37,7 +37,10 @@ const EmployeeDocumentPivot = ({ employeeId, token, fetchEmployees, user, onClos
         }
 
         const docTypeResponse = await employeeDocumentService.getEmployeeDocuments(token);
-        if (docTypeResponse.success) setDocumentTypes(docTypeResponse.data);
+        if (docTypeResponse.success) {
+          const types = docTypeResponse.data.filter((t: EmployeeDocument) => t.status === 'active');
+          setDocumentTypes(types);
+        }
 
         const existingResponse = await employeeDocumentPivotService.getEmployeeDocument(token, employeeId);
         if (existingResponse.success) {

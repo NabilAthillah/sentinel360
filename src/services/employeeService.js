@@ -1,19 +1,9 @@
 import api from "../utils/api";
 
 const employeeService = {
-    addEmployee: async (name, nric_fin_no, mobile, email, id_role, reporting_to, briefing_date, address, briefing_conducted, token) => {
+    addEmployee: async (payload, token) => {
         try {
-            const response = await api.post('/employees', {
-                name,
-                nric_fin_no,
-                mobile,
-                email,
-                id_role,
-                reporting_to,
-                briefing_date,
-                address,
-                briefing_conducted,
-            }, {
+            const response = await api.post('/employees', payload, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -36,6 +26,7 @@ const employeeService = {
     birth,
     address,
     briefing_conducted,
+    date_joined,
     profile, 
     token
 ) => {
@@ -48,6 +39,7 @@ const employeeService = {
             id_role: role,
             reporting_to,
             briefing_date,
+            date_joined,
             birth,
             address,
             briefing_conducted,
