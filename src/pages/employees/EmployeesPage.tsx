@@ -154,7 +154,11 @@ const EmployeesPage = () => {
             })
         }
     }
-
+    const formatDateTime = (date: string | Date | null): string | null => {
+    if (!date) return null;
+    const d = new Date(date);
+    return d.toISOString().slice(0, 19).replace("T", " ");
+};
     const handleEdit = async (e: React.SyntheticEvent) => {
         e.preventDefault();
         setLoading(true);
@@ -193,7 +197,7 @@ const EmployeesPage = () => {
                 editData.user.email,
                 editData.user.role.id,
                 editData.reporting || null,
-                editData.briefing_date || null,
+                formatDateTime(editData.briefing_date),
                 editData.birth || null,
                 editData.user.address || '',
                 editData.briefing_conducted ?? null,

@@ -1,7 +1,7 @@
 import api from "../utils/api";
 
 const employeeDocumentService = {
-    getEmployeeDocuments: async (token) => {
+    getEmployeeDocuments: async (token, employeeId) => {
         try {
             const response = await api.get(`/employee-documents`, {
                 headers: {

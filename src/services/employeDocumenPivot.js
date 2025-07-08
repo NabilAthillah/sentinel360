@@ -1,11 +1,11 @@
 import api from "../utils/api";
 
 const employeeDocumentPivotService = {
-    getEmployeeDocument: async (token) => {
+    getEmployeeDocument: async (token, employeeId) => {
         try {
-            const response = await api.get(`/employee-document`, {
+            const response = await api.get(`/employee-document/${employeeId}`, {
                 headers: {
-                    'Authorization': `Bearer ${token}`
+                    Authorization: `Bearer ${token}`
                 }
             });
 
