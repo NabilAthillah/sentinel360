@@ -13,22 +13,7 @@ import roleService from "../../services/roleService";
 import { RootState } from "../../store";
 import { Employee } from "../../types/employee";
 import EmployeeDocumentPivot from "./EmployeesDocumentPivot";
-
-type User = {
-    id: string;
-    name: string;
-    mobile: string;
-    address?: string;
-    profile_image?: string;
-    email: string;
-    status: string;
-    role: Role;
-};
-
-type Role = {
-    id: string;
-    name: string;
-};
+import { Role } from "../../types/role";
 
 const EmployeesPage = () => {
     const user = useSelector((state: RootState) => state.user.user);
@@ -261,6 +246,7 @@ const EmployeesPage = () => {
             const response = await roleService.getAllRoles(token);
 
             if (response.success) {
+                // const data = response.data.filter((r: Role) => r.status === 'active');
                 setRoles(response.data)
             }
         } catch (error) {

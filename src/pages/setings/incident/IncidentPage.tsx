@@ -21,6 +21,7 @@ const IncidentPageMaster = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 5;
+    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
     const filteredData = datas.filter(doc =>
         doc.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -40,6 +41,19 @@ const IncidentPageMaster = () => {
         if (currentPage > 1) {
             setCurrentPage(currentPage - 1);
         }
+    };
+
+    const handleSortByStatus = () => {
+        const sortedData = [...datas].sort((a, b) => {
+            if (sortOrder === 'asc') {
+                return a.status.localeCompare(b.status);
+            } else {
+                return b.status.localeCompare(a.status);
+            }
+        });
+
+        setDatas(sortedData);
+        setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'));
     };
 
     const fetchIncidentTypes = async () => {
@@ -216,7 +230,7 @@ const IncidentPageMaster = () => {
                                         <tr>
                                             <th className="font-semibold text-[#98A1B3] text-start">S. no</th>
                                             <th className="font-semibold text-[#98A1B3] text-start">Incident</th>
-                                            <th className="font-semibold text-[#98A1B3] text-start flex items-center gap-2">Status <svg xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="14.689416885375977" height="20.504201889038086" viewBox="0 0 14.689416885375977 20.504201889038086"><g><path d="M12.0068,16.103L12.0068,9.09128C12.0068,8.44962,11.4818,7.92462,10.8401,7.92462C10.1985,7.92462,9.67346,8.44962,9.67346,9.09128L9.67346,16.103L7.58512,16.103C7.06012,16.103,6.80346,16.733,7.17679,17.0946L10.4318,20.338C10.6651,20.5596,11.0268,20.5596,11.2601,20.338L14.5151,17.0946C14.8885,16.733,14.6201,16.103,14.1068,16.103L12.0068,16.103ZM3.43179,0.166284L0.17679,3.42128C-0.196543,3.78295,0.0601238,4.41295,0.585124,4.41295L2.67346,4.41295L2.67346,11.4246C2.67346,12.0663,3.19846,12.5913,3.84012,12.5913C4.48179,12.5913,5.00679,12.0663,5.00679,11.4246L5.00679,4.41295L7.09512,4.41295C7.62012,4.41295,7.87679,3.78295,7.50346,3.42128L4.24846,0.166284C4.02138,-0.0554282,3.65887,-0.0554282,3.43179,0.166284Z" fill="#98A1B3" fill-opacity="1" /></g></svg></th>
+                                            <th className="font-semibold text-[#98A1B3] text-start flex items-center gap-2 cursor-pointer" onClick={handleSortByStatus}>Status <svg xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="14.689416885375977" height="20.504201889038086" viewBox="0 0 14.689416885375977 20.504201889038086"><g><path d="M12.0068,16.103L12.0068,9.09128C12.0068,8.44962,11.4818,7.92462,10.8401,7.92462C10.1985,7.92462,9.67346,8.44962,9.67346,9.09128L9.67346,16.103L7.58512,16.103C7.06012,16.103,6.80346,16.733,7.17679,17.0946L10.4318,20.338C10.6651,20.5596,11.0268,20.5596,11.2601,20.338L14.5151,17.0946C14.8885,16.733,14.6201,16.103,14.1068,16.103L12.0068,16.103ZM3.43179,0.166284L0.17679,3.42128C-0.196543,3.78295,0.0601238,4.41295,0.585124,4.41295L2.67346,4.41295L2.67346,11.4246C2.67346,12.0663,3.19846,12.5913,3.84012,12.5913C4.48179,12.5913,5.00679,12.0663,5.00679,11.4246L5.00679,4.41295L7.09512,4.41295C7.62012,4.41295,7.87679,3.78295,7.50346,3.42128L4.24846,0.166284C4.02138,-0.0554282,3.65887,-0.0554282,3.43179,0.166284Z" fill="#98A1B3" fill-opacity="1" /></g></svg></th>
                                             <th className="font-semibold text-[#98A1B3] text-center">Actions</th>
                                         </tr>
                                     </thead>

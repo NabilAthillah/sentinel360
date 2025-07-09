@@ -96,7 +96,8 @@ const OccurencePage = () => {
             const response = await occurrenceCatgService.getCategories(token);
 
             if (response.data) {
-                setCategories(response.data.categories)
+                const data = response.data.categories.filter((c: OccurrenceCategory) => c.status === 'active')
+                setCategories(data)
             }
         } catch (error) {
             console.error(error)
@@ -115,7 +116,8 @@ const OccurencePage = () => {
             const response = await occurrenceService.getAllOccurrence(token);
 
             if (response.data) {
-                setOccurrences(response.data)
+                const data = response.data.filter((o: Occurrence) => o.category.status === 'active')
+                setOccurrences(data)
             }
         } catch (error) {
             console.error(error)
