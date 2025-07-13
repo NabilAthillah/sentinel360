@@ -12,8 +12,8 @@ import employeeService from "../../services/employeeService";
 import roleService from "../../services/roleService";
 import { RootState } from "../../store";
 import { Employee } from "../../types/employee";
-import EmployeeDocumentPivot from "./EmployeesDocumentPivot";
 import { Role } from "../../types/role";
+import EmployeeDocumentPivot from "./EmployeesDocumentPivot";
 
 const EmployeesPage = () => {
     const user = useSelector((state: RootState) => state.user.user);
@@ -146,10 +146,10 @@ const EmployeesPage = () => {
         }
     }
     const formatDateTime = (date: string | Date | null): string | null => {
-    if (!date) return null;
-    const d = new Date(date);
-    return d.toISOString().slice(0, 19).replace("T", " ");
-};
+        if (!date) return null;
+        const d = new Date(date);
+        return d.toISOString().slice(0, 19).replace("T", " ");
+    };
     const handleEdit = async (e: React.SyntheticEvent) => {
         e.preventDefault();
         setLoading(true);
@@ -357,9 +357,9 @@ const EmployeesPage = () => {
     };
 
     useEffect(() => {
-        const checkPermission = user?.role?.permissions?.some(p => p.name === 'List employees');
+        const checkPermission = user?.role?.permissions?.some(p => p.name === 'list_employees');
         if (!checkPermission) {
-            navigate('/dashboard')
+            navigate('/dashboard');
         }
     }, [user])
 
@@ -570,7 +570,16 @@ const EmployeesPage = () => {
                             </div>
                             <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
                                 <label htmlFor="briefing_conducted" className="text-xs leading-[21px] text-[#98A1B3]">Briefing conducted</label>
-                                <input
+                                <select
+                                    onChange={(e) =>
+                                        setAddData((prev) => ({ ...prev, briefing_conducted: e.target.value }))
+                                    }
+                                    className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
+                                >
+                                    <option value="yes">Yes</option>
+                                    <option value="no">No</option>
+                                </select>
+                                {/* <input
                                     type="text"
                                     id="briefing_conducted"
                                     placeholder="Briefing conducted"
@@ -579,7 +588,7 @@ const EmployeesPage = () => {
                                         setAddData((prev) => ({ ...prev, briefing_conducted: e.target.value }))
                                     }
                                     className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
-                                />
+                                /> */}
                             </div>
 
                             {/* {Object.entries(roles[1]).map(([category, roles]) => (
@@ -987,7 +996,16 @@ const EmployeesPage = () => {
 
                         <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
                             <label className="text-xs text-[#98A1B3]">Briefing Conducted</label>
-                            <input
+                            <select
+                                onChange={(e) =>
+                                    setAddData((prev) => ({ ...prev, briefing_conducted: e.target.value }))
+                                }
+                                className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
+                            >
+                                <option value="yes" selected={editData?.briefing_conducted === "yes"}>Yes</option>
+                                <option value="no" selected={editData?.briefing_conducted === "no"}>No</option>
+                            </select>
+                            {/* <input
                                 type="text"
                                 className="bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] outline-none"
                                 placeholder="Briefing Conducted"
@@ -997,7 +1015,7 @@ const EmployeesPage = () => {
                                         prev ? { ...prev, briefing_conducted: e.target.value } : null
                                     )
                                 }
-                            />
+                            /> */}
                         </div>
 
 
