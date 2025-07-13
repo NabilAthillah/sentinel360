@@ -6,12 +6,10 @@ export type Site = {
     email?: string;
     image?: string;
     mcst_number?: string;
-    ma_name?: string;
+    managing_agent?: string;
+    person_in_charge?: string;
     mobile?: string;
-    company_name?: string;
     address: string;
-    block?: string;
-    unit?: string;
     postal_code: string;
     lat: string;
     long: string;

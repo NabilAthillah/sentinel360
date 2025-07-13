@@ -30,7 +30,8 @@ const SitePage = () => {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [MCSTNumber, setMCSTNumber] = useState('');
-    const [MAName, setMAName] = useState('');
+    const [ManagingAgent, setManagingAgent] = useState('');
+    const [PersonInCharge, setPersonInCharge] = useState('');
     const [mobile, setMobile] = useState('');
     const [company, setCompany] = useState('');
     const [address, setAddress] = useState('');
@@ -63,9 +64,9 @@ const SitePage = () => {
                 name,
                 email,
                 mcst_number: MCSTNumber,
-                ma_name: MAName,
+                managing_agent: ManagingAgent,
+                person_in_charge: PersonInCharge,
                 mobile,
-                company_name: company,
                 address,
                 block,
                 unit,
@@ -91,12 +92,10 @@ const SitePage = () => {
             setName('');
             setEmail('');
             setMCSTNumber('');
-            setMAName('');
+            setManagingAgent('');
+            setPersonInCharge('');
             setMobile('');
-            setCompany('');
             setAddress('');
-            setBlock('');
-            setUnit('');
             setPostalCode('');
             setLat('');
             setLong('');
@@ -127,7 +126,8 @@ const SitePage = () => {
                 name,
                 email,
                 mcst_number: MCSTNumber,
-                ma_name: MAName,
+                managing_agent: ManagingAgent,
+                person_in_charge: PersonInCharge,
                 mobile,
                 company_name: company,
                 address,
@@ -155,12 +155,10 @@ const SitePage = () => {
             setName('');
             setEmail('');
             setMCSTNumber('');
-            setMAName('');
+            setManagingAgent('');
+            setPersonInCharge('');
             setMobile('');
-            setCompany('');
             setAddress('');
-            setBlock('');
-            setUnit('');
             setPostalCode('');
             setLat('');
             setLong('');
@@ -217,12 +215,10 @@ const SitePage = () => {
             setName(editSite.name);
             setEmail(editSite.email || '');
             setMCSTNumber(editSite.mcst_number || '');
-            setMAName(editSite.ma_name || '');
+            setManagingAgent(editSite.managing_agent || '');
+            setPersonInCharge(editSite.person_in_charge || '');
             setMobile(editSite.mobile || '');
-            setCompany(editSite.company_name || '');
             setAddress(editSite.address);
-            setBlock(editSite.block || '');
-            setUnit(editSite.unit || '');
             setPostalCode(editSite.postal_code);
             setLat(editSite.lat);
             setLong(editSite.long);
@@ -273,7 +269,7 @@ const SitePage = () => {
                                     <tr>
                                         <th className="font-semibold text-[#98A1B3] text-start">S. no</th>
                                         <th className="font-semibold text-[#98A1B3] text-start">Image</th>
-                                        <th className="font-semibold text-[#98A1B3] text-start">Site name</th>
+                                        <th className="font-semibold text-[#98A1B3] text-start">Site</th>
                                         <th className="font-semibold text-[#98A1B3] text-start">Address</th>
                                         <th className="font-semibold text-[#98A1B3] text-start">Latitude</th>
                                         <th className="font-semibold text-[#98A1B3] text-start">Longitude</th>
@@ -324,13 +320,35 @@ const SitePage = () => {
                         <div className="flex flex-col gap-6 p-6 bg-[#252C38] max-w-[568px] w-full max-h-screen overflow-auto h-full">
                             <h2 className='text-2xl leading-[36px] text-white font-noto'>Edit site</h2>
                             <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Site name</label>
+                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Site</label>
                                 <input
                                     type={"text"}
                                     className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
-                                    placeholder='Site name'
+                                    placeholder='Site'
                                     onChange={(e) => setName(e.target.value)}
                                     value={name}
+                                    required
+                                />
+                            </div>
+                            <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
+                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Address</label>
+                                <input
+                                    type={"text"}
+                                    className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
+                                    placeholder='Address'
+                                    value={address}
+                                    onChange={(e) => setAddress(e.target.value)}
+                                    required
+                                />
+                            </div>
+                            <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
+                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Postal Code</label>
+                                <input
+                                    type={"text"}
+                                    className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
+                                    placeholder='Postal Code'
+                                    value={postalCode}
+                                    onChange={(e) => setPostalCode(e.target.value)}
                                     required
                                 />
                             </div>
@@ -396,68 +414,26 @@ const SitePage = () => {
                                 />
                             </div>
                             <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">MA name</label>
+                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Managing Agent</label>
                                 <input
                                     type={"text"}
                                     className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
-                                    placeholder='MA name'
-                                    value={MAName}
-                                    onChange={(e) => setMAName(e.target.value)}
+                                    placeholder='Managing Agent'
+                                    value={ManagingAgent}
+                                    onChange={(e) => setManagingAgent(e.target.value)}
                                 />
                             </div>
                             <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Company Name</label>
+                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Person In Charge</label>
                                 <input
                                     type={"text"}
                                     className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
-                                    placeholder='Company Name'
-                                    value={company}
-                                    onChange={(e) => setCompany(e.target.value)}
-                                />
-                            </div>
-                            <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Address</label>
-                                <input
-                                    type={"text"}
-                                    className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
-                                    placeholder='Address'
-                                    value={address}
-                                    onChange={(e) => setAddress(e.target.value)}
-                                    required
-                                />
-                            </div>
-                            <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Postal Code</label>
-                                <input
-                                    type={"text"}
-                                    className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
-                                    placeholder='Postal Code'
-                                    value={postalCode}
-                                    onChange={(e) => setPostalCode(e.target.value)}
-                                    required
+                                    placeholder='Person In Charge'
+                                    value={PersonInCharge}
+                                    onChange={(e) => setPersonInCharge(e.target.value)}
                                 />
                             </div>
                             <div className="grid grid-cols-2 gap-8">
-                                <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                                    <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Block</label>
-                                    <input
-                                        type={"text"}
-                                        className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
-                                        placeholder='Block'
-                                        value={block}
-                                        onChange={(e) => setBlock(e.target.value)}
-                                    />
-                                </div>
-                                <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                                    <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Unit</label>
-                                    <input
-                                        type={"text"}
-                                        className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
-                                        placeholder='Unit'
-                                        value={unit}
-                                        onChange={(e) => setUnit(e.target.value)}
-                                    />
-                                </div>
                                 <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
                                     <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Latitude</label>
                                     <input
@@ -540,21 +516,21 @@ const SitePage = () => {
                                 <input
                                     type="file"
                                     ref={chartInputRef}
-                                onChange={(e) => {
-                                    const file = e.target.files?.[0];
-                                    if (file) {
-                                        const maxSizeInBytes = 5 * 1024 * 1024;
+                                    onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) {
+                                            const maxSizeInBytes = 5 * 1024 * 1024;
 
-                                        if (file.size > maxSizeInBytes) {
-                                            toast.warning('Maximum file size is 5MB!');
-                                            e.target.value = "";
-                                            return;
+                                            if (file.size > maxSizeInBytes) {
+                                                toast.warning('Maximum file size is 5MB!');
+                                                e.target.value = "";
+                                                return;
+                                            }
+
+                                            setChartName(file.name);
+                                            setChartFile(file);
                                         }
-
-                                        setChartName(file.name);
-                                        setChartFile(file);
-                                    }
-                                }}
+                                    }}
                                     className="hidden"
                                 />
                             </div>
@@ -572,12 +548,32 @@ const SitePage = () => {
                         <div className="flex flex-col gap-6 p-6 bg-[#252C38] max-w-[568px] w-full max-h-screen overflow-auto h-full">
                             <h2 className='text-2xl leading-[36px] text-white font-noto'>Add site</h2>
                             <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Site name</label>
+                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Site </label>
                                 <input
                                     type={"text"}
                                     className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
-                                    placeholder='Site name'
+                                    placeholder='Site'
                                     onChange={(e) => setName(e.target.value)}
+                                    required
+                                />
+                            </div>
+                            <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
+                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Address</label>
+                                <input
+                                    type={"text"}
+                                    className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
+                                    placeholder='Address'
+                                    onChange={(e) => setAddress(e.target.value)}
+                                    required
+                                />
+                            </div>
+                            <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
+                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Postal Code</label>
+                                <input
+                                    type={"text"}
+                                    className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
+                                    placeholder='Postal Code'
+                                    onChange={(e) => setPostalCode(e.target.value)}
                                     required
                                 />
                             </div>
@@ -639,62 +635,26 @@ const SitePage = () => {
                                 />
                             </div>
                             <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">MA name</label>
+                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Managing Agent</label>
                                 <input
                                     type={"text"}
                                     className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
-                                    placeholder='MA name'
-                                    onChange={(e) => setMAName(e.target.value)}
+                                    placeholder='Managing Agent'
+                                    onChange={(e) => setManagingAgent(e.target.value)}
                                 />
                             </div>
                             <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Company Name</label>
+                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Person In Charge</label>
                                 <input
                                     type={"text"}
                                     className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
-                                    placeholder='Company Name'
-                                    onChange={(e) => setCompany(e.target.value)}
+                                    placeholder='Person In Charge'
+                                    onChange={(e) => setPersonInCharge(e.target.value)}
                                 />
                             </div>
-                            <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Address</label>
-                                <input
-                                    type={"text"}
-                                    className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
-                                    placeholder='Address'
-                                    onChange={(e) => setAddress(e.target.value)}
-                                    required
-                                />
-                            </div>
-                            <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Postal Code</label>
-                                <input
-                                    type={"text"}
-                                    className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
-                                    placeholder='Postal Code'
-                                    onChange={(e) => setPostalCode(e.target.value)}
-                                    required
-                                />
-                            </div>
+                            
                             <div className="grid grid-cols-2 gap-8">
-                                <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                                    <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Block</label>
-                                    <input
-                                        type={"text"}
-                                        className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
-                                        placeholder='Block'
-                                        onChange={(e) => setBlock(e.target.value)}
-                                    />
-                                </div>
-                                <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                                    <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Unit</label>
-                                    <input
-                                        type={"text"}
-                                        className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
-                                        placeholder='Unit'
-                                        onChange={(e) => setUnit(e.target.value)}
-                                    />
-                                </div>
+
                                 <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
                                     <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Latitude</label>
                                     <input
@@ -734,21 +694,21 @@ const SitePage = () => {
                                     type="file"
                                     accept="image/*"
                                     ref={imageInputRef}
-                                onChange={(e) => {
-                                    const file = e.target.files?.[0];
-                                    if (file) {
-                                        const maxSizeInBytes = 5 * 1024 * 1024;
+                                    onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) {
+                                            const maxSizeInBytes = 5 * 1024 * 1024;
 
-                                        if (file.size > maxSizeInBytes) {
-                                            toast.warning('Maximum file size is 5MB!');
-                                            e.target.value = "";
-                                            return;
+                                            if (file.size > maxSizeInBytes) {
+                                                toast.warning('Maximum file size is 5MB!');
+                                                e.target.value = "";
+                                                return;
+                                            }
+
+                                            setImageName(file.name);
+                                            setImageFile(file);
                                         }
-
-                                        setImageName(file.name);
-                                        setImageFile(file);
-                                    }
-                                }}
+                                    }}
                                     className="hidden"
                                 />
                             </div>
@@ -769,21 +729,21 @@ const SitePage = () => {
                                 <input
                                     type="file"
                                     ref={chartInputRef}
-                                onChange={(e) => {
-                                    const file = e.target.files?.[0];
-                                    if (file) {
-                                        const maxSizeInBytes = 5 * 1024 * 1024;
+                                    onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) {
+                                            const maxSizeInBytes = 5 * 1024 * 1024;
 
-                                        if (file.size > maxSizeInBytes) {
-                                            toast.warning('Maximum file size is 5MB!');
-                                            e.target.value = "";
-                                            return;
+                                            if (file.size > maxSizeInBytes) {
+                                                toast.warning('Maximum file size is 5MB!');
+                                                e.target.value = "";
+                                                return;
+                                            }
+
+                                            setChartName(file.name);
+                                            setChartFile(file);
                                         }
-
-                                        setChartName(file.name);
-                                        setChartFile(file);
-                                    }
-                                }}
+                                    }}
                                     className="hidden"
                                 />
                             </div>
