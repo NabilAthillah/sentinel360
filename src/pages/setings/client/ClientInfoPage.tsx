@@ -1,15 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 import PhoneInput from "react-phone-input-2";
+import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import Navbar from "../../../components/Navbar";
 import MainLayout from "../../../layouts/MainLayout";
 import clientInfoService from "../../../services/clientInfoService";
+import { RootState } from "../../../store";
 import { Client } from "../../../types/client";
 
 const ClientInfoPage = () => {
     const navigate = useNavigate();
-
+    const user = useSelector((state: RootState) => state.user.user);
     const [client, setClient] = useState<Client>({
         id: '',
         name: '',
@@ -124,8 +126,16 @@ const ClientInfoPage = () => {
         }
     }
 
+    const hasPermission = (permissionName: string) => {
+        return user?.role?.permissions?.some(p => p.name === permissionName);
+    };
+
     useEffect(() => {
-        fetchClientInfo();
+        if (hasPermission('show_client')) {
+            fetchClientInfo();
+        } else {
+            navigate('/dashboard');
+        }
     }, [])
 
     useEffect(() => {
@@ -389,8 +399,10 @@ const ClientInfoPage = () => {
                                 </div>
                             </div>
                             <div className="flex gap-4 flex-wrap">
-                                <button type="submit" className="font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">Save</button>
-                                <button className="font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border-[1px] border-[#868686] rounded-full transition-all hover:bg-[#868686] hover:text-[#252C38]">Cancel</button>
+                                {hasPermission('edit_client') && (
+                                    <button type="submit" className="font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">Save</button>
+                                )}
+                                {/* <button className="font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border-[1px] border-[#868686] rounded-full transition-all hover:bg-[#868686] hover:text-[#252C38]">Cancel</button> */}
                             </div>
                         </form>
                     </div>

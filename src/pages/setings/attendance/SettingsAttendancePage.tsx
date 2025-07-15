@@ -1,11 +1,16 @@
 import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import Navbar from "../../../components/Navbar";
 import MainLayout from "../../../layouts/MainLayout";
 import attendanceSettingService from "../../../services/attendanceSettingService";
+import { RootState } from "../../../store";
+import { useNavigate } from "react-router-dom";
 
 const SettingsAttendancePage = () => {
     const [sidebar, setSidebar] = useState(false);
+    const user = useSelector((state: RootState) => state.user.user);
+    const navigate = useNavigate();
     const [formData, setFormData] = useState([
         {
             label: 'Grace period (in minutes)',
@@ -124,9 +129,16 @@ const SettingsAttendancePage = () => {
         }
     };
 
+    const hasPermission = (permissionName: string) => {
+        return user?.role?.permissions?.some(p => p.name === permissionName);
+    };
 
     useEffect(() => {
-        fetchSettings();
+        if (hasPermission('show_attendance_settings')) {
+            fetchSettings();
+        } else {
+            navigate('/dashboard');
+        }
     }, [])
 
     return (
@@ -149,10 +161,12 @@ const SettingsAttendancePage = () => {
                                     />
                                 </div>
                             ))}
-                            <div className="flex gap-4 flex-wrap">
-                                <button type="submit" className="font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">Save</button>
-                                <button className="font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border-[1px] border-[#868686] rounded-full transition-all hover:bg-[#868686] hover:text-[#252C38]">Cancel</button>
-                            </div>
+                            {hasPermission('edit_attendance_settings') && (
+                                <div className="flex gap-4 flex-wrap">
+                                    <button type="submit" className="font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">Save</button>
+                                    {/* <button className="font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border-[1px] border-[#868686] rounded-full transition-all hover:bg-[#868686] hover:text-[#252C38]">Cancel</button> */}
+                                </div>
+                            )}
                         </form>
                     </div>
                 </div>

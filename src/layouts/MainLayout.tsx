@@ -12,7 +12,7 @@ import { RootState } from '../store';
 const MainLayout = ({ children }: { children: React.ReactNode }) => {
     const [sidebar, setSidebar] = useState(false);
     const navigate = useNavigate();
-    const user = useSelector((state: RootState) => state.user.user)
+    const user = useSelector((state: RootState) => state.user.user);
     const dispatch = useDispatch();
 
     const handleLogout = async (e: React.SyntheticEvent) => {

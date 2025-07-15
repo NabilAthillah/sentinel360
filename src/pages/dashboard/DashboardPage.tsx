@@ -1,13 +1,17 @@
 import { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import Map from '../../components/Map';
 import MainLayout from '../../layouts/MainLayout';
 import siteService from '../../services/siteService';
+import { RootState } from '../../store';
 import { Site } from '../../types/site';
-import Map from '../../components/Map';
+import { toast } from 'react-toastify';
 
 const DashboardPage = () => {
     const navigate = useNavigate();
     const [sites, setSites] = useState<Site[]>([]);
+    const user = useSelector((state: RootState) => state.user.user);
 
     const fetchSites = async () => {
         try {
@@ -28,8 +32,32 @@ const DashboardPage = () => {
         }
     }
 
+    function isToday(dateString: string) {
+        const date = new Date(dateString);
+        const now = new Date();
+
+        return (
+            date.getUTCFullYear() === now.getUTCFullYear() &&
+            date.getUTCMonth() === now.getUTCMonth() &&
+            date.getUTCDate() === now.getUTCDate()
+        );
+    }
+
+    function checkLastLogin() {
+        const lastLogin = user?.last_login;
+        if (lastLogin && isToday(lastLogin)) {
+            const notifShown = localStorage.getItem('notif_last_login');
+
+            if (notifShown === 'false' || !notifShown) {
+                toast.warning('You must change your password every 3 months!');
+                localStorage.setItem('notif_last_login', 'true');
+            }
+        }
+    }
+
     useEffect(() => {
         fetchSites();
+        checkLastLogin();
     }, []);
 
     return (

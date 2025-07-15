@@ -1,12 +1,14 @@
 import { Switch } from '@material-tailwind/react';
 import { useEffect, useState } from 'react';
-import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import DeleteModal from '../../components/DeleteModal';
 import Loader from '../../components/Loader';
 import MainLayout from '../../layouts/MainLayout';
 import routeService from '../../services/routeService';
 import siteService from '../../services/siteService';
+import { RootState } from '../../store';
 import { Route } from '../../types/route';
 import { Site } from '../../types/site';
 
@@ -24,6 +26,7 @@ const RoutePage = () => {
 
     const [name, setName] = useState('');
 
+    const user = useSelector((state: RootState) => state.user.user)
     const navigate = useNavigate();
 
     const [switchStates, setSwitchStates] = useState<Record<string, boolean>>(
@@ -165,8 +168,16 @@ const RoutePage = () => {
         }
     }
 
+    const hasPermission = (permissionName: string) => {
+        return user?.role?.permissions?.some(p => p.name === permissionName);
+    };
+
     useEffect(() => {
-        fetchSite();
+        if (hasPermission('list_site_routes')) {
+            fetchSite();
+        } else {
+            navigate('/dashboard');
+        }
     }, [])
 
     useEffect(() => {
@@ -208,9 +219,11 @@ const RoutePage = () => {
                                 </button>
                             </div>
                         </div>
-                        <div className="min-w-[180px] max-w-[200px] w-fit">
-                            <button onClick={() => setAddData(true)} className="font-medium text-base text-[#181d26] px-[46.5px] py-[13.5px] border-[1px] border-[#EFBF04] bg-[#EFBF04] rounded-full hover:bg-[#181d26] hover:text-[#EFBF04] transition-all">Add route</button>
-                        </div>
+                        {hasPermission('add_site_route') && (
+                            <div className="min-w-[180px] max-w-[200px] w-fit">
+                                <button onClick={() => setAddData(true)} className="font-medium text-base text-[#181d26] px-[46.5px] py-[13.5px] border-[1px] border-[#EFBF04] bg-[#EFBF04] rounded-full hover:bg-[#181d26] hover:text-[#EFBF04] transition-all">Add route</button>
+                            </div>
+                        )}
                     </div>
                     <div className="w-full h-full relative flex flex-1 pb-10">
                         <div className="w-full h-fit overflow-auto pb-5">
@@ -229,29 +242,39 @@ const RoutePage = () => {
                                             <td className="text-[#F4F7FF] pt-6 pb-3">{index + 1}</td>
                                             <td className="text-[#F4F7FF] pt-6 pb-3 ">{route.name}</td>
                                             <td className="text-[#F4F7FF] pt-6 pb-3 ">
-                                                <div className="flex items-center gap-4 w-40">
-                                                    <Switch
-                                                        id="custom-switch-component"
-                                                        ripple={false}
-                                                        checked={switchStates[route.id]}
-                                                        onChange={(e) => handleToggle(route.id)}
-                                                        className="h-full w-full checked:bg-[#446FC7]"
-                                                        containerProps={{
-                                                            className: "w-11 h-6",
-                                                        }}
-                                                        circleProps={{
-                                                            className: "before:hidden left-0.5 border-none",
-                                                        }} onResize={undefined} onResizeCapture={undefined} onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} crossOrigin={undefined} />
+                                                {hasPermission('edit_site_route') ? (
+                                                    <div className="flex items-center gap-4 w-40">
+                                                        <Switch
+                                                            id="custom-switch-component"
+                                                            ripple={false}
+                                                            checked={switchStates[route.id]}
+                                                            onChange={(e) => handleToggle(route.id)}
+                                                            className="h-full w-full checked:bg-[#446FC7]"
+                                                            containerProps={{
+                                                                className: "w-11 h-6",
+                                                            }}
+                                                            circleProps={{
+                                                                className: "before:hidden left-0.5 border-none",
+                                                            }} onResize={undefined} onResizeCapture={undefined} onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} crossOrigin={undefined} />
+                                                        <p className={`font-medium text-sm capitalize ${switchStates[route.id] ? 'text-[#19CE74]' : 'text-[#FF7E6A]'}`}>
+                                                            {switchStates[route.id] ? 'active' : 'deactive'}
+                                                        </p>
+                                                    </div>
+                                                ) : (
                                                     <p className={`font-medium text-sm capitalize ${switchStates[route.id] ? 'text-[#19CE74]' : 'text-[#FF7E6A]'}`}>
                                                         {switchStates[route.id] ? 'active' : 'deactive'}
                                                     </p>
-                                                </div>
+                                                )}
                                             </td>
                                             <td className="pt-6 pb-3">
                                                 <div className="flex gap-6 items-center justify-center">
                                                     {/* <svg xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="28" height="28" viewBox="0 0 28 28"><defs><clipPath id="master_svg0_247_14305"><rect x="0" y="0" width="28" height="28" rx="0"/></clipPath></defs><g><g clip-path="url(#master_svg0_247_14305)"><g><path d="M11.46283298828125,19.6719859375L16.76641298828125,19.6719859375C17.495712988281248,19.6719859375,18.09231298828125,19.0752859375,18.09231298828125,18.3460859375L18.09231298828125,11.7165359375L20.20051298828125,11.7165359375C21.38061298828125,11.7165359375,21.97721298828125,10.2845659375,21.14191298828125,9.449245937499999L15.05601298828125,3.3633379375C14.54009298828125,2.8463349375,13.70246298828125,2.8463349375,13.18651298828125,3.3633379375L7.1006129882812505,9.449245937499999C6.26529298828125,10.2845659375,6.84869298828125,11.7165359375,8.02874298828125,11.7165359375L10.136932988281249,11.7165359375L10.136932988281249,18.3460859375C10.136932988281249,19.0752859375,10.73359298828125,19.6719859375,11.46283298828125,19.6719859375ZM6.15921298828125,22.3237859375L22.07011298828125,22.3237859375C22.79931298828125,22.3237859375,23.39601298828125,22.9203859375,23.39601298828125,23.6496859375C23.39601298828125,24.3788859375,22.79931298828125,24.9755859375,22.07011298828125,24.9755859375L6.15921298828125,24.9755859375C5.42996998828125,24.9755859375,4.83331298828125,24.3788859375,4.83331298828125,23.6496859375C4.83331298828125,22.9203859375,5.42996998828125,22.3237859375,6.15921298828125,22.3237859375Z" fill="#F4F7FF" fill-opacity="1"/></g></g></g></svg> */}
-                                                    <svg onClick={() => { setEditData(true); setEditRoute(route) }} className="cursor-pointer" xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="28" height="28" viewBox="0 0 28 28"><defs><clipPath id="master_svg0_247_14308"><rect x="0" y="0" width="28" height="28" rx="0" /></clipPath></defs><g><g clip-path="url(#master_svg0_247_14308)"><g><path d="M3.5,20.124948752212525L3.5,24.499948752212525L7.875,24.499948752212525L20.7783,11.596668752212524L16.4033,7.2216687522125245L3.5,20.124948752212525ZM24.1617,8.213328752212524C24.6166,7.759348752212524,24.6166,7.0223187522125246,24.1617,6.568328752212524L21.4317,3.8383337522125243C20.9777,3.3834207522125244,20.2406,3.3834207522125244,19.7867,3.8383337522125243L17.651699999999998,5.973328752212524L22.0267,10.348338752212523L24.1617,8.213328752212524Z" fill="#F4F7FF" fill-opacity="1" /></g></g></g></svg>
-                                                    <svg onClick={() => { setDeleteModal(true); setDeleteRoute(route) }} className="cursor-pointer" xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="28" height="28" viewBox="0 0 28 28"><defs><clipPath id="master_svg0_247_14302"><rect x="0" y="0" width="28" height="28" rx="0" /></clipPath></defs><g><g clip-path="url(#master_svg0_247_14302)"><g><path d="M6.9996778125,24.5L20.9997078125,24.5L20.9997078125,8.16667L6.9996778125,8.16667L6.9996778125,24.5ZM22.1663078125,4.66667L18.0830078125,4.66667L16.9163078125,3.5L11.0830078125,3.5L9.9163378125,4.66667L5.8330078125,4.66667L5.8330078125,7L22.1663078125,7L22.1663078125,4.66667Z" fill="#F4F7FF" fill-opacity="1" /></g></g></g></svg>
+                                                    {hasPermission('edit_site_route') && (
+                                                        <svg onClick={() => { setEditData(true); setEditRoute(route) }} className="cursor-pointer" xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="28" height="28" viewBox="0 0 28 28"><defs><clipPath id="master_svg0_247_14308"><rect x="0" y="0" width="28" height="28" rx="0" /></clipPath></defs><g><g clip-path="url(#master_svg0_247_14308)"><g><path d="M3.5,20.124948752212525L3.5,24.499948752212525L7.875,24.499948752212525L20.7783,11.596668752212524L16.4033,7.2216687522125245L3.5,20.124948752212525ZM24.1617,8.213328752212524C24.6166,7.759348752212524,24.6166,7.0223187522125246,24.1617,6.568328752212524L21.4317,3.8383337522125243C20.9777,3.3834207522125244,20.2406,3.3834207522125244,19.7867,3.8383337522125243L17.651699999999998,5.973328752212524L22.0267,10.348338752212523L24.1617,8.213328752212524Z" fill="#F4F7FF" fill-opacity="1" /></g></g></g></svg>
+                                                    )}
+                                                    {hasPermission('delete_site_route') && (
+                                                        <svg onClick={() => { setDeleteModal(true); setDeleteRoute(route) }} className="cursor-pointer" xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="28" height="28" viewBox="0 0 28 28"><defs><clipPath id="master_svg0_247_14302"><rect x="0" y="0" width="28" height="28" rx="0" /></clipPath></defs><g><g clip-path="url(#master_svg0_247_14302)"><g><path d="M6.9996778125,24.5L20.9997078125,24.5L20.9997078125,8.16667L6.9996778125,8.16667L6.9996778125,24.5ZM22.1663078125,4.66667L18.0830078125,4.66667L16.9163078125,3.5L11.0830078125,3.5L9.9163378125,4.66667L5.8330078125,4.66667L5.8330078125,7L22.1663078125,7L22.1663078125,4.66667Z" fill="#F4F7FF" fill-opacity="1" /></g></g></g></svg>
+                                                    )}
                                                 </div>
                                             </td>
                                         </tr>

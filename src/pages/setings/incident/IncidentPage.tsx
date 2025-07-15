@@ -1,11 +1,13 @@
 import { Switch } from "@material-tailwind/react";
 import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import Loader from "../../../components/Loader";
 import Navbar from "../../../components/Navbar";
 import MainLayout from "../../../layouts/MainLayout";
 import IncidentTypesService from "../../../services/incidentTypeService";
+import { RootState } from "../../../store";
 import { IncidentType } from "../../../types/incidentType";
 const IncidentPageMaster = () => {
     const [sidebar, setSidebar] = useState(false);
@@ -22,6 +24,7 @@ const IncidentPageMaster = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 5;
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+    const user = useSelector((state: RootState) => state.user.user);
     const filteredData = datas.filter(doc =>
         doc.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -169,8 +172,17 @@ const IncidentPageMaster = () => {
             toast.error(error.message);
         }
     }
+
+    const hasPermission = (permissionName: string) => {
+        return user?.role?.permissions?.some(p => p.name === permissionName);
+    };
+
     useEffect(() => {
-        fetchIncidentTypes();
+        if (hasPermission('list_incident_types')) {
+            fetchIncidentTypes();
+        } else {
+            navigate('/dashboard');
+        }
     }, []);
 
     useEffect(() => {
@@ -219,9 +231,11 @@ const IncidentPageMaster = () => {
                                     </button>
                                 </div>
                             </div>
-                            <div className="w-[200px]">
-                                <button onClick={() => setAddIncident(true)} className="font-medium text-base min-w-[200px] text-[#181d26] px-[46.5px] py-3 border-[1px] border-[#EFBF04] bg-[#EFBF04] rounded-full hover:bg-[#181d26] hover:text-[#EFBF04] transition-all">Add Incident</button>
-                            </div>
+                            {hasPermission('add_incident_type') && (
+                                <div className="w-[200px]">
+                                    <button onClick={() => setAddIncident(true)} className="font-medium text-base min-w-[200px] text-[#181d26] px-[46.5px] py-3 border-[1px] border-[#EFBF04] bg-[#EFBF04] rounded-full hover:bg-[#181d26] hover:text-[#EFBF04] transition-all">Add Incident</button>
+                                </div>
+                            )}
                         </div>
                         <div className="w-full h-full relative pb-10 flex flex-1">
                             <div className="w-full h-full overflow-auto pb-5 flex flex-1">
@@ -245,45 +259,53 @@ const IncidentPageMaster = () => {
                                                         {incident.name}
                                                     </td>
                                                     <td className="text-[#F4F7FF] pt-6 pb-3">
-                                                        <div className="flex items-center gap-4 w-40">
-                                                            <Switch
-                                                                id={`custom-switch-component-${incident.id}`}
-                                                                ripple={false}
-                                                                checked={switchStates[incident.id]}
-                                                                onChange={(e) => handleToggle(incident.id)}
-                                                                className="h-full w-full checked:bg-[#446FC7]"
-                                                                containerProps={{
-                                                                    className: "w-11 h-6",
-                                                                }}
-                                                                circleProps={{
-                                                                    className: "before:hidden left-0.5 border-none",
-                                                                }} onResize={undefined} onResizeCapture={undefined} onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} crossOrigin={undefined} />
+                                                        {hasPermission('add_incident_type') ? (
+                                                            <div className="flex items-center gap-4 w-40">
+                                                                <Switch
+                                                                    id={`custom-switch-component-${incident.id}`}
+                                                                    ripple={false}
+                                                                    checked={switchStates[incident.id]}
+                                                                    onChange={(e) => handleToggle(incident.id)}
+                                                                    className="h-full w-full checked:bg-[#446FC7]"
+                                                                    containerProps={{
+                                                                        className: "w-11 h-6",
+                                                                    }}
+                                                                    circleProps={{
+                                                                        className: "before:hidden left-0.5 border-none",
+                                                                    }} onResize={undefined} onResizeCapture={undefined} onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} crossOrigin={undefined} />
+                                                                <p className={`font-medium text-sm capitalize ${switchStates[incident.id] ? 'text-[#19CE74]' : 'text-[#FF7E6A]'}`}>
+                                                                    {switchStates[incident.id] ? 'active' : 'inactive'}
+                                                                </p>
+                                                            </div>
+                                                        ) : (
                                                             <p className={`font-medium text-sm capitalize ${switchStates[incident.id] ? 'text-[#19CE74]' : 'text-[#FF7E6A]'}`}>
                                                                 {switchStates[incident.id] ? 'active' : 'inactive'}
                                                             </p>
-                                                        </div>
+                                                        )}
                                                     </td>
                                                     <td className="pt-6 pb-3">
-                                                        <div className="flex gap-6 items-center justify-center">
-                                                            <svg
-                                                                onClick={() => {
-                                                                    setEditIncident(true);
-                                                                    setEditData(incident);
-                                                                }}
-                                                                className="cursor-pointer"
-                                                                xmlns="http://www.w3.org/2000/svg"
-                                                                fill="none"
-                                                                version="1.1"
-                                                                width="28"
-                                                                height="28"
-                                                                viewBox="0 0 28 28"
-                                                            >
-                                                                <path
-                                                                    d="M3.5,20.1249V24.5H7.875L20.7783,11.5967L16.4033,7.2217L3.5,20.1249ZM24.1617,8.2133C24.6166,7.7593,24.6166,7.0223,24.1617,6.5683L21.4317,3.8383C20.9777,3.3834,20.2406,3.3834,19.7867,3.8383L17.6517,5.9733L22.0267,10.3483L24.1617,8.2133Z"
-                                                                    fill="#F4F7FF"
-                                                                />
-                                                            </svg>
-                                                        </div>
+                                                        {hasPermission('edit_incident_type') && (
+                                                            <div className="flex gap-6 items-center justify-center">
+                                                                <svg
+                                                                    onClick={() => {
+                                                                        setEditIncident(true);
+                                                                        setEditData(incident);
+                                                                    }}
+                                                                    className="cursor-pointer"
+                                                                    xmlns="http://www.w3.org/2000/svg"
+                                                                    fill="none"
+                                                                    version="1.1"
+                                                                    width="28"
+                                                                    height="28"
+                                                                    viewBox="0 0 28 28"
+                                                                >
+                                                                    <path
+                                                                        d="M3.5,20.1249V24.5H7.875L20.7783,11.5967L16.4033,7.2217L3.5,20.1249ZM24.1617,8.2133C24.6166,7.7593,24.6166,7.0223,24.1617,6.5683L21.4317,3.8383C20.9777,3.3834,20.2406,3.3834,19.7867,3.8383L17.6517,5.9733L22.0267,10.3483L24.1617,8.2133Z"
+                                                                        fill="#F4F7FF"
+                                                                    />
+                                                                </svg>
+                                                            </div>
+                                                        )}
                                                     </td>
                                                 </tr>
                                             ))
