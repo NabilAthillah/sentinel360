@@ -58,7 +58,7 @@ const LearningPage = () => {
                             <table className="min-w-[700px] w-full">
                                 <thead>
                                     <tr>
-                                        <th className="font-semibold text-[#98A1B3] text-start">S. no</th>
+                                        <th className="font-semibold text-[#98A1B3] text-start">S.NO</th>
                                         <th className="font-semibold text-[#98A1B3] text-start">Course name</th>
                                         <th className="font-semibold text-[#98A1B3] text-start">Status</th>
                                         <th className="font-semibold text-[#98A1B3] text-center">Actions</th>

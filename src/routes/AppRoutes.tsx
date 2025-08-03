@@ -21,6 +21,7 @@ import AllocationPage from '../pages/site/AllocationPage';
 import IncidentPageMaster from '../pages/setings/incident/IncidentPage';
 import IncidentTypePage from '../pages/incident/IncidentPage';
 import IncidentPage from '../pages/incidentType/IncidentType';
+import PreEmployeePage from '../pages/preEmployee/PreEmployeePage';
 
 const AppRoutes = () => {
   return (
@@ -49,6 +50,7 @@ const AppRoutes = () => {
             <Route path='/settings/sop-document' element={<SopDocumentPage />}/>
             <Route path='/settings/profile' element={<ProfilePage />}/>
             <Route path='/incidentfree' element={< IncidentPage />}/>
+            <Route path='/pre-employees' element={< PreEmployeePage />}/>
         </Routes>
     </Router>
   )

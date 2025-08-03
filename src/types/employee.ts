@@ -10,4 +10,5 @@ export type Employee = {
     reporting: User;
     site?: Site;
     date_joined?: string;
+    status?: string;
 }

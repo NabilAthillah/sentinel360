@@ -207,7 +207,7 @@ const RolesPage = () => {
                                 <table className="min-w-[700px] w-full">
                                     <thead>
                                         <tr>
-                                            <th className="font-semibold text-[#98A1B3] text-start">S. no</th>
+                                            <th className="font-semibold text-[#98A1B3] text-start">S/NO</th>
                                             <th className="font-semibold text-[#98A1B3] text-start">Role</th>
                                             <th className="font-semibold text-[#98A1B3] text-center">Actions</th>
                                         </tr>

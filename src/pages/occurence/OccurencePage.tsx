@@ -196,7 +196,7 @@ const OccurencePage = () => {
             return;
         }
 
-        const headers = ['S. No', 'Date', 'Time', 'Site Name', 'Category', 'Reported By'];
+        const headers = ['S/NO', 'Date', 'Time', 'Site Name', 'Category', 'Reported By'];
 
         const rows = occurrences.map((occ, index) => [
             index + 1,
@@ -316,7 +316,7 @@ const OccurencePage = () => {
                             <table className="min-w-[700px] w-full">
                                 <thead>
                                     <tr>
-                                        <th className="font-semibold text-[#98A1B3] text-start">S. no</th>
+                                        <th className="font-semibold text-[#98A1B3] text-start">S.NO</th>
                                         <th className="font-semibold text-[#98A1B3] text-start">Date</th>
                                         <th className="font-semibold text-[#98A1B3] text-start">Time</th>
                                         <th className="font-semibold text-[#98A1B3] text-start">Site name</th>

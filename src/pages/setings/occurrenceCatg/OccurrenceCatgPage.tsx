@@ -245,7 +245,7 @@ const OccurrenceCatgPage = () => {
                                 <table className="w-full min-w-[500px]">
                                     <thead>
                                         <tr>
-                                            <th className="font-semibold text-[#98A1B3] text-start">S. no</th>
+                                            <th className="font-semibold text-[#98A1B3] text-start">S/NO</th>
                                             <th className="font-semibold text-[#98A1B3] text-start">Category</th>
                                             <th className="font-semibold text-[#98A1B3] text-start flex items-center gap-2">Status</th>
                                             <th className="font-semibold text-[#98A1B3] text-center">Actions</th>

@@ -15,51 +15,51 @@ const employeeService = {
     },
 
     editEmployee: async (
-    id,
-    name,
-    nric_fin_no,
-    mobile,
-    email,
-    role,
-    reporting_to,
-    briefing_date,
-    birth,
-    address,
-    briefing_conducted,
-    date_joined,
-    profile, 
-    token
-) => {
-    try {
-        const payload = {
-            name,
-            nric_fin_no,
-            mobile,
-            email,
-            id_role: role,
-            reporting_to,
-            briefing_date,
-            date_joined,
-            birth,
-            address,
-            briefing_conducted,
-        };
+        id,
+        name,
+        nric_fin_no,
+        mobile,
+        email,
+        role,
+        reporting_to,
+        briefing_date,
+        birth,
+        address,
+        briefing_conducted,
+        date_joined,
+        profile,
+        token
+    ) => {
+        try {
+            const payload = {
+                name,
+                nric_fin_no,
+                mobile,
+                email,
+                id_role: role,
+                reporting_to,
+                briefing_date,
+                date_joined,
+                birth,
+                address,
+                briefing_conducted,
+            };
 
-        if (profile) {
-            payload.profile = profile; 
+            if (profile) {
+                payload.profile = profile;
+            }
+
+            const response = await api.put(`/employees/${id}`, payload, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            return response.data;
+        } catch (error) {
+            throw error.response ? error.response.data : { message: 'Network error' };
         }
-
-        const response = await api.put(`/employees/${id}`, payload, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
-
-        return response.data;
-    } catch (error) {
-        throw error.response ? error.response.data : { message: 'Network error' };
-    }
-},
+    },
 
 
 
@@ -75,6 +75,23 @@ const employeeService = {
             throw error.response ? error.response.data : { message: 'Network error' };
         }
     },
+    updateEmployeeStatus: async (employeeId, status, token) => {
+        try {
+            const response = await api.put(
+                `/employees/${employeeId}/status`,
+                { status },
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+            return response.data;
+        } catch (error) {
+            throw error.response ? error.response.data : { message: 'Network error' };
+        }
+    },
+
 
     deleteEmployee: async (id, token) => {
         try {

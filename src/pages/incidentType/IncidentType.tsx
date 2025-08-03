@@ -141,7 +141,7 @@ console.log("IncidentTypes: ", incidentTypes);
                         <table className="min-w-[800px] w-full">
                             <thead>
                                 <tr>
-                                    <th className="text-left text-[#98A1B3]">S. no</th>
+                                    <th className="text-left text-[#98A1B3]">S/NO</th>
                                     <th className="text-left text-[#98A1B3]">Incident Date</th>
                                     <th className="text-left text-[#98A1B3]">Incident Time</th>
                                     <th className="text-left text-[#98A1B3]">Site Name</th>

@@ -60,7 +60,7 @@ const LeaveManagementPage = () => {
                             <table className="min-w-[800px] w-full">
                                 <thead>
                                     <tr>
-                                        <th className="font-semibold text-[#98A1B3] text-start">S. no</th>
+                                        <th className="font-semibold text-[#98A1B3] text-start">S/NO</th>
                                         <th className="font-semibold text-[#98A1B3] text-start">Name</th>
                                         <th className="font-semibold text-[#98A1B3] text-start">Type</th>
                                         <th className="font-semibold text-[#98A1B3] text-start">From</th>
