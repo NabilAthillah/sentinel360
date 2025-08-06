@@ -219,6 +219,51 @@ const EmployeesPage = () => {
         }
     };
 
+    const handleStatusUpdate = async (employeeId: string, status: 'pending' | 'accepted' | 'rejected') => {
+    setLoading(true);
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            toast.error("Token not found. Redirecting to login.");
+            localStorage.clear();
+            navigate('/login');
+            return;
+        }
+
+        const response = await employeeService.updateEmployeeStatus(employeeId, status, token);
+
+        
+        if (response.success) {
+            if (status === 'accepted') {
+                toast.success("Account status: active");
+            } else if (status === 'rejected') {
+                toast.success("Account has been deleted");
+            } else {
+                toast.success(`Status updated to ${status}`);
+            }
+
+            fetchEmployees();
+        } else {
+            toast.error(response.message || 'Failed to update status');
+        }
+    } catch (error: any) {
+        if (error.response?.status === 401) {
+            toast.error("Session expired. Please login again.");
+            localStorage.clear();
+            navigate('/login');
+        } else if (error.response?.data?.message) {
+            toast.error(`Server Error: ${error.response.data.message}`);
+        } else if (error.message) {
+            toast.error(`Error: ${error.message}`);
+        } else {
+            toast.error("Unexpected error occurred.");
+        }
+    } finally {
+        setLoading(false);
+    }
+};
+
+
 
 
 
@@ -391,11 +436,11 @@ const EmployeesPage = () => {
                                 Download Report
                             </button>
                         </div>
-                        {/* {user?.role?.permissions?.some(p => p.name === 'add_employee') && (
+                        {user?.role?.permissions?.some(p => p.name === 'add_employee') && (
                             <div className="min-w-[160px] max-w-[200px] w-fit">
                                 <button onClick={() => setAddEmployee(true)} className="font-medium text-base text-[#181d26] px-7 py-[13.5px] border-[1px] border-[#EFBF04] bg-[#EFBF04] rounded-full hover:bg-[#181d26] hover:text-[#EFBF04] transition-all">Add employee</button>
                             </div>
-                        )} */}
+                        )}
                     </div>
                     <div className="w-full h-full relative pb-10 flex flex-1">
                         <div className="w-full h-full overflow-auto pb-5 flex flex-1">
@@ -426,6 +471,37 @@ const EmployeesPage = () => {
                                             </td>
                                             <td className="pt-6 pb-3">
                                                 <div className="flex gap-6 items-center justify-center">
+                                                    {data.user.status !== 'active' && user?.role?.permissions?.some(p => p.name === 'add_employee') && (
+                                                            <svg
+                                                                height="28px"
+                                                                version="1.1"
+                                                                viewBox="0 0 18 15"
+                                                                width="28px"
+                                                                className="cursor-pointer"
+                                                                xmlns="http://www.w3.org/2000/svg"
+                                                                onClick={() => handleStatusUpdate(data.id, 'accepted')}
+                                                            >
+                                                                <g fill="none" fillRule="evenodd" stroke="none" strokeWidth="1">
+                                                                    <g fill="#ffffff" transform="translate(-423.000000, -47.000000)">
+                                                                        <g transform="translate(423.000000, 47.500000)">
+                                                                            <path d="M6,10.2 L1.8,6 L0.4,7.4 L6,13 L18,1 L16.6,-0.4 L6,10.2 Z" />
+                                                                        </g>
+                                                                    </g>
+                                                                </g>
+                                                            </svg>
+                                                        )}
+                                                    {data.user.status !== 'active' && user?.role?.permissions?.some(p => p.name === 'add_employee') && (
+                                                            <svg height="28" viewBox="0 0 16 16" width="28" xmlns="http://www.w3.org/2000/svg" 
+                                                            onClick={() => handleStatusUpdate(data.id, 'rejected')}
+                                                            className='cursor-pointer'>
+                                                                <polygon
+                                                                    fill="white"
+                                                                    fill-rule="evenodd"
+                                                                    points="8 9.414 3.707 13.707 2.293 12.293 6.586 8 2.293 3.707 3.707 2.293 8 6.586 12.293 2.293 13.707 3.707 9.414 8 13.707 12.293 12.293 13.707 8 9.414"
+                                                                />
+                                                            </svg>
+
+                                                        )}
                                                     <svg className="cursor-pointer" onClick={() => setUploadEmployee(true)} xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="28" height="28" viewBox="0 0 28 28"><defs><clipPath id="master_svg0_247_14305"><rect x="0" y="0" width="28" height="28" rx="0" /></clipPath></defs><g><g clipPath="url(#master_svg0_247_14305)"><g><path d="M11.46283298828125,19.6719859375L16.76641298828125,19.6719859375C17.495712988281248,19.6719859375,18.09231298828125,19.0752859375,18.09231298828125,18.3460859375L18.09231298828125,11.7165359375L20.20051298828125,11.7165359375C21.38061298828125,11.7165359375,21.97721298828125,10.2845659375,21.14191298828125,9.449245937499999L15.05601298828125,3.3633379375C14.54009298828125,2.8463349375,13.70246298828125,2.8463349375,13.18651298828125,3.3633379375L7.1006129882812505,9.449245937499999C6.26529298828125,10.2845659375,6.84869298828125,11.7165359375,8.02874298828125,11.7165359375L10.136932988281249,11.7165359375L10.136932988281249,18.3460859375C10.136932988281249,19.0752859375,10.73359298828125,19.6719859375,11.46283298828125,19.6719859375ZM6.15921298828125,22.3237859375L22.07011298828125,22.3237859375C22.79931298828125,22.3237859375,23.39601298828125,22.9203859375,23.39601298828125,23.6496859375C23.39601298828125,24.3788859375,22.79931298828125,24.9755859375,22.07011298828125,24.9755859375L6.15921298828125,24.9755859375C5.42996998828125,24.9755859375,4.83331298828125,24.3788859375,4.83331298828125,23.6496859375C4.83331298828125,22.9203859375,5.42996998828125,22.3237859375,6.15921298828125,22.3237859375Z" fill="#F4F7FF" fill-opacity="1" /></g></g></g></svg>
                                                  {user?.role?.permissions?.some(p => p.name === 'edit_employee') && (
                                                         <svg className="cursor-pointer" onClick={() => {

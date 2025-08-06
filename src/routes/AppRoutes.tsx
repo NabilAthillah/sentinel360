@@ -22,6 +22,7 @@ import IncidentPageMaster from '../pages/setings/incident/IncidentPage';
 import IncidentTypePage from '../pages/incident/IncidentPage';
 import IncidentPage from '../pages/incidentType/IncidentType';
 import PreEmployeePage from '../pages/preEmployee/PreEmployeePage';
+import AuditTrails from '../pages/auditTrails/AuditTrails';
 
 const AppRoutes = () => {
   return (
@@ -51,6 +52,7 @@ const AppRoutes = () => {
             <Route path='/settings/profile' element={<ProfilePage />}/>
             <Route path='/incidentfree' element={< IncidentPage />}/>
             <Route path='/pre-employees' element={< PreEmployeePage />}/>
+            <Route path='/audit-trails' element={< AuditTrails />}/>
         </Routes>
     </Router>
   )
