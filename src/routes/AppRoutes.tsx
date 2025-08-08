@@ -24,6 +24,22 @@ import HomePage from '../pages/user/home/HomePage';
 import MapPage from '../pages/site/MapPage';
 import SitePage from '../pages/site/SitePage';
 import RoutePage from '../pages/site/RoutePage';
+import Attendance from '../pages/user/Attendance/Attendance';
+import Checkin from '../pages/user/Attendance/Checkin';
+import Leaves from '../pages/user/Leaves/Leaves';
+import RequestLeaves from '../pages/user/Leaves/RequestLeaves';
+import Settings from '../pages/user/Settings/Settings';
+import Profile from '../pages/user/Settings/Profile';
+import ChangePassword from '../pages/user/Settings/ChangePassword';
+import Incident from '../pages/user/Incident/Incident';
+import Report from '../pages/user/Incident/Report';
+import History from '../pages/user/Incident/History';
+import Occurence from '../pages/user/Occurrence/Occurence';
+import ReportOccurance from '../pages/user/Occurrence/ReportOccurance';
+import EditOccurance from '../pages/user/Occurrence/EditOccurance';
+import HistoryOccurance from '../pages/user/Occurrence/HistoryOccurance';
+import Clocking from '../pages/user/Clocking/Clocking';
+import ScanClocking from '../pages/user/Clocking/ScanClocking';
 
 const AppRoutes = () => {
   return (
@@ -56,6 +72,22 @@ const AppRoutes = () => {
         <Route path='/audit-trails' element={< AuditTrails />} />
 
         <Route path='/user' element={<HomePage />} />
+        <Route path='/user/clocking' element={<Clocking />} />
+        <Route path='/user/clocking/scan' element={<ScanClocking />} />
+        <Route path='/user/e-occurence' element={<Occurence/>} />
+        <Route path='/user/e-occurence/report' element={<ReportOccurance/>} />
+        <Route path='/user/e-occurence/report/edit' element={<EditOccurance/>} />
+        <Route path='/user/e-occurence/history' element={<HistoryOccurance/>} />
+        <Route path='/user/incident' element={<Incident />} />
+        <Route path='/user/incident/report' element={<Report />} />
+        <Route path='/user/incident/history' element={<History />} />
+        <Route path='/user/attendance' element={<Attendance/>} />
+        <Route path='/user/attendance/checkin' element={<Checkin/>} />
+        <Route path='/user/leaves' element={<Leaves/>} />
+        <Route path='/user/leaves/request' element={<RequestLeaves/>} />
+        <Route path='/user/settings' element={<Settings/>} />
+        <Route path='/user/settings/profile' element={<Profile/>} />
+        <Route path='/user/settings/change-password' element={<ChangePassword/>} />
       </Routes>
     </Router>
   )
