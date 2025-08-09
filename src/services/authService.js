@@ -2,11 +2,26 @@ import api from '../utils/api';
 
 // Authentication service
 const authService = {
-  // Login user
+  // Login admin
   login: async (email, password) => {
     try {
       const response = await api.post('/auth/login', {
         email: email,
+        password: password
+      });
+      if (response.data) {
+        return response.data;
+      }
+    } catch (error) {
+      throw error.response ? error.response.data : { message: 'Network error' };
+    }
+  },
+
+  // Login user
+  loginUser: async (phone, password) => {
+    try {
+      const response = await api.post('/auth/user/login', {
+        phone: phone,
         password: password
       });
       if (response.data) {
@@ -57,7 +72,7 @@ const authService = {
     }
   },
 
-  updateProfile: async (id, token, name, address, mobile, email, old_password, new_password,profile) => {
+  updateProfile: async (id, token, name, address, mobile, email, old_password, new_password, profile) => {
     try {
       const response = await api.post('/auth/update-profile', {
         id,
@@ -70,7 +85,7 @@ const authService = {
         profile
       }, {
         headers: {
-          'Authorization' : `Bearer ${token}`
+          'Authorization': `Bearer ${token}`
         }
       })
 

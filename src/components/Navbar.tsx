@@ -14,37 +14,37 @@ const Navbar = () => {
     return (
         <nav className='flex flex-wrap'>
             {hasPermission('show_attendance_settings') && (
-                <Link to="/settings/attendance" className={`font-medium text-sm text-[#F4F7FF] px-6 ${pathname === '/settings/attendance' ? 'pt-[14px] pb-3 border-b-2 border-b-[#F3C511]' : 'py-[14px] border-b-0'}`}>
+                <Link to="/dashboard/settings/attendance" className={`font-medium text-sm text-[#F4F7FF] px-6 ${pathname === '/dashboard/settings/attendance' ? 'pt-[14px] pb-3 border-b-2 border-b-[#F3C511]' : 'py-[14px] border-b-0'}`}>
                     Attendance
                 </Link>
             )}
             {hasPermission('show_client') && (
-                <Link to="/settings/client-info" className={`font-medium text-sm text-[#F4F7FF] px-6 ${pathname === '/settings/client-info' ? 'pt-[14px] pb-3 border-b-2 border-b-[#F3C511]' : 'py-[14px] border-b-0'}`}>
+                <Link to="/dashboard/settings/client-info" className={`font-medium text-sm text-[#F4F7FF] px-6 ${pathname === '/dashboard/settings/client-info' ? 'pt-[14px] pb-3 border-b-2 border-b-[#F3C511]' : 'py-[14px] border-b-0'}`}>
                     Client info
                 </Link>
             )}
             {hasPermission('list_employee_documents') && (
-                <Link to="/settings/employee-document" className={`font-medium text-sm text-[#F4F7FF] px-6 ${pathname === '/settings/employee-document' ? 'pt-[14px] pb-3 border-b-2 border-b-[#F3C511]' : 'py-[14px] border-b-0'}`}>
+                <Link to="/dashboard/settings/employee-document" className={`font-medium text-sm text-[#F4F7FF] px-6 ${pathname === '/dashboard/settings/employee-document' ? 'pt-[14px] pb-3 border-b-2 border-b-[#F3C511]' : 'py-[14px] border-b-0'}`}>
                     Employee Document
                 </Link>
             )}
             {hasPermission('list_incident_type') && (
-                <Link to="/settings/incident" className={`font-medium text-sm text-[#F4F7FF] px-6 ${pathname === '/settings/incident' ? 'pt-[14px] pb-3 border-b-2 border-b-[#F3C511]' : 'py-[14px] border-b-0'}`}>
+                <Link to="/dashboard/settings/incident" className={`font-medium text-sm text-[#F4F7FF] px-6 ${pathname === '/dashboard/settings/incident' ? 'pt-[14px] pb-3 border-b-2 border-b-[#F3C511]' : 'py-[14px] border-b-0'}`}>
                     Incident
                 </Link>
             )}
             {hasPermission('list_occurrence_categories') && (
-                <Link to="/settings/occurrence-catg" className={`font-medium text-sm text-[#F4F7FF] px-6 ${pathname === '/settings/occurrence-catg' ? 'pt-[14px] pb-3 border-b-2 border-b-[#F3C511]' : 'py-[14px] border-b-0'}`}>
+                <Link to="/dashboard/settings/occurrence-catg" className={`font-medium text-sm text-[#F4F7FF] px-6 ${pathname === '/dashboard/settings/occurrence-catg' ? 'pt-[14px] pb-3 border-b-2 border-b-[#F3C511]' : 'py-[14px] border-b-0'}`}>
                     Occurence Catg.
                 </Link>
             )}
             {hasPermission('list_roles') && (
-                <Link to="/settings/roles" className={`font-medium text-sm text-[#F4F7FF] px-6 ${pathname === '/settings/roles' ? 'pt-[14px] pb-3 border-b-2 border-b-[#F3C511]' : 'py-[14px] border-b-0'}`}>
+                <Link to="/dashboard/settings/roles" className={`font-medium text-sm text-[#F4F7FF] px-6 ${pathname === '/dashboard/settings/roles' ? 'pt-[14px] pb-3 border-b-2 border-b-[#F3C511]' : 'py-[14px] border-b-0'}`}>
                     Roles
                 </Link>
             )}
             {hasPermission('list_sop_documents') && (
-                <Link to="/settings/sop-document" className={`font-medium text-sm text-[#F4F7FF] px-6 ${pathname === '/settings/sop-document' ? 'pt-[14px] pb-3 border-b-2 border-b-[#F3C511]' : 'py-[14px] border-b-0'}`}>
+                <Link to="/dashboard/settings/sop-document" className={`font-medium text-sm text-[#F4F7FF] px-6 ${pathname === '/dashboard/settings/sop-document' ? 'pt-[14px] pb-3 border-b-2 border-b-[#F3C511]' : 'py-[14px] border-b-0'}`}>
                     SOP Document
                 </Link>
             )}

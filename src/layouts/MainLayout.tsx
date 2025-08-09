@@ -5,7 +5,6 @@ import { useNavigate } from 'react-router-dom';
 import { Bounce, toast, ToastContainer } from 'react-toastify';
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
-import { User } from '../types/user';
 import { clearUser } from '../features/user/userSlice';
 import { RootState } from '../store';
 
@@ -23,7 +22,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
         localStorage.removeItem('user');
 
         toast.success('Logout successfully');
-        navigate('/login');
+        navigate('/auth/login');
     }
 
     useEffect(() => {
@@ -41,17 +40,17 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
 
                     if (!parsedUser || !parsedUser.id) {
                         localStorage.clear();
-                        navigate('/login');
+                        navigate('/auth/login');
                         return;
                     }
                 })
                 .catch((err) => {
-                    navigate('/login')
+                    navigate('/auth/login')
                     localStorage.removeItem('token');
                     localStorage.removeItem('user');
                 });
         } else {
-            navigate('/login')
+            navigate('/auth/login')
             localStorage.removeItem('token');
             localStorage.removeItem('user');
         }

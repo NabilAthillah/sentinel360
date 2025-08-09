@@ -6,10 +6,10 @@ import DeleteModal from "../../../components/DeleteModal";
 import Loader from "../../../components/Loader";
 import Navbar from "../../../components/Navbar";
 import MainLayout from "../../../layouts/MainLayout";
+import auditTrialsService from "../../../services/auditTrailsService";
 import sopDocumentService from "../../../services/sopDocumentService";
 import { RootState } from "../../../store";
 import { SopDocument } from "../../../types/sopDocument";
-import auditTrialsService from "../../../services/auditTrailsService";
 const SopDocumentPage = () => {
     const [deleteModal, setDeleteModal] = useState(false);
     const [viewDoc, setViewDoc] = useState(false);
@@ -66,7 +66,7 @@ const SopDocumentPage = () => {
 
             if (!token) {
                 localStorage.clear();
-                navigate('/login');
+                navigate('/auth/login');
             }
 
             const response = await sopDocumentService.getSop(token);
@@ -97,7 +97,7 @@ const SopDocumentPage = () => {
 
             if (!token) {
                 localStorage.clear();
-                navigate('/login');
+                navigate('/auth/login');
             }
 
             const response = await sopDocumentService.addSop(token, name, imageBase64);
@@ -121,7 +121,7 @@ const SopDocumentPage = () => {
             const token = localStorage.getItem('token');
             if (!token) {
                 localStorage.clear();
-                navigate('/login');
+                navigate('/auth/login');
                 return;
             }
 
@@ -157,7 +157,7 @@ const SopDocumentPage = () => {
 
             if (!token) {
                 localStorage.clear();
-                navigate('/login');
+                navigate('/auth/login');
                 return;
             }
 

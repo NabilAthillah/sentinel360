@@ -1,7 +1,5 @@
-import React from 'react'
-import MainLayout from "../../layouts/MainLayout";
 import { Switch } from "@material-tailwind/react";
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from 'react';
 import PhoneInput from "react-phone-input-2";
 import 'react-phone-input-2/lib/style.css';
 import { useSelector } from "react-redux";
@@ -9,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import DeleteModal from "../../components/DeleteModal";
 import Loader from "../../components/Loader";
+import MainLayout from "../../layouts/MainLayout";
 import employeeService from "../../services/employeeService";
 import roleService from "../../services/roleService";
 import { RootState } from "../../store";
@@ -159,7 +158,7 @@ const PreEmployeePage = () => {
             if (!token) {
                 toast.error("Token not found. Redirecting to login.");
                 localStorage.clear();
-                navigate('/login');
+                navigate('/auth/login');
                 return;
             }
 
@@ -348,7 +347,7 @@ const PreEmployeePage = () => {
             if (!token) {
                 toast.error("Token not found. Redirecting to login.");
                 localStorage.clear();
-                navigate('/login');
+                navigate('/auth/login');
                 return;
             }
 
@@ -476,9 +475,9 @@ const PreEmployeePage = () => {
                                                             </svg>
                                                         )}
                                                         {user?.role?.permissions?.some(p => p.name === 'add_employee') && (
-                                                            <svg height="28" viewBox="0 0 16 16" width="28" xmlns="http://www.w3.org/2000/svg" 
-                                                            onClick={() => handleStatusUpdate(data.id, 'rejected')}
-                                                            className='cursor-pointer'>
+                                                            <svg height="28" viewBox="0 0 16 16" width="28" xmlns="http://www.w3.org/2000/svg"
+                                                                onClick={() => handleStatusUpdate(data.id, 'rejected')}
+                                                                className='cursor-pointer'>
                                                                 <polygon
                                                                     fill="white"
                                                                     fill-rule="evenodd"

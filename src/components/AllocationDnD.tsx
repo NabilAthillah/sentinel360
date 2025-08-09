@@ -167,7 +167,7 @@ const AllocationDnD = ({ sites, setLoading, allocationType, shiftType, date }: {
 
             if (!token) {
                 localStorage.clear();
-                navigate('/login');
+                navigate('/auth/login');
             }
 
             const response = await employeeService.getAllEmployee(token);
@@ -186,7 +186,7 @@ const AllocationDnD = ({ sites, setLoading, allocationType, shiftType, date }: {
 
             if (!token) {
                 localStorage.clear();
-                navigate('/login');
+                navigate('/auth/login');
             }
 
             const response = await siteEmployeeService.getAllSiteEmployee(token, allocationType, shiftType, date);
@@ -249,7 +249,7 @@ const AllocationDnD = ({ sites, setLoading, allocationType, shiftType, date }: {
 
                 if (!token) {
                     localStorage.clear();
-                    navigate('/login');
+                    navigate('/auth/login');
                 }
 
                 const response = await siteEmployeeService.allocationUserToSite(siteId, token, employeeId, allocationType, shiftType, date);
@@ -291,7 +291,7 @@ const AllocationDnD = ({ sites, setLoading, allocationType, shiftType, date }: {
 
                 if (!token) {
                     localStorage.clear();
-                    navigate('/login');
+                    navigate('/auth/login');
                 }
 
                 const response = await employeeService.disallocationUserFromSite(token, employeeId, siteId, allocationType, shiftType, date);

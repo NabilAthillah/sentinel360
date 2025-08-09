@@ -6,10 +6,10 @@ import { toast } from "react-toastify";
 import Loader from "../../../components/Loader";
 import Navbar from "../../../components/Navbar";
 import MainLayout from "../../../layouts/MainLayout";
+import auditTrialsService from "../../../services/auditTrailsService";
 import employeeDocumentService from "../../../services/employeeDocumentService";
 import { RootState } from "../../../store";
 import { EmployeeDocument } from "../../../types/employeeDocument";
-import auditTrialsService from "../../../services/auditTrailsService";
 const EmployeeDocumentPage = () => {
     const [sidebar, setSidebar] = useState(false);
     const [data1, setData1] = useState(true);
@@ -57,7 +57,7 @@ const EmployeeDocumentPage = () => {
 
             if (!token) {
                 localStorage.clear();
-                navigate('/login');
+                navigate('/auth/login');
             }
 
             const response = await employeeDocumentService.getEmployeeDocuments(token);
@@ -89,7 +89,7 @@ const EmployeeDocumentPage = () => {
 
         if (!token) {
             localStorage.clear();
-            navigate('/login');
+            navigate('/auth/login');
         }
 
         try {
@@ -119,7 +119,7 @@ const EmployeeDocumentPage = () => {
 
             if (!token) {
                 localStorage.clear();
-                navigate('/login');
+                navigate('/auth/login');
             }
 
             const response = await employeeDocumentService.addEmployeeDocument(token, name);
@@ -146,7 +146,7 @@ const EmployeeDocumentPage = () => {
 
             if (!token) {
                 localStorage.clear();
-                navigate('/login');
+                navigate('/auth/login');
             }
 
             const response = await employeeDocumentService.editEmployeeDocument(token, editData?.id, name);

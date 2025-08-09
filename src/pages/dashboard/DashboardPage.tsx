@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import Map from '../../components/Map';
 import MainLayout from '../../layouts/MainLayout';
+import auditTrialsService from '../../services/auditTrailsService';
 import siteService from '../../services/siteService';
 import { RootState } from '../../store';
 import { Site } from '../../types/site';
-import { toast } from 'react-toastify';
-import auditTrialsService from '../../services/auditTrailsService';
 
 const DashboardPage = () => {
     const navigate = useNavigate();
@@ -20,7 +20,7 @@ const DashboardPage = () => {
 
             if (!token) {
                 localStorage.clear();
-                navigate('/login');
+                navigate('/auth/login');
             }
 
             const response = await siteService.getAllSite(token);
