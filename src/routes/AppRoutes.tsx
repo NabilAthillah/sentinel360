@@ -40,6 +40,7 @@ import EditOccurance from '../pages/user/Occurrence/EditOccurance';
 import HistoryOccurance from '../pages/user/Occurrence/HistoryOccurance';
 import Clocking from '../pages/user/Clocking/Clocking';
 import ScanClocking from '../pages/user/Clocking/ScanClocking';
+import Login from '../pages/user/Auth/Login';
 
 const AppRoutes = () => {
   return (
@@ -72,6 +73,7 @@ const AppRoutes = () => {
         <Route path='/audit-trails' element={< AuditTrails />} />
 
         <Route path='/user' element={<HomePage />} />
+        <Route path='/user/Login' element={<Login />} />
         <Route path='/user/clocking' element={<Clocking />} />
         <Route path='/user/clocking/scan' element={<ScanClocking />} />
         <Route path='/user/e-occurence' element={<Occurence/>} />
