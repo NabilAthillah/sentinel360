@@ -6,4 +6,5 @@ export type AuditTrail = {
     status?: string ;
     created_at: string;
     user: User;
+    category: string;
 }

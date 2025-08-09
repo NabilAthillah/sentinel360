@@ -917,12 +917,10 @@ const PreEmployeePage = () => {
                                 placeholder="Briefing Date"
                                 value={
                                     editData.briefing_date
-                                        ? new Date(editData.briefing_date).toISOString().slice(0, 16)
-                                        : ''
                                 }
                                 onChange={(e) =>
                                     setEditData((prev) =>
-                                        prev ? { ...prev, briefing_date: new Date(e.target.value) } : null
+                                        prev ? { ...prev, briefing_date: e.target.value } : null
                                     )
                                 }
                             />
@@ -936,12 +934,10 @@ const PreEmployeePage = () => {
                                 placeholder="Date Joined"
                                 value={
                                     editData.date_joined
-                                        ? new Date(editData.date_joined).toISOString().slice(0, 16)
-                                        : ''
                                 }
                                 onChange={(e) =>
                                     setEditData((prev) =>
-                                        prev ? { ...prev, date_joined: new Date(e.target.value).toString() } : null
+                                        prev ? { ...prev, date_joined: e.target.value } : null
                                     )
                                 }
                             />

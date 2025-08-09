@@ -137,7 +137,7 @@ const ClientInfoPage = () => {
             const title = `Access client info page`;
             const description = `User ${user?.email} access client info page`;
             const status = 'success';
-            await auditTrialsService.storeAuditTrails(token, user?.id, title, description, status);
+            await auditTrialsService.storeAuditTrails(token, user?.id, title, description, status, 'access client info');
         } catch (error) {
             console.error(error);
         }

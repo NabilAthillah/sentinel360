@@ -62,7 +62,7 @@ const DashboardPage = () => {
             const title = `Access dashboard page`;
             const description = `User ${user?.email} access dashboard page`;
             const status = 'success';
-            await auditTrialsService.storeAuditTrails(token, user?.id, title, description, status);
+            await auditTrialsService.storeAuditTrails(token, user?.id, title, description, status, 'access dashboard');
         } catch (error) {
             console.error(error);
         }

@@ -81,7 +81,7 @@ const AllocationPage = () => {
             const title = `Access site allocation page`;
             const description = `User ${user?.email} access site allocation page`;
             const status = 'success';
-            await auditTrialsService.storeAuditTrails(token, user?.id, title, description, status);
+            await auditTrialsService.storeAuditTrails(token, user?.id, title, description, status, 'access site allocation');
         } catch (error) {
             console.error(error);
         }

@@ -22,7 +22,7 @@ interface EmployeeCardProps {
 const dummyEmployee = {
     id: '1',
     nric_fin_no: 'S1234567A',
-    briefing_date: new Date(),
+    briefing_date: new Date().toString(),
     user: {
         id: 'u-001',
         name: 'John Doe',

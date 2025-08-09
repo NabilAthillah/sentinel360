@@ -179,7 +179,7 @@ const OccurrenceCatgPage = () => {
             const title = `Access occurrence catgories page`;
             const description = `User ${user?.email} access occurrence categories page`;
             const status = 'success';
-            await auditTrialsService.storeAuditTrails(token, user?.id, title, description, status);
+            await auditTrialsService.storeAuditTrails(token, user?.id, title, description, status, 'access occurrence categories');
         } catch (error) {
             console.error(error);
         }

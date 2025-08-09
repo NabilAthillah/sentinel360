@@ -222,7 +222,7 @@ const SitePage = () => {
             const title = `Access sites page`;
             const description = `User ${user?.email} access sites page`;
             const status = 'success';
-            await auditTrialsService.storeAuditTrails(token, user?.id, title, description, status);
+            await auditTrialsService.storeAuditTrails(token, user?.id, title, description, status, 'access sites');
         } catch (error) {
             console.error(error);
         }

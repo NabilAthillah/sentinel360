@@ -70,7 +70,7 @@ const ProfilePage = () => {
             const title = `Access profile page`;
             const description = `User ${user?.email} access profile page`;
             const status = 'success';
-            await auditTrialsService.storeAuditTrails(token, user?.id, title, description, status);
+            await auditTrialsService.storeAuditTrails(token, user?.id, title, description, status, 'access profile');
         } catch (error) {
             console.error(error);
         }

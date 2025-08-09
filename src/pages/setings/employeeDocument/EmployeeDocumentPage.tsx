@@ -175,7 +175,7 @@ const EmployeeDocumentPage = () => {
             const title = `Access employe document settings page`;
             const description = `User ${user?.email} access employee document settings page`;
             const status = 'success';
-            await auditTrialsService.storeAuditTrails(token, user?.id, title, description, status);
+            await auditTrialsService.storeAuditTrails(token, user?.id, title, description, status, 'access employee document');
         } catch (error) {
             console.error(error);
         }

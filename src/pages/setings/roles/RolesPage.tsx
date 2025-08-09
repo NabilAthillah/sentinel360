@@ -159,7 +159,7 @@ const RolesPage = () => {
             const title = `Access roles page`;
             const description = `User ${user?.email} access roles page`;
             const status = 'success';
-            await auditTrialsService.storeAuditTrails(token, user?.id, title, description, status);
+            await auditTrialsService.storeAuditTrails(token, user?.id, title, description, status, 'access roles');
         } catch (error) {
             console.error(error);
         }

@@ -195,7 +195,7 @@ const OccurencePage = () => {
             const title = `Access occurrence page`;
             const description = `User ${user?.email} access occurrence page`;
             const status = 'success';
-            await auditTrialsService.storeAuditTrails(token, user?.id, title, description, status);
+            await auditTrialsService.storeAuditTrails(token, user?.id, title, description, status, 'access occurrences');
         } catch (error) {
             console.error(error);
         }

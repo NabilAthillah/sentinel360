@@ -48,7 +48,7 @@ const MapPage = () => {
             const title = `Access site map page`;
             const description = `User ${user?.email} access site map page`;
             const status = 'success';
-            await auditTrialsService.storeAuditTrails(token, user?.id, title, description, status);
+            await auditTrialsService.storeAuditTrails(token, user?.id, title, description, status, 'access site map');
         } catch (error) {
             console.error(error);
         }

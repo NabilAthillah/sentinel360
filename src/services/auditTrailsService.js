@@ -16,13 +16,14 @@ const auditTrialsService = {
         }
     },
 
-    storeAuditTrails: async (token, id, title, description, status) => {
+    storeAuditTrails: async (token, id, title, description, status, category) => {
         try {
             const response = await api.post('/audit-trails', {
                 title,
                 description,
                 user_id: id,
-                status
+                status,
+                category
             }, {
                 headers: {
                     'Authorization': `Bearer ${token}`

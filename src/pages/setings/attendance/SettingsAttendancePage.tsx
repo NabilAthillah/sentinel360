@@ -140,7 +140,7 @@ const SettingsAttendancePage = () => {
             const title = `Access attendance settings page`;
             const description = `User ${user?.email} access attendance settings page`;
             const status = 'success';
-            await auditTrialsService.storeAuditTrails(token, user?.id, title, description, status);
+            await auditTrialsService.storeAuditTrails(token, user?.id, title, description, status, 'access attendance settings');
         } catch (error) {
             console.error(error);
         }

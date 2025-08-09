@@ -200,7 +200,7 @@ const SopDocumentPage = () => {
             const title = `Access sop document settings page`;
             const description = `User ${user?.email} access sop document settings page`;
             const status = 'success';
-            await auditTrialsService.storeAuditTrails(token, user?.id, title, description, status);
+            await auditTrialsService.storeAuditTrails(token, user?.id, title, description, status, 'access sop documents');
         } catch (error) {
             console.error(error);
         }

@@ -184,7 +184,7 @@ const IncidentPageMaster = () => {
             const title = `Access incident settings page`;
             const description = `User ${user?.email} access incident settings page`;
             const status = 'success';
-            await auditTrialsService.storeAuditTrails(token, user?.id, title, description, status);
+            await auditTrialsService.storeAuditTrails(token, user?.id, title, description, status, 'access incident');
         } catch (error) {
             console.error(error);
         }

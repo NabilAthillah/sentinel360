@@ -3,7 +3,7 @@ import { User } from "./user";
 export type Employee = {
     id: string;
     nric_fin_no: string;
-    briefing_date: Date;
+    briefing_date: string;
     user: User;
     birth? : string;
     briefing_conducted?: string;

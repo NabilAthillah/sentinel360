@@ -179,7 +179,7 @@ const RoutePage = () => {
             const title = `Access site route page`;
             const description = `User ${user?.email} access site route page`;
             const status = 'success';
-            await auditTrialsService.storeAuditTrails(token, user?.id, title, description, status);
+            await auditTrialsService.storeAuditTrails(token, user?.id, title, description, status, 'access site route');
         } catch (error) {
             console.error(error);
         }
