@@ -77,7 +77,7 @@ const History: React.FC = () => {
 
     return (
         <div className="min-h-screen bg-[#181D26] text-[#F4F7FF] p-4 flex flex-col gap-4">
-            {/* Header */}
+           
             <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-3">
                     <ChevronLeft
@@ -89,7 +89,6 @@ const History: React.FC = () => {
                 </div>
             </div>
 
-            {/* Cards */}
             {data.map((item) => (
                 <div
                     key={item.id}

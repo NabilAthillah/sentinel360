@@ -70,19 +70,23 @@ const Login: React.FC = () => {
                         className="w-full max-w-sm px-6 flex flex-col gap-16"
                     >
                         <div className="flex flex-col gap-4">
-                            <div className="w-full py-1 p-4 text-lg rounded bg-[#1B1E2B] text-white border-b flex flex-col gap-1">
+                            <div className="w-full py-1 p-4 p-4 text-lg rounded bg-[#1B1E2B] text-white 
+                                    border-b border-white 
+                                    focus-within:border focus-within:border-whitegap-1">
                                 <label className="block text-[#98A1B3] text-sm  ">
                                     Mobile number
                                 </label>
                                 <input
-                                    type="text"
+
                                     name="account"
                                     placeholder="Input"
                                     required
-                                    className="bg-[#1B1E2B] w-full text-base"
+                                    className="bg-[#1B1E2B] w-full text-base outline-none border-none"
                                 />
                             </div>
-                            <div className="w-full py-1 p-4 text-lg rounded bg-[#1B1E2B] text-white border-b relative">
+                            <div className="w-full py-1 p-4 p-4 text-lg rounded bg-[#1B1E2B] text-white 
+                                    border-b border-white 
+                                    focus-within:border focus-within:border-white relative">
                                 <label className="block text-[#98A1B3] text-sm mb-1">
                                     Password
                                 </label>
@@ -91,7 +95,7 @@ const Login: React.FC = () => {
                                     name="password"
                                     placeholder="••••••••"
                                     required
-                                    className="w-full text-base bg-[#1B1E2B]"
+                                    className="w-full text-base bg-[#1B1E2B] outline-none border-none"
                                 />
                                 <button
                                     type="button"
@@ -105,6 +109,7 @@ const Login: React.FC = () => {
                                     )}
                                 </button>
                             </div>
+
 
 
                         </div>

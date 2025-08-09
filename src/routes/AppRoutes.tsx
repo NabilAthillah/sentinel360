@@ -41,6 +41,9 @@ import HistoryOccurance from '../pages/user/Occurrence/HistoryOccurance';
 import Clocking from '../pages/user/Clocking/Clocking';
 import ScanClocking from '../pages/user/Clocking/ScanClocking';
 import Login from '../pages/user/Auth/Login';
+import Contact from '../pages/user/Contact/Contact';
+import SopDocument from '../pages/user/SopDocument/SopDocument';
+import EmployeeDocument from '../pages/user/EmployeDocument/EmployeeDocument';
 
 const AppRoutes = () => {
   return (
@@ -74,6 +77,9 @@ const AppRoutes = () => {
 
         <Route path='/user' element={<HomePage />} />
         <Route path='/user/Login' element={<Login />} />
+        <Route path='/user/contact' element={<Contact/>} />
+        <Route path='/user/sop-document' element={<SopDocument/>} />
+        <Route path='/user/employee-document' element={<EmployeeDocument/>} />
         <Route path='/user/clocking' element={<Clocking />} />
         <Route path='/user/clocking/scan' element={<ScanClocking />} />
         <Route path='/user/e-occurence' element={<Occurence/>} />
