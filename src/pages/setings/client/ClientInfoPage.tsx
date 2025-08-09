@@ -5,10 +5,10 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import Navbar from "../../../components/Navbar";
 import MainLayout from "../../../layouts/MainLayout";
+import auditTrialsService from "../../../services/auditTrailsService";
 import clientInfoService from "../../../services/clientInfoService";
 import { RootState } from "../../../store";
 import { Client } from "../../../types/client";
-import auditTrialsService from "../../../services/auditTrailsService";
 
 const ClientInfoPage = () => {
     const navigate = useNavigate();
@@ -59,7 +59,7 @@ const ClientInfoPage = () => {
 
             if (!token) {
                 localStorage.clear();
-                navigate('/login');
+                navigate('/auth/login');
             }
 
             const response = await clientInfoService.getData(token);
@@ -102,7 +102,7 @@ const ClientInfoPage = () => {
 
             if (!token) {
                 localStorage.clear();
-                navigate('/login');
+                navigate('/auth/login');
             }
 
             const response = await clientInfoService.updateData(token, payload, client.id);

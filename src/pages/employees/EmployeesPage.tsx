@@ -8,13 +8,13 @@ import { toast } from "react-toastify";
 import DeleteModal from "../../components/DeleteModal";
 import Loader from "../../components/Loader";
 import MainLayout from "../../layouts/MainLayout";
+import auditTrialsService from "../../services/auditTrailsService";
 import employeeService from "../../services/employeeService";
 import roleService from "../../services/roleService";
 import { RootState } from "../../store";
 import { Employee } from "../../types/employee";
 import { Role } from "../../types/role";
 import EmployeeDocumentPivot from "./EmployeesDocumentPivot";
-import auditTrialsService from "../../services/auditTrailsService";
 
 const EmployeesPage = () => {
     const user = useSelector((state: RootState) => state.user.user);
@@ -160,7 +160,7 @@ const EmployeesPage = () => {
             if (!token) {
                 toast.error("Token not found. Redirecting to login.");
                 localStorage.clear();
-                navigate('/login');
+                navigate('/auth/login');
                 return;
             }
 
@@ -227,7 +227,7 @@ const EmployeesPage = () => {
             if (!token) {
                 toast.error("Token not found. Redirecting to login.");
                 localStorage.clear();
-                navigate('/login');
+                navigate('/auth/login');
                 return;
             }
 
@@ -251,7 +251,7 @@ const EmployeesPage = () => {
             if (error.response?.status === 401) {
                 toast.error("Session expired. Please login again.");
                 localStorage.clear();
-                navigate('/login');
+                navigate('/auth/login');
             } else if (error.response?.data?.message) {
                 toast.error(`Server Error: ${error.response.data.message}`);
             } else if (error.message) {

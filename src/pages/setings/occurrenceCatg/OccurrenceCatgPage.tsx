@@ -6,10 +6,10 @@ import { toast } from "react-toastify";
 import Loader from "../../../components/Loader";
 import Navbar from "../../../components/Navbar";
 import MainLayout from "../../../layouts/MainLayout";
+import auditTrialsService from "../../../services/auditTrailsService";
 import occurrenceCatgService from "../../../services/occurrenceCatgService";
 import { RootState } from "../../../store";
 import { OccurrenceCategory } from "../../../types/occurrenceCategory";
-import auditTrialsService from "../../../services/auditTrailsService";
 
 const OccurrenceCatgPage = () => {
     const [addCatg, setAddCatg] = useState(false);
@@ -53,7 +53,7 @@ const OccurrenceCatgPage = () => {
 
             if (!token) {
                 localStorage.clear();
-                navigate('/login');
+                navigate('/auth/login');
             }
 
             const response = await occurrenceCatgService.getCategories(token);
@@ -86,7 +86,7 @@ const OccurrenceCatgPage = () => {
 
         if (!token) {
             localStorage.clear();
-            navigate('/login');
+            navigate('/auth/login');
         }
 
         try {
@@ -116,7 +116,7 @@ const OccurrenceCatgPage = () => {
 
             if (!token) {
                 localStorage.clear();
-                navigate('/login');
+                navigate('/auth/login');
             }
 
             const response = await occurrenceCatgService.addCategory(token, name);
@@ -143,7 +143,7 @@ const OccurrenceCatgPage = () => {
 
             if (!token) {
                 localStorage.clear();
-                navigate('/login');
+                navigate('/auth/login');
             }
 
             const response = await occurrenceCatgService.editCategory(token, editData?.id, name);

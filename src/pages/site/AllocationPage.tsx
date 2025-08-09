@@ -31,7 +31,7 @@ const AllocationPage = () => {
 
             if (!token) {
                 localStorage.clear();
-                navigate('/login');
+                navigate('/auth/login');
             }
 
             const response = await siteService.getAllSite(token);
@@ -104,16 +104,16 @@ const AllocationPage = () => {
                 <h2 className='text-2xl leading-9 text-white font-noto'>Site Allocation</h2>
                 <nav className='flex flex-wrap'>
                     {hasPermission('list_sites') && (
-                        <Link to="/sites" className={`font-medium text-sm text-[#F4F7FF] px-6 ${pathname === '/sites' ? 'pt-[14px] pb-3 border-b-2 border-b-[#F3C511]' : 'py-[14px] border-b-0'}`}>
+                        <Link to="/dashboard/sites" className={`font-medium text-sm text-[#F4F7FF] px-6 ${pathname === '/dashboard/sites' ? 'pt-[14px] pb-3 border-b-2 border-b-[#F3C511]' : 'py-[14px] border-b-0'}`}>
                             Sites
                         </Link>
                     )}
                     {hasPermission('site_map') && (
-                        <Link to="/sites/map" className={`font-medium text-sm text-[#F4F7FF] px-6 ${pathname === '/sites/map' ? 'pt-[14px] pb-3 border-b-2 border-b-[#F3C511]' : 'py-[14px] border-b-0'}`}>
+                        <Link to="/dashboard/sites/map" className={`font-medium text-sm text-[#F4F7FF] px-6 ${pathname === '/dashboard/sites/map' ? 'pt-[14px] pb-3 border-b-2 border-b-[#F3C511]' : 'py-[14px] border-b-0'}`}>
                             Map
                         </Link>
                     )}
-                    <Link to="/sites/allocation" className={`font-medium text-sm text-[#F4F7FF] px-6 ${pathname === '/sites/allocation' ? 'pt-[14px] pb-3 border-b-2 border-b-[#F3C511]' : 'py-[14px] border-b-0'}`}>
+                    <Link to="/dashboard/sites/allocation" className={`font-medium text-sm text-[#F4F7FF] px-6 ${pathname === '/dashboard/sites/allocation' ? 'pt-[14px] pb-3 border-b-2 border-b-[#F3C511]' : 'py-[14px] border-b-0'}`}>
                         Allocation List
                     </Link>
                 </nav>

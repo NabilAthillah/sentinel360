@@ -58,7 +58,7 @@ const LoginPage: React.FC = () => {
 
       if (!token) {
         localStorage.clear();
-        navigate('/login');
+        navigate('/auth/login');
       }
 
       const response = await clientInfoService.getData(token);

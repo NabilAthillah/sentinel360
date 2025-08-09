@@ -6,10 +6,10 @@ import { toast } from "react-toastify";
 import Loader from "../../../components/Loader";
 import Navbar from "../../../components/Navbar";
 import MainLayout from "../../../layouts/MainLayout";
+import auditTrialsService from "../../../services/auditTrailsService";
 import IncidentTypesService from "../../../services/incidentTypeService";
 import { RootState } from "../../../store";
 import { IncidentType } from "../../../types/incidentType";
-import auditTrialsService from "../../../services/auditTrailsService";
 const IncidentPageMaster = () => {
     const [sidebar, setSidebar] = useState(false);
     const [data1, setData1] = useState(true);
@@ -66,7 +66,7 @@ const IncidentPageMaster = () => {
 
             if (!token) {
                 localStorage.clear();
-                navigate('/login');
+                navigate('/auth/login');
             }
 
             const response = await IncidentTypesService.getIncidentTypes(token);
@@ -98,7 +98,7 @@ const IncidentPageMaster = () => {
 
         if (!token) {
             localStorage.clear();
-            navigate('/login');
+            navigate('/auth/login');
         }
 
         try {
@@ -128,7 +128,7 @@ const IncidentPageMaster = () => {
 
             if (!token) {
                 localStorage.clear();
-                navigate('/login');
+                navigate('/auth/login');
             }
 
             const response = await IncidentTypesService.addIncidentTypes(token, name);
@@ -155,7 +155,7 @@ const IncidentPageMaster = () => {
 
             if (!token) {
                 localStorage.clear();
-                navigate('/login');
+                navigate('/auth/login');
             }
 
             const response = await IncidentTypesService.editIncidentTypes(token, editData?.id, name);

@@ -6,12 +6,12 @@ import { toast } from 'react-toastify';
 import DeleteModal from '../../components/DeleteModal';
 import Loader from '../../components/Loader';
 import MainLayout from '../../layouts/MainLayout';
+import auditTrialsService from '../../services/auditTrailsService';
 import routeService from '../../services/routeService';
 import siteService from '../../services/siteService';
 import { RootState } from '../../store';
 import { Route } from '../../types/route';
 import { Site } from '../../types/site';
-import auditTrialsService from '../../services/auditTrailsService';
 
 const RoutePage = () => {
     const params = useParams();
@@ -50,7 +50,7 @@ const RoutePage = () => {
 
         if (!token) {
             localStorage.clear();
-            navigate('/login');
+            navigate('/auth/login');
         }
 
         try {
@@ -77,7 +77,7 @@ const RoutePage = () => {
 
             if (!token) {
                 localStorage.clear();
-                navigate('/login');
+                navigate('/auth/login');
             }
 
             const response = await siteService.getSiteById(params.idSite, token);
@@ -99,7 +99,7 @@ const RoutePage = () => {
 
             if (!token) {
                 localStorage.clear();
-                navigate('/login');
+                navigate('/auth/login');
             }
 
             const response = await routeService.addRoute(token, params.idSite, name);
@@ -126,7 +126,7 @@ const RoutePage = () => {
 
             if (!token) {
                 localStorage.clear();
-                navigate('/login');
+                navigate('/auth/login');
             }
 
             const response = await routeService.editRoute(token, editRoute?.id, name);
@@ -152,7 +152,7 @@ const RoutePage = () => {
 
             if (!token) {
                 localStorage.clear();
-                navigate('/login');
+                navigate('/auth/login');
             }
 
             const response = await routeService.deleteRoute(token, deleteRoute);

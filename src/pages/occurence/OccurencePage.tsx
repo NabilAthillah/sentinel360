@@ -1,18 +1,18 @@
 import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import Loader from "../../components/Loader";
 import MainLayout from "../../layouts/MainLayout";
+import auditTrialsService from "../../services/auditTrailsService";
 import occurrenceCatgService from "../../services/occurrenceCatgService";
 import occurrenceService from "../../services/occurrenceService";
 import siteService from "../../services/siteService";
+import { RootState } from "../../store";
 import { Employee } from "../../types/employee";
 import { Occurrence } from "../../types/occurrence";
 import { OccurrenceCategory } from "../../types/occurrenceCategory";
 import { Site } from "../../types/site";
-import auditTrialsService from "../../services/auditTrailsService";
-import { useSelector } from "react-redux";
-import { RootState } from "../../store";
 interface OccurrenceInput {
     id_site: string;
     id_category: string;
@@ -75,7 +75,7 @@ const OccurencePage = () => {
 
             if (!token) {
                 localStorage.clear();
-                navigate('/login');
+                navigate('/auth/login');
             }
 
             const response = await siteService.getAllSite(token);
@@ -94,7 +94,7 @@ const OccurencePage = () => {
 
             if (!token) {
                 localStorage.clear();
-                navigate('/login');
+                navigate('/auth/login');
             }
 
             const response = await occurrenceCatgService.getCategories(token);
@@ -114,7 +114,7 @@ const OccurencePage = () => {
 
             if (!token) {
                 localStorage.clear();
-                navigate('/login');
+                navigate('/auth/login');
             }
 
             const response = await occurrenceService.getAllOccurrence(token);
@@ -161,7 +161,7 @@ const OccurencePage = () => {
 
             if (!token) {
                 localStorage.clear();
-                navigate('/login');
+                navigate('/auth/login');
             }
 
             const response = await occurrenceService.addOccurrence(token, formData);
