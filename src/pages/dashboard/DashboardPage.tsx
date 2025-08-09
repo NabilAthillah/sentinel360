@@ -7,6 +7,7 @@ import siteService from '../../services/siteService';
 import { RootState } from '../../store';
 import { Site } from '../../types/site';
 import { toast } from 'react-toastify';
+import auditTrialsService from '../../services/auditTrailsService';
 
 const DashboardPage = () => {
     const navigate = useNavigate();
@@ -55,7 +56,20 @@ const DashboardPage = () => {
         }
     }
 
+    const audit = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const title = `Access dashboard page`;
+            const description = `User ${user?.email} access dashboard page`;
+            const status = 'success';
+            await auditTrialsService.storeAuditTrails(token, user?.id, title, description, status);
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
     useEffect(() => {
+        audit();
         fetchSites();
         checkLastLogin();
     }, []);

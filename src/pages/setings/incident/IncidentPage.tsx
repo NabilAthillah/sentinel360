@@ -9,6 +9,7 @@ import MainLayout from "../../../layouts/MainLayout";
 import IncidentTypesService from "../../../services/incidentTypeService";
 import { RootState } from "../../../store";
 import { IncidentType } from "../../../types/incidentType";
+import auditTrialsService from "../../../services/auditTrailsService";
 const IncidentPageMaster = () => {
     const [sidebar, setSidebar] = useState(false);
     const [data1, setData1] = useState(true);
@@ -177,7 +178,20 @@ const IncidentPageMaster = () => {
         return user?.role?.permissions?.some(p => p.name === permissionName);
     };
 
+    const audit = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const title = `Access incident settings page`;
+            const description = `User ${user?.email} access incident settings page`;
+            const status = 'success';
+            await auditTrialsService.storeAuditTrails(token, user?.id, title, description, status);
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
     useEffect(() => {
+        audit();
         if (hasPermission('list_incident_types')) {
             fetchIncidentTypes();
         } else {

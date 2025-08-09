@@ -8,6 +8,7 @@ import MainLayout from "../../../layouts/MainLayout";
 import clientInfoService from "../../../services/clientInfoService";
 import { RootState } from "../../../store";
 import { Client } from "../../../types/client";
+import auditTrialsService from "../../../services/auditTrailsService";
 
 const ClientInfoPage = () => {
     const navigate = useNavigate();
@@ -130,7 +131,20 @@ const ClientInfoPage = () => {
         return user?.role?.permissions?.some(p => p.name === permissionName);
     };
 
+    const audit = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const title = `Access client info page`;
+            const description = `User ${user?.email} access client info page`;
+            const status = 'success';
+            await auditTrialsService.storeAuditTrails(token, user?.id, title, description, status);
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
     useEffect(() => {
+        audit();
         if (hasPermission('show_client')) {
             fetchClientInfo();
         } else {

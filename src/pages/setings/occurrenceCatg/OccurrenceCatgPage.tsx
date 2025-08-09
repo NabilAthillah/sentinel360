@@ -9,6 +9,7 @@ import MainLayout from "../../../layouts/MainLayout";
 import occurrenceCatgService from "../../../services/occurrenceCatgService";
 import { RootState } from "../../../store";
 import { OccurrenceCategory } from "../../../types/occurrenceCategory";
+import auditTrialsService from "../../../services/auditTrailsService";
 
 const OccurrenceCatgPage = () => {
     const [addCatg, setAddCatg] = useState(false);
@@ -172,7 +173,20 @@ const OccurrenceCatgPage = () => {
         return user?.role?.permissions?.some(p => p.name === permissionName);
     };
 
+    const audit = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const title = `Access occurrence catgories page`;
+            const description = `User ${user?.email} access occurrence categories page`;
+            const status = 'success';
+            await auditTrialsService.storeAuditTrails(token, user?.id, title, description, status);
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
     useEffect(() => {
+        audit();
         if (hasPermission('list_occurrence_categories')) {
             fetchCategories();
         } else {

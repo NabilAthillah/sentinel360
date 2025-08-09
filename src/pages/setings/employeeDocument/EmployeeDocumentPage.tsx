@@ -9,6 +9,7 @@ import MainLayout from "../../../layouts/MainLayout";
 import employeeDocumentService from "../../../services/employeeDocumentService";
 import { RootState } from "../../../store";
 import { EmployeeDocument } from "../../../types/employeeDocument";
+import auditTrialsService from "../../../services/auditTrailsService";
 const EmployeeDocumentPage = () => {
     const [sidebar, setSidebar] = useState(false);
     const [data1, setData1] = useState(true);
@@ -168,7 +169,20 @@ const EmployeeDocumentPage = () => {
         return user?.role?.permissions?.some(p => p.name === permissionName);
     };
 
+    const audit = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const title = `Access employe document settings page`;
+            const description = `User ${user?.email} access employee document settings page`;
+            const status = 'success';
+            await auditTrialsService.storeAuditTrails(token, user?.id, title, description, status);
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
     useEffect(() => {
+        audit();
         if (hasPermission('list_employee_documents')) {
             fetchEmployeeDocuments();
         } else {

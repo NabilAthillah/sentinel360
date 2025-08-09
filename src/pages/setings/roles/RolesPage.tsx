@@ -8,6 +8,7 @@ import MainLayout from "../../../layouts/MainLayout";
 import permissionService from "../../../services/permissionService";
 import roleService from "../../../services/roleService";
 import { RootState } from "../../../store";
+import auditTrialsService from "../../../services/auditTrailsService";
 
 type Role = {
     id: string;
@@ -152,7 +153,20 @@ const RolesPage = () => {
         return user?.role?.permissions?.some(p => p.name === permissionName);
     };
 
+    const audit = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const title = `Access roles page`;
+            const description = `User ${user?.email} access roles page`;
+            const status = 'success';
+            await auditTrialsService.storeAuditTrails(token, user?.id, title, description, status);
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
     useEffect(() => {
+        audit();
         if (hasPermission('list_roles')) {
             fetchRoles();
             fetchPermissions();

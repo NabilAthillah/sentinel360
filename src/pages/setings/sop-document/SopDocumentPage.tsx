@@ -9,6 +9,7 @@ import MainLayout from "../../../layouts/MainLayout";
 import sopDocumentService from "../../../services/sopDocumentService";
 import { RootState } from "../../../store";
 import { SopDocument } from "../../../types/sopDocument";
+import auditTrialsService from "../../../services/auditTrailsService";
 const SopDocumentPage = () => {
     const [deleteModal, setDeleteModal] = useState(false);
     const [viewDoc, setViewDoc] = useState(false);
@@ -193,7 +194,20 @@ const SopDocumentPage = () => {
         return user?.role?.permissions?.some(p => p.name === permissionName);
     };
 
+    const audit = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const title = `Access sop document settings page`;
+            const description = `User ${user?.email} access sop document settings page`;
+            const status = 'success';
+            await auditTrialsService.storeAuditTrails(token, user?.id, title, description, status);
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
     useEffect(() => {
+        audit();
         if (hasPermission('list_sop_documents')) {
             fetchSopDocument();
         } else {

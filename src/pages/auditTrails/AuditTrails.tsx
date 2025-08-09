@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react'
-import MainLayout from '../../layouts/MainLayout'
-import { AuditTrail } from '../../types/auditTrials';
-import { toast } from 'react-toastify';
+import { useEffect, useState } from 'react';
+import MainLayout from '../../layouts/MainLayout';
 import auditTrialsService from '../../services/auditTrailsService';
+import { AuditTrail } from '../../types/auditTrials';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store';
 
 const AuditTrails = () => {
     const [logs, setLogs] = useState<AuditTrail[]>([]);
@@ -13,6 +14,7 @@ const AuditTrails = () => {
     const totalPages = Math.ceil(logs.length / itemsPerPage);
     const paginatedLogs = logs.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
     const [showModal, setShowModal] = useState(false);
+    const user = useSelector((state: RootState) => state.user.user);
     const fetchAuditTrails = async () => {
         try {
             const token = localStorage.getItem('token');
@@ -51,7 +53,21 @@ const AuditTrails = () => {
             setCurrentPage(currentPage - 1);
         }
     };
+
+    const audit = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const title = `Access audit trails page`;
+            const description = `User ${user?.email} access audit trails page`;
+            const status = 'success';
+            await auditTrialsService.storeAuditTrails(token, user?.id, title, description, status);
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
     useEffect(() => {
+        audit();
         fetchAuditTrails();
     }, []);
 

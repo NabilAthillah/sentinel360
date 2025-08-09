@@ -11,6 +11,7 @@ import siteService from '../../services/siteService';
 import { RootState } from '../../store';
 import { Route } from '../../types/route';
 import { Site } from '../../types/site';
+import auditTrialsService from '../../services/auditTrailsService';
 
 const RoutePage = () => {
     const params = useParams();
@@ -172,7 +173,20 @@ const RoutePage = () => {
         return user?.role?.permissions?.some(p => p.name === permissionName);
     };
 
+    const audit = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const title = `Access site route page`;
+            const description = `User ${user?.email} access site route page`;
+            const status = 'success';
+            await auditTrialsService.storeAuditTrails(token, user?.id, title, description, status);
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
     useEffect(() => {
+        audit();
         if (hasPermission('list_site_routes')) {
             fetchSite();
         } else {

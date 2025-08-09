@@ -15,6 +15,27 @@ const auditTrialsService = {
             throw error.response ? error.response.data : { message: 'Network error' };
         }
     },
+
+    storeAuditTrails: async (token, id, title, description, status) => {
+        try {
+            const response = await api.post('/audit-trails', {
+                title,
+                description,
+                user_id: id,
+                status
+            }, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+                
+            })
+            if (response.data) {
+                return response.data;
+            }
+        } catch (error) {
+            throw error.response ? error.response.data : { message: 'Network error' };
+        }
+    }
 }
 
 export default auditTrialsService

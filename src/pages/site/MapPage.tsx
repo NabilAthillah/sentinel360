@@ -6,6 +6,7 @@ import MainLayout from '../../layouts/MainLayout';
 import siteService from '../../services/siteService';
 import { RootState } from '../../store';
 import { Site } from '../../types/site';
+import auditTrialsService from '../../services/auditTrailsService';
 
 const MapPage = () => {
     const location = useLocation();
@@ -41,7 +42,20 @@ const MapPage = () => {
         return user?.role?.permissions?.some(p => p.name === permissionName);
     };
 
+        const audit = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const title = `Access site map page`;
+            const description = `User ${user?.email} access site map page`;
+            const status = 'success';
+            await auditTrialsService.storeAuditTrails(token, user?.id, title, description, status);
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
     useEffect(() => {
+        audit();
         if (hasPermission('site_map')) {
             fetchSites();
         } else {

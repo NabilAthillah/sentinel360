@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import AllocationDnD from '../../components/AllocationDnD';
 import Loader from '../../components/Loader';
 import MainLayout from '../../layouts/MainLayout';
+import auditTrialsService from '../../services/auditTrailsService';
 import siteService from '../../services/siteService';
 import { RootState } from '../../store';
 import { Site } from '../../types/site';
@@ -74,6 +75,21 @@ const AllocationPage = () => {
         setDate(formattedDate);
     }, [allocationType]);
 
+    const audit = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const title = `Access site allocation page`;
+            const description = `User ${user?.email} access site allocation page`;
+            const status = 'success';
+            await auditTrialsService.storeAuditTrails(token, user?.id, title, description, status);
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    useEffect(() => {
+        audit();
+    }, [])
 
     return (
         <MainLayout>

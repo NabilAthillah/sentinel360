@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import Loader from "../../../components/Loader";
@@ -6,6 +6,7 @@ import { setUser } from "../../../features/user/userSlice";
 import MainLayout from "../../../layouts/MainLayout";
 import authService from "../../../services/authService";
 import { RootState } from "../../../store";
+import auditTrialsService from "../../../services/auditTrailsService";
 
 
 const ProfilePage = () => {
@@ -62,6 +63,22 @@ const ProfilePage = () => {
             setLoading(false);
         }
     }
+
+    const audit = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const title = `Access profile page`;
+            const description = `User ${user?.email} access profile page`;
+            const status = 'success';
+            await auditTrialsService.storeAuditTrails(token, user?.id, title, description, status);
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    useEffect(() => {
+        audit();
+    }, [])
 
     return (
         <MainLayout>

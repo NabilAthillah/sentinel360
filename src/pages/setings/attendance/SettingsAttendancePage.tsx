@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import Navbar from "../../../components/Navbar";
 import MainLayout from "../../../layouts/MainLayout";
 import attendanceSettingService from "../../../services/attendanceSettingService";
 import { RootState } from "../../../store";
-import { useNavigate } from "react-router-dom";
+import auditTrialsService from "../../../services/auditTrailsService";
 
 const SettingsAttendancePage = () => {
     const [sidebar, setSidebar] = useState(false);
@@ -133,7 +134,20 @@ const SettingsAttendancePage = () => {
         return user?.role?.permissions?.some(p => p.name === permissionName);
     };
 
+    const audit = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const title = `Access attendance settings page`;
+            const description = `User ${user?.email} access attendance settings page`;
+            const status = 'success';
+            await auditTrialsService.storeAuditTrails(token, user?.id, title, description, status);
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
     useEffect(() => {
+        audit();
         if (hasPermission('show_attendance_settings')) {
             fetchSettings();
         } else {

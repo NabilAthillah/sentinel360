@@ -6,10 +6,13 @@ import MainLayout from "../../layouts/MainLayout";
 import occurrenceCatgService from "../../services/occurrenceCatgService";
 import occurrenceService from "../../services/occurrenceService";
 import siteService from "../../services/siteService";
+import { Employee } from "../../types/employee";
 import { Occurrence } from "../../types/occurrence";
 import { OccurrenceCategory } from "../../types/occurrenceCategory";
 import { Site } from "../../types/site";
-import { Employee } from "../../types/employee";
+import auditTrialsService from "../../services/auditTrailsService";
+import { useSelector } from "react-redux";
+import { RootState } from "../../store";
 interface OccurrenceInput {
     id_site: string;
     id_category: string;
@@ -23,6 +26,7 @@ const OccurencePage = () => {
     const [addData, setAddData] = useState(false);
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+    const user = useSelector((state: RootState) => state.user.user);
 
     const [sites, setSites] = useState<Site[]>([]);
     const [employee, setEmployee] = useState<Employee[]>([]);
@@ -185,11 +189,25 @@ const OccurencePage = () => {
         setFilteredOccurrence(filtered);
     };
 
+    const audit = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const title = `Access occurrence page`;
+            const description = `User ${user?.email} access occurrence page`;
+            const status = 'success';
+            await auditTrialsService.storeAuditTrails(token, user?.id, title, description, status);
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
     useEffect(() => {
+        audit();
         fetchOccurrences();
         fetchSites();
         fetchCategories();
-    }, [])
+    }, []);
+
     const handleDownload = () => {
         if (occurrences.length === 0) {
             toast.warning('No occurrence data to export.');

@@ -9,6 +9,7 @@ import MainLayout from '../../layouts/MainLayout';
 import siteService from '../../services/siteService';
 import { RootState } from '../../store';
 import { Site } from '../../types/site';
+import auditTrialsService from '../../services/auditTrailsService';
 
 const SitePage = () => {
     const location = useLocation();
@@ -215,7 +216,20 @@ const SitePage = () => {
         return user?.role?.permissions?.some(p => p.name === permissionName);
     };
 
+    const audit = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const title = `Access sites page`;
+            const description = `User ${user?.email} access sites page`;
+            const status = 'success';
+            await auditTrialsService.storeAuditTrails(token, user?.id, title, description, status);
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
     useEffect(() => {
+        audit();
         if (hasPermission('list_sites')) {
             fetchSites();
         } else {
@@ -677,7 +691,7 @@ const SitePage = () => {
                                     onChange={(e) => setPersonInCharge(e.target.value)}
                                 />
                             </div>
-                            
+
                             <div className="grid grid-cols-2 gap-8">
 
                                 <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
