@@ -44,7 +44,7 @@ const Login: React.FC = () => {
                 localStorage.setItem("token", response.data.token);
                 localStorage.setItem("user", JSON.stringify(response.data.user));
                 toast.success("Login successfully");
-                navigate("/dashboard");
+                navigate("/user");
             } else {
                 toast.error(response.message);
             }
@@ -164,7 +164,7 @@ const Login: React.FC = () => {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full bg-[#F4C430] text-black font-bold py-2 px-4 rounded-2xl mt-4 flex justify-center disabled:opacity-70"
+                            className="w-full bg-[#F4C430] text-black font-bold py-3 px-4 rounded-2xl mt-4 flex justify-center disabled:opacity-70"
                         >
                             {loading ? <Loader /> : "Login"}
                         </button>

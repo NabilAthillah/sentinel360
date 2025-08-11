@@ -12,6 +12,10 @@
     font-family: "Open Sans", sans-serif;
 }
 
+.font-inter {
+  font-family: "Inter", sans-serif;
+}
+
 .react-tel-input .flag-dropdown {
   background-color: #222834 !important;
   background: #222834 !important;

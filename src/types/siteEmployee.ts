@@ -1,3 +1,4 @@
+import { Attendance } from "./attendance";
 import { Employee } from "./employee";
 import { Site } from "./site";
 
@@ -7,4 +8,5 @@ export type SiteEmployee = {
     site: Site;
     date: string;
     shift: string;
+    attendance: Attendance | null;
 }

@@ -149,7 +149,8 @@ const AllocationPage = () => {
                         >
                             <option value="day">Day Shift</option>
                             <option value="night">Night Shift</option>
-                            <option value="relief">Relief Shift</option>
+                            <option value="relief day">Relief Day Shift</option>
+                            <option value="relief night">Relief Night Shift</option>
                         </select>
                     </div>
                 </div>

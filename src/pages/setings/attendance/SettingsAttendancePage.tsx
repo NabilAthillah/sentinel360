@@ -94,7 +94,6 @@ const SettingsAttendancePage = () => {
         }
     };
 
-
     const handleInputChange = (index: number, newValue: string) => {
         setFormData(prev => {
             const updated = [...prev];

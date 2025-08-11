@@ -1,84 +1,40 @@
 "use client"
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { RootState } from '../../../store';
-import { User } from '../../../types/user';
-import { SiteEmployee } from '../../../types/siteEmployee';
-import siteEmployeeService from '../../../services/siteEmployeeService';
-import attendanceSettingService from '../../../services/attendanceSettingService';
-import { toast } from 'react-toastify';
-import BottomNavBar from '../components/BottomBar';
 import { Link } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import attendanceSettingService from '../../../services/attendanceSettingService';
+import siteEmployeeService from '../../../services/siteEmployeeService';
+import { RootState } from '../../../store';
+import { SiteEmployee } from '../../../types/siteEmployee';
+import BottomNavBar from '../components/BottomBar';
+
+type Settings = {
+  label: string;
+  placeholder: string;
+  value: string;
+}
+
 const HomePage = () => {
   const user = useSelector((state: RootState) => state.user.user);
-  const [sites, setSites] = useState<SiteEmployee>();
+  const [siteEmployee, setSiteEmployee] = useState<SiteEmployee>();
   const [attendance, setAttendance] = useState();
-  const [formData, setFormData] = useState([
-    {
-      label: 'Grace period (in minutes)',
-      placeholder: 'Grace period (in minutes)',
-      value: '15'
-    },
-    {
-      label: 'Geo fencing (in minutes)',
-      placeholder: 'Geo fencing (in minutes)',
-      value: '200'
-    },
-    {
-      label: 'Day shift start time',
-      placeholder: '00:00',
-      value: '08:00'
-    },
-    {
-      label: 'Day shift end time',
-      placeholder: '00:00',
-      value: '20:00'
-    },
-    {
-      label: 'Night shift start time',
-      placeholder: '00:00',
-      value: '20:00'
-    },
-    {
-      label: 'Night shift end time',
-      placeholder: '00:00',
-      value: '08:00'
-    },
-    {
-      label: 'RELIEF Day shift start time',
-      placeholder: '00:00',
-      value: '08:00'
-    },
-    {
-      label: 'RELIEF Day shift end time',
-      placeholder: '00:00',
-      value: '20:00'
-    },
-    {
-      label: 'RELIEF night shift start time',
-      placeholder: '00:00',
-      value: '20:00'
-    },
-    {
-      label: 'RELIEF night shift end time',
-      placeholder: '00:00',
-      value: '08:00'
-    },
-  ]);
+  const [formData, setFormData] = useState<Settings[]>([]);
+
   const fetchSites = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await siteEmployeeService.getAllSiteUser(token, user);
+      const response = await siteEmployeeService.getNearestSiteUser(token, user);
 
       if (response.success) {
-        setSites(response.data);
+        setSiteEmployee(response.data);
       }
     } catch (error) {
       console.error(error)
     }
   }
 
-  const fecthAttendance = async () => {
+  const fetchSettings = async () => {
     try {
       const token = localStorage.getItem('token');
 
@@ -100,25 +56,114 @@ const HomePage = () => {
           { label: 'RELIEF night shift end time', placeholder: '00:00', value: data.relief_night_shift_end_time.slice(0, 5) },
         ];
 
+        console.log(mappedData)
+
         setFormData(mappedData);
       }
     } catch (error: any) {
       toast.error(error.message);
     }
   };
+
+  const getSettingTime = (label: string) => {
+    const item = formData.find(d => d.label.trim().toLowerCase() === label.trim().toLowerCase());
+    return item?.value ?? null;
+  };
+
+  const toTodayTime = (hhmm: string | null) => {
+    if (!hhmm) return null;
+    const [h, m] = hhmm.split(':').map(Number);
+    const d = new Date();
+    d.setHours(h, m, 0, 0);
+    return d;
+  };
+
+  const fmtHM = (ms: number) => {
+    const abs = Math.abs(ms);
+    const minutes = Math.floor(abs / 60000);
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    return `${h}h ${m}m`;
+  };
+
+  const getShiftLabels = (shiftRaw?: string) => {
+    const s = (shiftRaw || '').toLowerCase().trim();
+    if (s === 'day') {
+      return { start: 'Day shift start time', end: 'Day shift end time' };
+    }
+    if (s === 'night') {
+      return { start: 'Night shift start time', end: 'Night shift end time' };
+    }
+    if (s === 'relief day' || s === 'relief-day' || s === 'relief_day') {
+      return { start: 'RELIEF Day shift start time', end: 'RELIEF Day shift end time' };
+    }
+    if (s === 'relief night' || s === 'relief-night' || s === 'relief_night') {
+      return { start: 'RELIEF night shift start time', end: 'RELIEF night shift end time' };
+    }
+    return null;
+  };
+
+  const [diffLabel, setDiffLabel] = useState<string>('');
+  const [isLate, setIsLate] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (!siteEmployee || formData.length === 0) return;
+
+    const tick = () => {
+      const labels = getShiftLabels(siteEmployee.shift);
+      if (!labels) {
+        setDiffLabel('');
+        setIsLate(false);
+        return;
+      }
+
+      const startStr = getSettingTime(labels.start);
+      const endStr = getSettingTime(labels.end);
+
+      const start = toTodayTime(startStr);
+      let end = toTodayTime(endStr);
+      const now = new Date();
+
+      if (!start || !end) {
+        setDiffLabel('');
+        setIsLate(false);
+        return;
+      }
+
+      if (end.getTime() <= start.getTime()) {
+        const e = new Date(end);
+        e.setDate(e.getDate() + 1);
+        end = e;
+      }
+
+      const hasAttendance =
+        (siteEmployee as any).attendance != null || (siteEmployee as any).attendancenya != null;
+
+      const target = hasAttendance ? end : start;
+      const ms = target.getTime() - now.getTime();
+
+      setIsLate(ms < 0);
+      setDiffLabel(fmtHM(ms));
+    };
+
+    tick();
+    const id = setInterval(tick, 60 * 1000);
+    return () => clearInterval(id);
+  }, [siteEmployee, formData]);
+
+
   useEffect(() => {
     fetchSites();
-    fecthAttendance();
+    fetchSettings();
   }, [])
 
   return (
     <div className="bg-[#0F101C] text-white min-h-screen px-4 pt-6 pb-20">
-  
+
       <div className="mt-2 relative">
         <h1 className="text-xl font-bold">{user?.name}</h1>
         <p className="text-sm text-gray-400">
-          {user?.role.name} |
-          {user?.employee?.nric_fin_no
+          {user?.role.name} | {user?.employee?.nric_fin_no
             ? '*'.repeat(3) + user.employee.nric_fin_no.slice(3)
             : ''}
         </p>
@@ -146,134 +191,124 @@ const HomePage = () => {
         </div>
       </div>
 
+      {siteEmployee && (
+        <div
+          className="bg-[#EFBF04] text-[#181D26] p-4 rounded-lg relative mt-4 flex justify-between items-center"
+        >
+          <div className='flex flex-col'>
+            <p className="text-sm font-semibold capitalize">{siteEmployee.shift} Shift</p>
+            {/* <p className="text-xs font-normal">{attendance?.value}</p> */}
+            <p className={`text-xs font-normal ${isLate ? 'text-red-400' : 'text-[#181D26]'}`}>
+              {siteEmployee?.date ? (() => {
+                const dateObj = new Date(siteEmployee.date);
+                const day = dateObj.toLocaleDateString("en-GB", { day: "2-digit" });
+                const month = dateObj.toLocaleDateString("en-GB", { month: "long" });
+                const year = dateObj.toLocaleDateString("en-GB", { year: "numeric" });
+                const weekday = dateObj.toLocaleDateString("en-GB", { weekday: "long" });
+                return `${day} ${month} ${year}, ${weekday}`;
+              })() : "Invalid date"} {diffLabel ? ` | ${diffLabel}` : ''}
+            </p>
+          </div>
 
-      <div
-        key={sites?.id}
-        className="bg-[#EFBF04] text-[#181D26] p-4 rounded-lg relative mt-4 mb-6"
-      >
-        <p className="text-sm font-semibold capitalize">{sites?.shift}</p>
-        {/* <p className="text-xs font-normal">{attendance?.value}</p> */}
-        <p className="text-xs font-normal">
-          {sites?.date ? (
-            (() => {
-              const dateObj = new Date(sites.date);
-              const day = dateObj.toLocaleDateString("en-GB", { day: "2-digit" });
-              const month = dateObj.toLocaleDateString("en-GB", { month: "long" });
-              const year = dateObj.toLocaleDateString("en-GB", { year: "numeric" });
-              const weekday = dateObj.toLocaleDateString("en-GB", { weekday: "long" });
-              return `${day} ${month} ${year}, ${weekday}`;
-            })()
-          ) : (
-            "Invalid date"
-          )}| 10h 20m
-        </p>
-
-
-
-        <div className="absolute top-4 right-4">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="w-4 h-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              d="M9 5l7 7-7 7"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          <div className="">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="w-4 h-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                d="M9 5l7 7-7 7"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </div>
         </div>
-      </div>
+      )}
 
-
-      <div className="grid grid-cols-2 gap-4">
-        <div className="flex flex-col gap-4">
-          <Link to="/user/e-occurence" className="bg-[#FFFFFF1A] p-4 rounded-xl flex flex-col justify-center items-center gap-2 w-full py-6 px-3">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none"
-              version="1.1" width="34" height="36" viewBox="0 0 34 36">
-              <defs>
-                <clipPath id="master_svg0_133_01082">
-                  <rect x="0" y="0" width="34" height="36" rx="0" />
-                </clipPath>
-              </defs>
-              <g clip-path="url(#master_svg0_133_01082)">
-                <g>
-                  <path
-                    d="M29,3.5L8,3.5C6.35,3.5,5,4.85,5,6.5L5,27.5C5,29.15,6.35,30.5,8,30.5L29,30.5C30.65,30.5,32,29.15,32,27.5L32,6.5C32,4.85,30.65,3.5,29,3.5ZM29,27.5L8,27.5L8,6.5L29,6.5L29,27.5Z"
-                    fill="#D65B92" fill-opacity="1" />
-                </g>
-                <g>
-                  <path
-                    d="M9.875,10.58L17.375,10.58L17.375,12.83L9.875,12.83L9.875,10.58ZM20,22.625L27.5,22.625L27.5,24.875L20,24.875L20,22.625ZM20,18.875L27.5,18.875L27.5,21.125L20,21.125L20,18.875ZM12.5,26L14.75,26L14.75,23L17.75,23L17.75,20.75L14.75,20.75L14.75,17.75L12.5,17.75L12.5,20.75L9.5,20.75L9.5,23L12.5,23L12.5,26ZM21.634999999999998,15.425L23.75,13.309999999999999L25.865,15.425L27.455,13.835L25.34,11.705L27.455,9.59L25.865,8L23.75,10.115L21.634999999999998,8L20.045,9.59L22.16,11.705L20.045,13.835L21.634999999999998,15.425Z"
-                    fill="#D65B92" fill-opacity="1" />
-                </g>
-              </g>
-            </svg>
-            <span className="text-white text-sm">e-Occurrence</span>
-          </Link>
-
-          <Link to="/user/sop-document" className="bg-[#FFFFFF1A] p-4 rounded-xl flex flex-col justify-center items-center gap-2 w-full py-6 px-3">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none"
-              version="1.1" width="32" height="32" viewBox="0 0 32 32">
-              <defs>
-                <clipPath id="master_svg0_133_00984">
-                  <rect x="0" y="0" width="32" height="32" rx="0" />
-                </clipPath>
-              </defs>
-              <g clip-path="url(#master_svg0_133_00984)">
-                <g>
-                  <path
-                    d="M16.551956494140626,6.66667L27.999956494140626,6.66667C28.736356494140626,6.66667,29.333356494140624,7.2636199999999995,29.333356494140624,8L29.333356494140624,26.6667C29.333356494140624,27.403,28.736356494140626,28,27.999956494140626,28L3.999986494140625,28C3.263610494140625,28,2.666656494140625,27.403,2.666656494140625,26.6667L2.666656494140625,5.33333C2.666656494140625,4.596954,3.263610494140625,4,3.999986494140625,4L13.885356494140625,4L16.551956494140626,6.66667ZM5.333326494140625,6.66667L5.333326494140625,25.3333L26.666656494140625,25.3333L26.666656494140625,9.33333L15.447956494140625,9.33333L12.781356494140624,6.66667L5.333326494140625,6.66667ZM14.666656494140625,12L17.333356494140624,12L17.333356494140624,22.6667L14.666656494140625,22.6667L14.666656494140625,12ZM19.999956494140626,16L22.666656494140625,16L22.666656494140625,22.6667L19.999956494140626,22.6667L19.999956494140626,16ZM9.333326494140625,18.6667L11.999986494140625,18.6667L11.999986494140625,22.6667L9.333326494140625,22.6667L9.333326494140625,18.6667Z"
-                    fill="#E5D463" fill-opacity="1" />
-                </g>
-              </g>
-            </svg>
-            <span className="text-white">SOP Documents</span>
-          </Link>
-
-          <Link to="/user/clocking"
-            className="bg-[#FFFFFF1A] p-4 rounded-xl flex flex-col items-center justify-center gap-2 w-full py-6 px-3">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" width="32" height="32"
-              viewBox="0 0 44 44">
-              <defs>
-                <clipPath id="master_svg0_133_00783">
-                  <rect x="0" y="0" width="44" height="44" rx="0" />
-                </clipPath>
-              </defs>
-              <g clip-path="url(#master_svg0_133_00783)">
+      <div className="grid grid-cols-2 gap-4 mt-6">
+        <Link to="/user/e-occurence" className="bg-[#FFFFFF1A] p-4 rounded-xl flex flex-col justify-center items-center gap-2 w-full py-6 px-3 text-center">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+            version="1.1" width="34" height="36" viewBox="0 0 34 36">
+            <defs>
+              <clipPath id="master_svg0_133_01082">
+                <rect x="0" y="0" width="34" height="36" rx="0" />
+              </clipPath>
+            </defs>
+            <g clip-path="url(#master_svg0_133_01082)">
+              <g>
                 <path
-                  d="M21.99998701171875,3.6666641235351562C11.91668701171875,3.6666641235351562,3.66668701171875,11.916664123535156,3.66668701171875,21.999964123535158C3.66668701171875,32.083364123535155,11.91668701171875,40.333364123535155,21.99998701171875,40.333364123535155C32.08338701171875,40.333364123535155,40.33338701171875,32.083364123535155,40.33338701171875,21.999964123535158C40.33338701171875,11.916664123535156,32.08338701171875,3.6666641235351562,21.99998701171875,3.6666641235351562ZM21.99998701171875,36.666664123535156C13.91498701171875,36.666664123535156,7.33335701171875,30.084964123535155,7.33335701171875,21.999964123535158C7.33335701171875,13.914964123535157,13.91498701171875,7.333334123535156,21.99998701171875,7.333334123535156C30.08498701171875,7.333334123535156,36.66668701171875,13.914964123535157,36.66668701171875,21.999964123535158C36.66668701171875,30.084964123535155,30.08498701171875,36.666664123535156,21.99998701171875,36.666664123535156ZM22.91668701171875,12.833334123535156L20.16668701171875,12.833334123535156L20.16668701171875,23.833364123535155L29.69998701171875,29.699964123535157L31.16668701171875,27.316664123535155L22.91668701171875,22.366664123535156L22.91668701171875,12.833334123535156Z"
-                  fill="#6091F4" fill-opacity="1" />
+                  d="M29,3.5L8,3.5C6.35,3.5,5,4.85,5,6.5L5,27.5C5,29.15,6.35,30.5,8,30.5L29,30.5C30.65,30.5,32,29.15,32,27.5L32,6.5C32,4.85,30.65,3.5,29,3.5ZM29,27.5L8,27.5L8,6.5L29,6.5L29,27.5Z"
+                  fill="#D65B92" fill-opacity="1" />
               </g>
-            </svg>
-            <span className="text-white">Clocking</span>
-          </Link>
+              <g>
+                <path
+                  d="M9.875,10.58L17.375,10.58L17.375,12.83L9.875,12.83L9.875,10.58ZM20,22.625L27.5,22.625L27.5,24.875L20,24.875L20,22.625ZM20,18.875L27.5,18.875L27.5,21.125L20,21.125L20,18.875ZM12.5,26L14.75,26L14.75,23L17.75,23L17.75,20.75L14.75,20.75L14.75,17.75L12.5,17.75L12.5,20.75L9.5,20.75L9.5,23L12.5,23L12.5,26ZM21.634999999999998,15.425L23.75,13.309999999999999L25.865,15.425L27.455,13.835L25.34,11.705L27.455,9.59L25.865,8L23.75,10.115L21.634999999999998,8L20.045,9.59L22.16,11.705L20.045,13.835L21.634999999999998,15.425Z"
+                  fill="#D65B92" fill-opacity="1" />
+              </g>
+            </g>
+          </svg>
+          <span className="text-white text-sm">e-Occurrence</span>
+        </Link>
 
-        </div>
+        <Link to="/user/employee-document"
+          className="bg-[#FFFFFF1A] p-4 rounded-xl flex flex-col items-center justify-center gap-2 w-full py-6 px-3">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="32" height="32" viewBox="0 0 32 32"><defs><clipPath id="master_svg0_133_00798"><rect x="0" y="0" width="32" height="32" rx="0" /></clipPath></defs><g clip-path="url(#master_svg0_133_00798)"><g><path d="M18.6667,11.999986494140625L18.6667,5.333326494140625L6.66667,5.333326494140625L6.66667,26.666656494140625L14.7413,26.666656494140625C15.1787,27.222656494140626,15.7067,27.713356494140626,16.314700000000002,28.113356494140625L18.168,29.333356494140624L5.324,29.333356494140624C4.593295,29.333356494140624,4.000735919,28.741356494140625,4,28.010656494140626L4,3.989326494140625C4,3.273323494140625,4.598666,2.666656494140625,5.336,2.666656494140625L19.996000000000002,2.666656494140625L28,10.666656494140625L28,11.999986494140625L18.6667,11.999986494140625ZM16,14.666656494140625L28,14.666656494140625L28,22.598656494140624C28,23.918656494140624,27.332,25.153356494140624,26.2187,25.885356494140623L22,28.663956494140624L17.7813,25.885356494140623C16.6726,25.159756494140623,16.0031,23.925056494140627,16,22.599956494140624L16,14.666656494140625ZM18.6667,22.598656494140624C18.6667,23.019956494140626,18.8827,23.417356494140623,19.247999999999998,23.658656494140626L22,25.471956494140624L24.752,23.658656494140626C25.112,23.425856494140625,25.3306,23.027356494140626,25.3333,22.598656494140624L25.3333,17.333356494140624L18.6667,17.333356494140624L18.6667,22.598656494140624Z" fill="#46EADF" fill-opacity="1" /></g></g></svg>
+          <span className="text-white text-center flex flex-col ">Employe Document</span>
+        </Link>
 
-        <div className="flex flex-col gap-4">
-          <Link to="/user/employee-document"
-            className="bg-[#FFFFFF1A] p-4 rounded-xl flex flex-col items-center justify-center gap-2 w-full py-6 px-3">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="32" height="32" viewBox="0 0 32 32"><defs><clipPath id="master_svg0_133_00798"><rect x="0" y="0" width="32" height="32" rx="0" /></clipPath></defs><g clip-path="url(#master_svg0_133_00798)"><g><path d="M18.6667,11.999986494140625L18.6667,5.333326494140625L6.66667,5.333326494140625L6.66667,26.666656494140625L14.7413,26.666656494140625C15.1787,27.222656494140626,15.7067,27.713356494140626,16.314700000000002,28.113356494140625L18.168,29.333356494140624L5.324,29.333356494140624C4.593295,29.333356494140624,4.000735919,28.741356494140625,4,28.010656494140626L4,3.989326494140625C4,3.273323494140625,4.598666,2.666656494140625,5.336,2.666656494140625L19.996000000000002,2.666656494140625L28,10.666656494140625L28,11.999986494140625L18.6667,11.999986494140625ZM16,14.666656494140625L28,14.666656494140625L28,22.598656494140624C28,23.918656494140624,27.332,25.153356494140624,26.2187,25.885356494140623L22,28.663956494140624L17.7813,25.885356494140623C16.6726,25.159756494140623,16.0031,23.925056494140627,16,22.599956494140624L16,14.666656494140625ZM18.6667,22.598656494140624C18.6667,23.019956494140626,18.8827,23.417356494140623,19.247999999999998,23.658656494140626L22,25.471956494140624L24.752,23.658656494140626C25.112,23.425856494140625,25.3306,23.027356494140626,25.3333,22.598656494140624L25.3333,17.333356494140624L18.6667,17.333356494140624L18.6667,22.598656494140624Z" fill="#46EADF" fill-opacity="1" /></g></g></svg>
-            <span className="text-white text-center flex flex-col ">Employe Document</span>
-          </Link>
+        <Link to="/user/sop-document" className="bg-[#FFFFFF1A] p-4 rounded-xl flex flex-col justify-center items-center gap-2 w-full py-6 px-3 text-center">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+            version="1.1" width="32" height="32" viewBox="0 0 32 32">
+            <defs>
+              <clipPath id="master_svg0_133_00984">
+                <rect x="0" y="0" width="32" height="32" rx="0" />
+              </clipPath>
+            </defs>
+            <g clip-path="url(#master_svg0_133_00984)">
+              <g>
+                <path
+                  d="M16.551956494140626,6.66667L27.999956494140626,6.66667C28.736356494140626,6.66667,29.333356494140624,7.2636199999999995,29.333356494140624,8L29.333356494140624,26.6667C29.333356494140624,27.403,28.736356494140626,28,27.999956494140626,28L3.999986494140625,28C3.263610494140625,28,2.666656494140625,27.403,2.666656494140625,26.6667L2.666656494140625,5.33333C2.666656494140625,4.596954,3.263610494140625,4,3.999986494140625,4L13.885356494140625,4L16.551956494140626,6.66667ZM5.333326494140625,6.66667L5.333326494140625,25.3333L26.666656494140625,25.3333L26.666656494140625,9.33333L15.447956494140625,9.33333L12.781356494140624,6.66667L5.333326494140625,6.66667ZM14.666656494140625,12L17.333356494140624,12L17.333356494140624,22.6667L14.666656494140625,22.6667L14.666656494140625,12ZM19.999956494140626,16L22.666656494140625,16L22.666656494140625,22.6667L19.999956494140626,22.6667L19.999956494140626,16ZM9.333326494140625,18.6667L11.999986494140625,18.6667L11.999986494140625,22.6667L9.333326494140625,22.6667L9.333326494140625,18.6667Z"
+                  fill="#E5D463" fill-opacity="1" />
+              </g>
+            </g>
+          </svg>
+          <span className="text-white">SOP Documents</span>
+        </Link>
 
-          <Link to="/user/contact" className="bg-[#FFFFFF1A] p-4 rounded-xl flex flex-col justify-center items-center gap-2 w-full py-6 px-3">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="32" height="32" viewBox="0 0 32 32"><defs><clipPath id="master_svg0_133_01334"><rect x="0" y="0" width="32" height="32" rx="0" /></clipPath></defs><g clip-path="url(#master_svg0_133_01334)"><g><path d="M26.66656494140625,5.33333L5.33323494140625,5.33333C3.86656494140625,5.33333,2.66656494140625,6.53333,2.66656494140625,8L2.66656494140625,24C2.66656494140625,25.4667,3.86656494140625,26.6667,5.33323494140625,26.6667L26.66656494140625,26.6667C28.13326494140625,26.6667,29.33326494140625,25.4667,29.33326494140625,24L29.33326494140625,8C29.33326494140625,6.53333,28.13326494140625,5.33333,26.66656494140625,5.33333ZM26.66656494140625,24L5.33323494140625,24L5.33323494140625,8L26.66656494140625,8L26.66656494140625,24ZM5.33323494140625,0L26.66656494140625,0L26.66656494140625,2.66667L5.33323494140625,2.66667L5.33323494140625,0ZM5.33323494140625,29.3333L26.66656494140625,29.3333L26.66656494140625,32L5.33323494140625,32L5.33323494140625,29.3333ZM15.99986494140625,16C17.840864941406252,16,19.33326494140625,14.5076,19.33326494140625,12.6667C19.33326494140625,10.8257,17.840864941406252,9.33333,15.99986494140625,9.33333C14.15896494140625,9.33333,12.66656494140625,10.8257,12.66656494140625,12.6667C12.66656494140625,14.5076,14.15896494140625,16,15.99986494140625,16ZM15.99986494140625,11.3333C16.73326494140625,11.3333,17.33326494140625,11.9333,17.33326494140625,12.6667C17.33326494140625,13.4,16.73326494140625,14,15.99986494140625,14C15.26656494140625,14,14.66656494140625,13.4,14.66656494140625,12.6667C14.66656494140625,11.9333,15.26656494140625,11.3333,15.99986494140625,11.3333ZM22.66656494140625,21.32C22.66656494140625,18.5333,18.25326494140625,17.3333,15.99986494140625,17.3333C13.74656494140625,17.3333,9.33323494140625,18.5333,9.33323494140625,21.32L9.33323494140625,22.6667L22.66656494140625,22.6667L22.66656494140625,21.32ZM11.74656494140625,20.6667C12.55989494140625,19.9733,14.45326494140625,19.3333,15.99986494140625,19.3333C17.55986494140625,19.3333,19.45326494140625,19.9733,20.26656494140625,20.6667L11.74656494140625,20.6667Z" fill="#D4863F" fill-opacity="1" /></g></g></svg>
-            <span className="text-white">Contacts</span>
-          </Link>
+        <Link to="/user/contact" className="bg-[#FFFFFF1A] p-4 rounded-xl flex flex-col justify-center items-center gap-2 w-full py-6 px-3">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="32" height="32" viewBox="0 0 32 32"><defs><clipPath id="master_svg0_133_01334"><rect x="0" y="0" width="32" height="32" rx="0" /></clipPath></defs><g clip-path="url(#master_svg0_133_01334)"><g><path d="M26.66656494140625,5.33333L5.33323494140625,5.33333C3.86656494140625,5.33333,2.66656494140625,6.53333,2.66656494140625,8L2.66656494140625,24C2.66656494140625,25.4667,3.86656494140625,26.6667,5.33323494140625,26.6667L26.66656494140625,26.6667C28.13326494140625,26.6667,29.33326494140625,25.4667,29.33326494140625,24L29.33326494140625,8C29.33326494140625,6.53333,28.13326494140625,5.33333,26.66656494140625,5.33333ZM26.66656494140625,24L5.33323494140625,24L5.33323494140625,8L26.66656494140625,8L26.66656494140625,24ZM5.33323494140625,0L26.66656494140625,0L26.66656494140625,2.66667L5.33323494140625,2.66667L5.33323494140625,0ZM5.33323494140625,29.3333L26.66656494140625,29.3333L26.66656494140625,32L5.33323494140625,32L5.33323494140625,29.3333ZM15.99986494140625,16C17.840864941406252,16,19.33326494140625,14.5076,19.33326494140625,12.6667C19.33326494140625,10.8257,17.840864941406252,9.33333,15.99986494140625,9.33333C14.15896494140625,9.33333,12.66656494140625,10.8257,12.66656494140625,12.6667C12.66656494140625,14.5076,14.15896494140625,16,15.99986494140625,16ZM15.99986494140625,11.3333C16.73326494140625,11.3333,17.33326494140625,11.9333,17.33326494140625,12.6667C17.33326494140625,13.4,16.73326494140625,14,15.99986494140625,14C15.26656494140625,14,14.66656494140625,13.4,14.66656494140625,12.6667C14.66656494140625,11.9333,15.26656494140625,11.3333,15.99986494140625,11.3333ZM22.66656494140625,21.32C22.66656494140625,18.5333,18.25326494140625,17.3333,15.99986494140625,17.3333C13.74656494140625,17.3333,9.33323494140625,18.5333,9.33323494140625,21.32L9.33323494140625,22.6667L22.66656494140625,22.6667L22.66656494140625,21.32ZM11.74656494140625,20.6667C12.55989494140625,19.9733,14.45326494140625,19.3333,15.99986494140625,19.3333C17.55986494140625,19.3333,19.45326494140625,19.9733,20.26656494140625,20.6667L11.74656494140625,20.6667Z" fill="#D4863F" fill-opacity="1" /></g></g></svg>
+          <span className="text-white">Contacts</span>
+        </Link>
 
-          <Link to="/user/incident" className="bg-[#FFFFFF1A] p-4 rounded-xl flex flex-col justify-center items-center gap-2 w-full py-6 px-3">
-            <svg xmlns="http://www.w3.org/2000/svg"  fill="none" version="1.1" width="34" height="34" viewBox="0 0 34 34"><defs><clipPath id="master_svg0_133_01341"><rect x="0" y="0" width="34" height="34" rx="0" /></clipPath></defs><g clip-path="url(#master_svg0_133_01341)"><g><path d="M17.000114453125,8.485832098999023L27.667614453125,26.916642098999024L6.332594453125,26.916642098999024L17.000114453125,8.485832098999023ZM3.881756453125,25.500042098999025C2.790923453125,27.384142098999025,4.150923453125,29.750042098999025,6.332594453125,29.750042098999025L27.667614453125,29.750042098999025C29.849214453125,29.750042098999025,31.209214453125,27.384142098999025,30.118414453125,25.500042098999025L19.450914453125,7.069162098999024C18.360114453125,5.185000098999024,15.640114453125,5.185000098999024,14.549214453125,7.069162098999024L3.881756453125,25.500042098999025ZM15.583414453125,15.583332098999023L15.583414453125,18.416642098999024C15.583414453125,19.195842098999023,16.220914453124998,19.833342098999026,17.000114453125,19.833342098999026C17.779214453125,19.833342098999026,18.416714453125,19.195842098999023,18.416714453125,18.416642098999024L18.416714453125,15.583332098999023C18.416714453125,14.804172098999024,17.779214453125,14.166672098999024,17.000114453125,14.166672098999024C16.220914453124998,14.166672098999024,15.583414453125,14.804172098999024,15.583414453125,15.583332098999023ZM15.583414453125,22.666642098999024L18.416714453125,22.666642098999024L18.416714453125,25.500042098999025L15.583414453125,25.500042098999025L15.583414453125,22.666642098999024Z" fill="#58E79F" fill-opacity="1" /></g></g></svg>
-            <span className="text-white">Incidents</span>
-          </Link>
-        </div>
+        <Link to="/user/clocking"
+          className="bg-[#FFFFFF1A] p-4 rounded-xl flex flex-col items-center justify-center gap-2 w-full py-6 px-3">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" width="32" height="32"
+            viewBox="0 0 44 44">
+            <defs>
+              <clipPath id="master_svg0_133_00783">
+                <rect x="0" y="0" width="44" height="44" rx="0" />
+              </clipPath>
+            </defs>
+            <g clip-path="url(#master_svg0_133_00783)">
+              <path
+                d="M21.99998701171875,3.6666641235351562C11.91668701171875,3.6666641235351562,3.66668701171875,11.916664123535156,3.66668701171875,21.999964123535158C3.66668701171875,32.083364123535155,11.91668701171875,40.333364123535155,21.99998701171875,40.333364123535155C32.08338701171875,40.333364123535155,40.33338701171875,32.083364123535155,40.33338701171875,21.999964123535158C40.33338701171875,11.916664123535156,32.08338701171875,3.6666641235351562,21.99998701171875,3.6666641235351562ZM21.99998701171875,36.666664123535156C13.91498701171875,36.666664123535156,7.33335701171875,30.084964123535155,7.33335701171875,21.999964123535158C7.33335701171875,13.914964123535157,13.91498701171875,7.333334123535156,21.99998701171875,7.333334123535156C30.08498701171875,7.333334123535156,36.66668701171875,13.914964123535157,36.66668701171875,21.999964123535158C36.66668701171875,30.084964123535155,30.08498701171875,36.666664123535156,21.99998701171875,36.666664123535156ZM22.91668701171875,12.833334123535156L20.16668701171875,12.833334123535156L20.16668701171875,23.833364123535155L29.69998701171875,29.699964123535157L31.16668701171875,27.316664123535155L22.91668701171875,22.366664123535156L22.91668701171875,12.833334123535156Z"
+                fill="#6091F4" fill-opacity="1" />
+            </g>
+          </svg>
+          <span className="text-white">Clocking</span>
+        </Link>
+
+        <Link to="/user/incident" className="bg-[#FFFFFF1A] p-4 rounded-xl flex flex-col justify-center items-center gap-2 w-full py-6 px-3">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="34" height="34" viewBox="0 0 34 34"><defs><clipPath id="master_svg0_133_01341"><rect x="0" y="0" width="34" height="34" rx="0" /></clipPath></defs><g clip-path="url(#master_svg0_133_01341)"><g><path d="M17.000114453125,8.485832098999023L27.667614453125,26.916642098999024L6.332594453125,26.916642098999024L17.000114453125,8.485832098999023ZM3.881756453125,25.500042098999025C2.790923453125,27.384142098999025,4.150923453125,29.750042098999025,6.332594453125,29.750042098999025L27.667614453125,29.750042098999025C29.849214453125,29.750042098999025,31.209214453125,27.384142098999025,30.118414453125,25.500042098999025L19.450914453125,7.069162098999024C18.360114453125,5.185000098999024,15.640114453125,5.185000098999024,14.549214453125,7.069162098999024L3.881756453125,25.500042098999025ZM15.583414453125,15.583332098999023L15.583414453125,18.416642098999024C15.583414453125,19.195842098999023,16.220914453124998,19.833342098999026,17.000114453125,19.833342098999026C17.779214453125,19.833342098999026,18.416714453125,19.195842098999023,18.416714453125,18.416642098999024L18.416714453125,15.583332098999023C18.416714453125,14.804172098999024,17.779214453125,14.166672098999024,17.000114453125,14.166672098999024C16.220914453124998,14.166672098999024,15.583414453125,14.804172098999024,15.583414453125,15.583332098999023ZM15.583414453125,22.666642098999024L18.416714453125,22.666642098999024L18.416714453125,25.500042098999025L15.583414453125,25.500042098999025L15.583414453125,22.666642098999024Z" fill="#58E79F" fill-opacity="1" /></g></g></svg>
+          <span className="text-white">Incidents</span>
+        </Link>
       </div>
 
-          <BottomNavBar />
+      <BottomNavBar />
     </div>
 
   )
