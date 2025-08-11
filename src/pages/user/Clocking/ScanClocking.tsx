@@ -8,7 +8,7 @@ const ScanClocking = () => {
     return (
         <div className="min-h-screen bg-[#181D26] text-[#F4F7FF] flex flex-col justify-between p-4  gap-6 pt-10">
             <div className="flex flex-col gap-8">
-                <div className="flex items-center gap-3 ">
+                <div className="flex items-center gap-3  w-full bg-[#181D26]">
                     <ChevronLeft
                         size={20}
                         className="cursor-pointer"

@@ -1,5 +1,5 @@
-import React, { useState } from "react";
 import { ChevronLeft, Eye, EyeOff } from "lucide-react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 const ChangePassword = () => {
@@ -10,16 +10,14 @@ const ChangePassword = () => {
     const [showConfirm, setShowConfirm] = useState(false);
 
     return (
-        <div className="min-h-screen bg-[#181D26] text-[#F4F7FF] p-4 flex flex-col gap-5">
-            <div className="flex items-center gap-3 pt-8">
+        <div className="min-h-screen bg-[#181D26] text-[#F4F7FF] p-4 flex flex-col gap-5 pt-20">
+            <div className="flex items-center gap-2 fixed px-6 py-6 top-0 left-0 w-full bg-[#181D26]">
                 <ChevronLeft
                     size={20}
                     className="cursor-pointer"
                     onClick={() => navigate(-1)}
                 />
-                <h1 className="text-xl font-normal text-[#F4F7FF]">
-                    Change Password
-                </h1>
+                <h1 className="text-xl text-[#F4F7FF] font-normal font-noto">Change Password</h1>
             </div>
 
             <div className="flex flex-col gap-4 mt-4 ">

@@ -9,7 +9,7 @@ const Result = () => {
     return (
         <div className="min-h-screen bg-[#181D26] text-[#F4F7FF] p-4 flex flex-col justify-between">
             <div>
-                <div className="flex items-center gap-3 mb-6">
+                <div className="flex items-center gap-3 mb-6 w-full bg-[#181D26]">
                     <ChevronLeft
                         size={20}
                         className="cursor-pointer"

@@ -1,5 +1,4 @@
-import { ChevronLeft, Pencil, Trash2 } from 'lucide-react'
-import React from 'react'
+import { ChevronLeft, Pencil, Trash2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 
 const HistoryOccurance = () => {
@@ -22,17 +21,15 @@ const HistoryOccurance = () => {
     }
   ];
   return (
-    <div className="min-h-screen bg-[#181D26] text-[#F4F7FF] p-4 flex flex-col gap-4">
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-3">
+    <div className="min-h-screen bg-[#181D26] text-[#F4F7FF] p-4 flex flex-col gap-4 pt-20">
+        <div className="flex items-center gap-2 fixed px-6 py-6 top-0 left-0 w-full bg-[#181D26]">
           <ChevronLeft
             size={20}
             className="cursor-pointer"
             onClick={() => navigate(-1)}
           />
-          <h1 className="text-xl text-[#F4F7FF] font-normal">HDB</h1>
+          <h1 className="text-xl text-[#F4F7FF] font-normal font-noto">HDB</h1>
         </div>
-      </div>
 
       {data.map((item) => (
         <div
@@ -43,7 +40,7 @@ const HistoryOccurance = () => {
             <p className="text-[#EFBF04] font-semibold">{item.title}</p>
             <div className="flex gap-3 text-[#98A1B3]">
               <Link to="/user/e-occurence/report/edit">
-              <Pencil size={16} className="cursor-pointer" />
+                <Pencil size={16} className="cursor-pointer" />
               </Link>
               <Trash2 size={16} className="cursor-pointer" />
             </div>
@@ -54,7 +51,7 @@ const HistoryOccurance = () => {
               <p className="mb-1 text-xs">Date & time</p>
               <p className="text-[#F4F7FF]">{item.date}, {item.time}</p>
             </div>
-            
+
             <div>
               <p className="mb-1 text-xs">Occurance</p>
               <p className="text-[#F4F7FF]">{item.description}</p>

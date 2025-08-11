@@ -1,4 +1,3 @@
-import React from "react";
 import { ChevronLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import BottomNavBar from "../components/BottomBar";
@@ -27,10 +26,14 @@ const Profile = () => {
     );
 
     return (
-        <div className="min-h-screen bg-[#181D26] text-[#F4F7FF] p-4 flex flex-col gap-8">
-            <div className="flex items-center gap-3 pt-8">
-                <ChevronLeft size={20} className="cursor-pointer" onClick={() => navigate(-1)} />
-                <h1 className="text-xl font-normal text-[#F4F7FF]">Profile</h1>
+        <div className="min-h-screen bg-[#181D26] text-[#F4F7FF] p-4 flex flex-col gap-8 py-20">
+            <div className="flex items-center gap-2 fixed px-6 py-6 top-0 left-0 w-full bg-[#181D26]">
+                <ChevronLeft
+                    size={20}
+                    className="cursor-pointer"
+                    onClick={() => navigate(-1)}
+                />
+                <h1 className="text-xl text-[#F4F7FF] font-normal font-noto">Profile</h1>
             </div>
 
             <div className="flex flex-col gap-6">

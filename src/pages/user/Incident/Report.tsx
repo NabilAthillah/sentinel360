@@ -1,5 +1,5 @@
 import { ChevronLeft } from 'lucide-react';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 const Report = () => {
@@ -19,7 +19,7 @@ const Report = () => {
     };
     const FormField = ({ label, type = "text", defaultValue }: { label: string; type?: string; defaultValue?: string }) => (
         <div className="flex flex-col gap-1 bg-[#222630]  w-full  p-4 border-b rounded-md outline-none">
-            
+
             <input
                 type={type}
                 placeholder={label}
@@ -60,11 +60,15 @@ const Report = () => {
     );
 
     return (
-        <div className="min-h-screen bg-[#181D26] text-[#F4F7FF] p-4 flex flex-col gap-6">
+        <div className="min-h-screen bg-[#181D26] text-[#F4F7FF] p-4 flex flex-col gap-6 pt-20">
 
-            <div className="flex items-center gap-3 pt-8">
-                <ChevronLeft size={20} className="cursor-pointer" onClick={() => navigate(-1)} />
-                <h1 className="text-xl font-normal text-[#F4F7FF]">Report</h1>
+            <div className="flex items-center gap-2 fixed px-6 py-6 top-0 left-0 w-full bg-[#181D26]">
+                <ChevronLeft
+                    size={20}
+                    className="cursor-pointer"
+                    onClick={() => navigate(-1)}
+                />
+                <h1 className="text-xl text-[#F4F7FF] font-normal font-noto">Report</h1>
             </div>
 
             <div className="flex flex-col gap-6">

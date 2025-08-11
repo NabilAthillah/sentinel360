@@ -1,7 +1,5 @@
 import { ChevronLeft } from 'lucide-react';
-import React from 'react'
 import { Link, useNavigate } from 'react-router-dom';
-import Occurence from './Occurence';
 
 const ReportOccurance = () => {
   const navigate = useNavigate();
@@ -22,11 +20,15 @@ const ReportOccurance = () => {
     </div>
   );
   return (
-    <div className="min-h-screen bg-[#181D26] text-[#F4F7FF] p-4 flex flex-col gap-6 justify-between">
+    <div className="min-h-screen bg-[#181D26] text-[#F4F7FF] px-6 flex flex-col gap-6 justify-between pt-20">
       <div className='flex flex-col gap-10'>
-        <div className="flex items-center gap-3 pt-8">
-          <ChevronLeft size={20} className="cursor-pointer" onClick={() => navigate(-1)} />
-          <h1 className="text-xl font-normal text-[#F4F7FF]">Report</h1>
+        <div className="flex items-center gap-2 fixed px-6 py-6 top-0 left-0 w-full bg-[#181D26]">
+          <ChevronLeft
+            size={20}
+            className="cursor-pointer"
+            onClick={() => navigate(-1)}
+          />
+          <h1 className="text-xl text-[#F4F7FF] font-normal font-noto">Report</h1>
         </div>
 
         <div className="flex flex-col gap-6">

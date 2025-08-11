@@ -7,7 +7,7 @@ const SopDocument = () => {
     return (
         <div className="min-h-screen bg-[#181D26] text-[#F4F7FF] p-4 flex flex-col gap-4">
             <div className="flex items-center justify-between mb-2 pt-4">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 w-full bg-[#181D26]">
                     <ChevronLeft
                         size={20}
                         className="cursor-pointer"

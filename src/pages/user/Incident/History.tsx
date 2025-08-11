@@ -1,5 +1,5 @@
-import React, { useState } from "react";
 import { ChevronLeft, Pencil, Trash2, X } from "lucide-react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 interface IncidentDetails {
@@ -76,17 +76,15 @@ const History: React.FC = () => {
     ];
 
     return (
-        <div className="min-h-screen bg-[#181D26] text-[#F4F7FF] p-4 flex flex-col gap-4">
-           
-            <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-3">
-                    <ChevronLeft
-                        size={20}
-                        className="cursor-pointer"
-                        onClick={() => navigate(-1)}
-                    />
-                    <h1 className="text-xl text-[#F4F7FF] font-normal">HDB</h1>
-                </div>
+        <div className="min-h-screen bg-[#181D26] text-[#F4F7FF] p-4 flex flex-col gap-4 pt-20">
+
+            <div className="flex items-center gap-2 fixed px-6 py-6 top-0 left-0 w-full bg-[#181D26]">
+                <ChevronLeft
+                    size={20}
+                    className="cursor-pointer"
+                    onClick={() => navigate(-1)}
+                />
+                <h1 className="text-xl text-[#F4F7FF] font-normal font-noto">HDB</h1>
             </div>
 
             {data.map((item) => (

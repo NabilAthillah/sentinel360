@@ -16,7 +16,7 @@ const Settings = () => {
         { icon: <Key size={18} />, label: "Change Password", path: "change-password" },
         { icon: <ScanLine size={18} />, label: "Scan Tag", path: "scan-tag" },
         { icon: <Info size={18} />, label: "About", path: "about" },
-        { icon: <LogOut size={18} />, label: "Logout", path: "logout" },
+        { icon: <LogOut size={18} />, label: "Logout", path: "/user/login" },
     ];
     return (
         <div className="min-h-screen bg-[#181D26] text-white p-4 flex flex-col  pt-40 gap-6">
