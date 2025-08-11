@@ -41,6 +41,10 @@ import ReportOccurance from '../pages/user/Occurrence/ReportOccurance';
 import ChangePassword from '../pages/user/Settings/ChangePassword';
 import Profile from '../pages/user/Settings/Profile';
 import Settings from '../pages/user/Settings/Settings';
+import ReportPage from '../pages/report/ReportPage';
+import SopDocument from '../pages/user/SopDocument/SopDocument';
+import EmployeeDocument from '../pages/user/EmployeDocument/EmployeeDocument';
+import Contact from '../pages/user/Contact/Contact';
 
 const AppRoutes = () => {
   return (
@@ -49,6 +53,7 @@ const AppRoutes = () => {
         <Route path="/" element={<Navigate to="/auth/login" replace />} />
         <Route path='/auth/login' element={<LoginPage />} />
         <Route path='/dashboard' element={<DashboardPage />} />
+        <Route path='/dashboard/report' element={<ReportPage />} />
         <Route path='/dashboard/employees' element={<EmployeesPage />} />
         <Route path='/dashboard/attendance' element={<AttendancePage />} />
         <Route path='/dashboard/e-occurrence' element={<OccurencePage />} />
@@ -72,6 +77,9 @@ const AppRoutes = () => {
 
         <Route path='/user' element={<HomePage />} />
         <Route path='/user/login' element={<Login />} />
+        <Route path='/user/employee-document' element={<EmployeeDocument />} />
+        <Route path='/user/contact' element={<Contact />} />
+        <Route path='/user/sop-document' element={<SopDocument />} />
         <Route path='/user/clocking' element={<Clocking />} />
         <Route path='/user/clocking/scan' element={<ScanClocking />} />
         <Route path='/user/e-occurence' element={<Occurence />} />
