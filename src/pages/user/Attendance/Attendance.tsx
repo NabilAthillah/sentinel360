@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { Bounce, toast, ToastContainer } from 'react-toastify';
+import Swal from 'sweetalert2';
+import attendanceService from '../../../services/attendanceService';
 import attendanceSettingService from '../../../services/attendanceSettingService';
 import siteEmployeeService from '../../../services/siteEmployeeService';
 import { RootState } from '../../../store';
 import { SiteEmployee } from '../../../types/siteEmployee';
 import BottomNavBar from '../components/BottomBar';
-import { redirect, useNavigate } from 'react-router-dom';
 
 type Settings = {
     label: string;
@@ -96,14 +98,14 @@ const Attendance = () => {
     const getEffectiveTime = (timeIn?: string | null, timeOut?: string | null) => {
         if (!timeIn || !timeOut) return '0h 0m';
 
-        const [inH, inM] = timeIn.split(':').map(Number);
-        const [outH, outM] = timeOut.split(':').map(Number);
+        const [inH, inM, inS] = timeIn.split(':').map(Number);
+        const [outH, outM, outS] = timeOut.split(':').map(Number);
 
         const inDate = new Date();
-        inDate.setHours(inH ?? 0, inM ?? 0, 0, 0);
+        inDate.setHours(inH ?? 0, inM ?? 0, inS ?? 0, 0);
 
         const outDate = new Date();
-        outDate.setHours(outH ?? 0, outM ?? 0, 0, 0);
+        outDate.setHours(outH ?? 0, outM ?? 0, outS ?? 0, 0);
 
         let diffMs = outDate.getTime() - inDate.getTime();
         if (diffMs < 0) diffMs += 24 * 60 * 60 * 1000;
@@ -113,6 +115,12 @@ const Attendance = () => {
         const minutes = totalMinutes % 60;
 
         return `${hours}h ${minutes}m`;
+    };
+
+    const nowMinutesSG = () => {
+        const fmt = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Singapore', hour12: false, hour: '2-digit', minute: '2-digit' });
+        const [hh, mm] = fmt.format(new Date()).split(':').map(Number);
+        return hh * 60 + mm;
     };
 
     const isBeforeCheckin = () => {
@@ -127,6 +135,20 @@ const Attendance = () => {
         start.setHours(h ?? 0, m ?? 0, 0, 0);
 
         return now.getTime() < start.getTime();
+    };
+
+    const isBeforeCheckout = () => {
+        if (!siteEmployee) return false;
+        const meta = getShiftMeta(siteEmployee.shift);
+        const endStr = getSettingTime(meta.end);
+        if (!endStr) return false;
+
+        const [h, m] = endStr.split(':').map(Number);
+        const now = new Date();
+        const end = new Date();
+        end.setHours(h ?? 0, m ?? 0, 0, 0);
+
+        return now.getTime() < end.getTime();
     };
 
     const startEndOf = (shiftRaw?: string) => {
@@ -192,13 +214,135 @@ const Attendance = () => {
         }
 
         if (!siteEmployee?.attendance) {
-            navigate('/user/attendance/checkin')
+            navigate(`/user/attendance/checkin/${siteEmployee?.id}`);
+            return;
         }
 
+        if (siteEmployee?.attendance?.time_out) {
+            return;
+        }
+
+        const confirm = await Swal.fire({
+            title: 'Confirm checkout?',
+            text: 'Do you want to check out now?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, check out',
+            cancelButtonText: 'Cancel',
+            background: '#1e1e1e',
+            confirmButtonColor: '#EFBF04',
+            color: '#f4f4f4',
+            customClass: { popup: 'swal2-dark-popup' },
+        });
+
+        if (!confirm.isConfirmed) return;
+
+        if (isBeforeCheckout()) {
+            const { isConfirmed, value: reason } = await Swal.fire({
+                title: 'Checkout before end time',
+                text: 'Please provide a reason for early checkout.',
+                input: 'text',
+                inputLabel: 'Reason',
+                inputPlaceholder: 'e.g., Family emergency',
+                inputAttributes: { maxlength: '200' },
+                showCancelButton: true,
+                confirmButtonText: 'Submit',
+                cancelButtonText: 'Cancel',
+                background: '#1e1e1e',
+                confirmButtonColor: '#EFBF04',
+                color: '#f4f4f4',
+                customClass: { popup: 'swal2-dark-popup' },
+                inputValidator: (val) => {
+                    if (!val || val.trim().length < 3) return 'Please enter at least 3 characters.';
+                    return undefined;
+                },
+            });
+
+            if (!isConfirmed) return;
+
+            await handleCheckout(reason.trim());
+
+            return;
+        }
+
+        handleCheckout('');
+    }
+
+    const handleCheckout = async (reason: string) => {
         try {
+            const token = localStorage.getItem('token');
 
+            if (!token) {
+                localStorage.clear();
+                navigate('/auth/login');
+                return;
+            }
+
+            const id_site_employee = siteEmployee?.id;
+            if (!id_site_employee) {
+                Swal.fire({
+                    title: "Error!",
+                    text: 'Oops! Something went wrong',
+                    icon: "error",
+                    background: "#1e1e1e",
+                    confirmButtonColor: "#EFBF04",
+                    color: "#f4f4f4",
+                    customClass: { popup: "swal2-dark-popup" },
+                });
+            }
+
+            const time_out = new Intl.DateTimeFormat('en-GB', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false,
+                timeZone: 'Asia/Singapore',
+            }).format(new Date());
+
+            const payload = {
+                id_site_employee,
+                time_out,
+                is_early: isBeforeCheckout(),
+                reason: reason
+            };
+
+            const response = await attendanceService.updateAttendance(token, payload, siteEmployee?.attendance?.id);
+
+            if (response?.success) {
+                Swal.fire({
+                    title: "Checked out!",
+                    text: "Successfully checked out.",
+                    icon: "success",
+                    background: "#1e1e1e",
+                    confirmButtonColor: "#EFBF04",
+                    color: "#f4f4f4",
+                    customClass: { popup: "swal2-dark-popup" },
+                });
+                fetchSites();
+                navigate('/user/attendance');
+            } else {
+                Swal.fire({
+                    title: "Error!",
+                    text: 'Oops! Something went wrong',
+                    icon: "error",
+                    background: "#1e1e1e",
+                    confirmButtonColor: "#EFBF04",
+                    color: "#f4f4f4",
+                    customClass: { popup: "swal2-dark-popup" },
+                });
+            }
         } catch (error) {
-
+            Swal.fire({
+                title: "Error!",
+                text: 'Oops! Something went wrong',
+                icon: "error",
+                background: "#1e1e1e",
+                confirmButtonColor: "#EFBF04",
+                color: "#f4f4f4",
+                customClass: { popup: "swal2-dark-popup" },
+            });
+        } finally {
+            return;
         }
     }
 
@@ -298,7 +442,7 @@ const Attendance = () => {
                             </div>
                             <div className="flex flex-col gap-1">
                                 <p className="text-[#98A1B3] text-xs font-normal">Check out</p>
-                                <p className="text-[#FF7E6A]">
+                                <p className="text-[#FF7E6A] font-normal text-xs">
                                     {siteEmployee?.attendance?.time_out ?? '--:--'}
                                 </p>
                             </div>
@@ -315,24 +459,28 @@ const Attendance = () => {
                     </div>
                 </div>
 
-                <button
-                    onClick={handleSubmit}
-                    className="bg-[#EFBF04] rounded-full flex flex-wrap justify-center gap-3 items-center w-full py-[13.5px]"
-                >
-                    <span className="flex text-[#181D26] text-base font-bold gap-2 text-center w-fit font-inter">
-                        {isBeforeCheckin()
-                            ? 'It is not yet check-in time'
-                            : siteEmployee?.attendance?.time_in
-                                ? "Let's checkout"
-                                : "Let's check in"}
-                    </span>
-                    <span className="flex text-[#181D26] text-base font-bold gap-2 text-center w-fit font-inter">
-                        |
-                    </span>
-                    <span className="flex text-[#181D26] text-base font-bold gap-2 text-center w-fit font-inter">
-                        {nowStr || '00:00:00'}
-                    </span>
-                </button>
+                {!siteEmployee?.attendance?.time_out && (
+                    <button
+                        onClick={handleSubmit}
+                        className="bg-[#EFBF04] rounded-full flex flex-wrap justify-center gap-3 items-center w-full py-[13.5px]"
+                    >
+                        <span className="flex text-[#181D26] text-base font-bold gap-2 text-center w-fit font-inter">
+                            {isBeforeCheckin()
+                                ? 'It is not yet check-in time'
+                                : siteEmployee?.attendance?.time_in && !siteEmployee?.attendance?.time_out
+                                    ? "Let's checkout"
+                                    : siteEmployee?.attendance?.time_out
+                                        ? 'You have already checked out'
+                                        : "Let's check in"}
+                        </span>
+                        <span className="flex text-[#181D26] text-base font-bold gap-2 text-center w-fit font-inter">
+                            |
+                        </span>
+                        <span className="flex text-[#181D26] text-base font-bold gap-2 text-center w-fit font-inter">
+                            {nowStr || '00:00:00'}
+                        </span>
+                    </button>
+                )}
             </div>
 
             <div className="h-full w-full flex flex-col flex-1 gap-4 pb-16">

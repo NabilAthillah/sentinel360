@@ -90,7 +90,7 @@ const AppRoutes = () => {
         <Route path='/user/incident/report' element={<Report />} />
         <Route path='/user/incident/history' element={<History />} />
         <Route path='/user/attendance' element={<Attendance />} />
-        <Route path='/user/attendance/checkin' element={<Checkin />} />
+        <Route path='/user/attendance/checkin/:id' element={<Checkin />} />
         <Route path='/user/leaves' element={<Leaves />} />
         <Route path='/user/leaves/request' element={<RequestLeaves />} />
         <Route path='/user/settings' element={<Settings />} />

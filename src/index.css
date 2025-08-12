@@ -51,3 +51,14 @@
     background: #222834 !important;
 }
 
+.swal2-custom-confirm {
+  background-color: #EFBF04 !important;
+  color: #181D26 !important;
+  border: none !important;
+  border-radius: 6px !important;
+  padding: 8px 20px !important;
+}
+
+.swal2-custom-confirm:hover {
+  background-color: #d4a800 !important;
+}

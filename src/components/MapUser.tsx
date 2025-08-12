@@ -1,5 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { GoogleMap, LoadScript, Marker } from "@react-google-maps/api";
+
+type Props = {
+  userPos: { lat: number; lng: number } | null;
+};
 
 const containerStyle = {
   height: "100%",
@@ -12,19 +16,26 @@ const containerStyle = {
 
 const DEFAULT_CENTER = { lat: 1.3521, lng: 103.8198 };
 
-const MapUser = () => {
-  const [userPos, setUserPos] = useState<{ lat: number; lng: number } | null>(null);
-
+const MapUser = ({ userPos }: Props) => {
+  const center = useMemo(() => userPos ?? DEFAULT_CENTER, [userPos]);
+  useEffect(() => {
+    console.log(userPos)
+  }, [])
   return (
     <LoadScript
-      googleMapsApiKey="AIzaSyApktDuyS7d_DUd8uIDZZeL5KauAlxlc-M"
+      googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_KEY || "AIzaSyApktDuyS7d_DUd8uIDZZeL5KauAlxlc-M"}
       language="en"
     >
       <GoogleMap
         mapContainerStyle={containerStyle}
-        center={userPos ?? DEFAULT_CENTER}
-        zoom={userPos ? 15 : 11}
-        options={{ mapTypeControl: true, mapTypeControlOptions: { style: 1 } }}
+        center={center}
+        zoom={userPos ? 16 : 11}
+        options={{
+          mapTypeControl: true,
+          mapTypeControlOptions: { style: 1 },
+          streetViewControl: false,
+          fullscreenControl: false,
+        }}
       >
         {userPos && <Marker position={userPos} />}
       </GoogleMap>
