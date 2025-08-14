@@ -12,4 +12,5 @@ export type User = {
         last_login?: string;
         role: Role;
         employee?: Employee;
+        language?: string;
 }

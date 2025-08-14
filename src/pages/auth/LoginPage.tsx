@@ -26,26 +26,39 @@ const LoginPage: React.FC = () => {
   const handleSubmit = async (e: React.SyntheticEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError('')
+    setError('');
 
     try {
       const response = await authService.login(email, password);
 
       if (response.success) {
-        dispatch(setUser(response.data.user));
+        const user = response.data.user;
+        const roleName =
+          typeof user.role === 'string'
+            ? user.role
+            : user.role?.name || '';
+
+        dispatch(setUser(user));
         localStorage.setItem('token', response.data.token);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
+        localStorage.setItem('user', JSON.stringify(user));
         toast.success('Login successfully');
-        navigate('/dashboard');
+
+        if (roleName.toLowerCase() === 'administrator') {
+          navigate('/dashboard');
+        } else {
+          navigate('/user');
+        }
       } else {
         toast.error(response.message);
       }
     } catch (error: any) {
-      toast.error(error.message)
+      toast.error(error.message);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
+
+
 
   const [client, setClient] = useState<Client>();
 

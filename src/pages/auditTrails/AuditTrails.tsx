@@ -16,7 +16,7 @@ const AuditTrails = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
     const [showModal, setShowModal] = useState(false);
-
+    const [showDropdown, setShowDropdown] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState('');
     const [selectedUserId, setSelectedUserId] = useState('');
     const [startDate, setStartDate] = useState<string>('');
@@ -174,20 +174,19 @@ const AuditTrails = () => {
 
         doc.save(getFilename('pdf'));
     };
+    
 
     return (
         <MainLayout>
             <div className="flex flex-col gap-6 px-6 pb-20 w-full min-h-[calc(100vh-91px)] h-full">
                 <h2 className="text-2xl leading-9 text-white font-noto">Audit Trails</h2>
 
-                <div className="flex flex-col flex-1 gap-10 bg-[#252C38] p-6 rounded-lg w-full h-full">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-center mb-4">
-                        <div className="flex flex-wrap gap-3 items-center">
+                <div className="flex flex-col gap-10 bg-[#252C38] p-6 rounded-lg w-full h-full flex-1">
+                    <div className="flex justify-start relative">
+                        <div className="relative flex gap-6">
+
                             <select
-                                className="w-full h-[44px] px-4 pt-[17.5px] pb-[10.5px]
-                 bg-[#222834] rounded-[4px_4px_0px_0px] text-[#F4F7FF] text-base
-                 placeholder:text-[#98A1B3] border-b border-b-[#98A1B3]
-                 active:outline-none focus-visible:outline-none"
+                                className="max-w-[250px] w-full h-[44px] px-4 pt-[17.5px] pb-[10.5px] bg-[#222834] rounded-[4px_4px_0px_0px] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] border-b border-b-[#98A1B3] active:outline-none focus-visible:outline-none"
                                 value={selectedCategory}
                                 onChange={(e) => {
                                     setSelectedCategory(e.target.value);
@@ -196,15 +195,46 @@ const AuditTrails = () => {
                             >
                                 <option value="">All Categories</option>
                                 {categories.map((cat, idx) => (
-                                    <option key={idx} value={cat} className='capitalize'>{cat}</option>
+                                    <option key={idx} value={cat} className="capitalize">{cat}</option>
                                 ))}
                             </select>
+                            <button
+                                onClick={() => setShowDropdown(prev => !prev)}
+                                className="font-medium text-sm min-w-[160px] text-[#EFBF04] px-4 py-[9.5px] border border-[#EFBF04] rounded-full hover:bg-[#EFBF04] hover:text-[#252C38] transition-all"
+                            >
+                                Download Report
+                            </button>
+                            {showDropdown && (
+                                <div className="absolute mt-2 w-full bg-[#222834] border border-[#EFBF04] rounded-lg shadow-lg overflow-hidden z-50">
+                                    <button
+                                        onClick={() => {
+                                            handleDownloadExcel();
+                                            setShowDropdown(false);
+                                        }}
+                                        className="w-full text-left px-4 py-2 text-[#F4F7FF] hover:bg-[#EFBF04] hover:text-[#252C38]"
+                                    >
+                                        Excel
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            handleDownloadPDF();
+                                            setShowDropdown(false);
+                                        }}
+                                        className="w-full text-left px-4 py-2 text-[#F4F7FF] hover:bg-[#EFBF04] hover:text-[#252C38]"
+                                    >
+                                        PDF
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="w-full flex justify-between items-center gap-4 flex-wrap lg:flex-nowrap">
+                        <div className="flex flex-wrap md:flex-nowrap items-end gap-4 w-full">
+
 
                             <select
-                                className="w-full h-[44px] px-4 pt-[17.5px] pb-[10.5px]
-                 bg-[#222834] rounded-[4px_4px_0px_0px] text-[#F4F7FF] text-base
-                 placeholder:text-[#98A1B3] border-b border-b-[#98A1B3]
-                 active:outline-none focus-visible:outline-none"
+                                className="max-w-[250px] w-full h-[44px] px-4 pt-[17.5px] pb-[10.5px] bg-[#222834] rounded-[4px_4px_0px_0px] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] border-b border-b-[#98A1B3] active:outline-none focus-visible:outline-none"
                                 value={selectedUserId}
                                 onChange={(e) => {
                                     setSelectedUserId(e.target.value);
@@ -224,9 +254,7 @@ const AuditTrails = () => {
                                     setStartDate(e.target.value);
                                     setCurrentPage(1);
                                 }}
-                                className="h-[44px] px-3 bg-[#222834] text-[#F4F7FF]
-                 border-b border-b-[#98A1B3] rounded-[4px_4px_0_0]
-                 active:outline-none focus-visible:outline-none"
+                                className="h-[44px] px-3 bg-[#222834] text-[#F4F7FF] border-b border-b-[#98A1B3] rounded-[4px_4px_0_0] active:outline-none focus-visible:outline-none"
                             />
                             <span className="text-[#98A1B3]">to</span>
                             <input
@@ -236,9 +264,7 @@ const AuditTrails = () => {
                                     setEndDate(e.target.value);
                                     setCurrentPage(1);
                                 }}
-                                className="h-[44px] px-3 bg-[#222834] text-[#F4F7FF]
-                 border-b border-b-[#98A1B3] rounded-[4px_4px_0_0]
-                 active:outline-none focus-visible:outline-none"
+                                className="h-[44px] px-3 bg-[#222834] text-[#F4F7FF] border-b border-b-[#98A1B3] rounded-[4px_4px_0_0] active:outline-none focus-visible:outline-none"
                             />
 
                             <button
@@ -247,32 +273,9 @@ const AuditTrails = () => {
                                     setEndDate('');
                                     setCurrentPage(1);
                                 }}
-                                className="text-sm text-[#EFBF04] px-3 py-2 border border-[#EFBF04]
-                 rounded-full hover:bg-[#EFBF04] hover:text-[#252C38]
-                 transition-all"
+                                className="text-sm text-[#EFBF04] px-3 py-2 border border-[#EFBF04] rounded-full hover:bg-[#EFBF04] hover:text-[#252C38] transition-all"
                             >
                                 Clear Dates
-                            </button>
-                        </div>
-
-                        <div className="flex flex-wrap gap-2 justify-start md:justify-end">
-                            <button
-                                onClick={handleDownloadExcel}
-                                className="font-medium text-sm min-w-[142px] text-[#EFBF04] px-4 py-[9.5px]
-                 border border-[#EFBF04] rounded-full hover:bg-[#EFBF04]
-                 hover:text-[#252C38] transition-all"
-                                disabled={loading}
-                            >
-                                Download Excel
-                            </button>
-                            <button
-                                onClick={handleDownloadPDF}
-                                className="font-medium text-sm min-w-[142px] text-[#EFBF04] px-4 py-[9.5px]
-                 border border-[#EFBF04] rounded-full hover:bg-[#EFBF04]
-                 hover:text-[#252C38] transition-all"
-                                disabled={loading}
-                            >
-                                Download PDF
                             </button>
                         </div>
                     </div>
@@ -358,8 +361,8 @@ const AuditTrails = () => {
                         </div>
                     )}
                 </div>
-            </div>
-        </MainLayout>
+            </div >
+        </MainLayout >
     );
 };
 

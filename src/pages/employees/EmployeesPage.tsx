@@ -638,15 +638,23 @@ const EmployeesPage = () => {
                                 />
                             </div>
                             <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Briefing date</label>
+                                <style>
+                                    {`
+                                        input[type="date"]::-webkit-calendar-picker-indicator {
+                                            filter: invert(1);
+                                        }
+                                    `}
+                                </style>
+                                <label className="text-xs leading-[21px] text-[#98A1B3]">Briefing date</label>
                                 <input
-                                    type={"date"}
+                                    type="date"
                                     className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
-                                    placeholder='Briefing date'
+                                    placeholder="Briefing date"
                                     onChange={(e) => setAddData(prev => ({ ...prev, briefing_date: e.target.value }))}
                                     required
                                 />
                             </div>
+
                             <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
                                 <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Date joined</label>
                                 <input
