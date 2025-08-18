@@ -1,4 +1,5 @@
 import { Switch } from "@material-tailwind/react";
+import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -10,10 +11,8 @@ import auditTrialsService from "../../../services/auditTrailsService";
 import employeeDocumentService from "../../../services/employeeDocumentService";
 import { RootState } from "../../../store";
 import { EmployeeDocument } from "../../../types/employeeDocument";
+
 const EmployeeDocumentPage = () => {
-    const [sidebar, setSidebar] = useState(false);
-    const [data1, setData1] = useState(true);
-    const [data2, setData2] = useState(false);
     const [addEmploy, setAddEmploy] = useState(false);
     const [editEmploy, setEditEmploy] = useState(false);
     const [editData, setEditData] = useState<EmployeeDocument | null>();
@@ -25,6 +24,7 @@ const EmployeeDocumentPage = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 5;
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+    const [isSorting, setIsSorting] = useState(false);
     const user = useSelector((state: RootState) => state.user.user);
     const goToNextPage = () => {
         if (currentPage < totalPages) {
@@ -39,19 +39,18 @@ const EmployeeDocumentPage = () => {
     };
 
     const handleSortByStatus = () => {
-        const sortedData = [...datas].sort((a, b) => {
-            if (sortOrder === 'asc') {
-                return a.status.localeCompare(b.status);
-            } else {
-                return b.status.localeCompare(a.status);
-            }
-        });
+        const sorted = [...datas].sort((a, b) =>
+            sortOrder === 'asc' ? a.status.localeCompare(b.status) : b.status.localeCompare(a.status)
+        );
+        setDatas(sorted);
+        setSortOrder(prev => (prev === 'asc' ? 'desc' : 'asc'));
 
-        setDatas(sortedData);
-        setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+        setIsSorting(true);
+        setTimeout(() => setIsSorting(false), 250);
     };
 
     const fetchEmployeeDocuments = async () => {
+        setLoading(true);
         try {
             const token = localStorage.getItem('token');
 
@@ -67,6 +66,8 @@ const EmployeeDocumentPage = () => {
             }
         } catch (error: any) {
             console.error(error.message)
+        } finally {
+            setLoading(false);
         }
     }
     const [switchStates, setSwitchStates] = useState<Record<string, boolean>>(
@@ -264,75 +265,87 @@ const EmployeeDocumentPage = () => {
                                             <th className="font-semibold text-[#98A1B3] text-center">Actions</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
-                                        {paginatedData.length > 0 ? (
-                                            paginatedData.map((employeeDocument, index) => (
-                                                <tr key={employeeDocument.id}>
-                                                    <td className="text-[#F4F7FF] pt-6 pb-3">
-                                                        {(currentPage - 1) * itemsPerPage + index + 1}
-                                                    </td>
-                                                    <td className="text-[#F4F7FF] pt-6 pb-3">
-                                                        {employeeDocument.name}
-                                                    </td>
-                                                    <td className="text-[#F4F7FF] pt-6 pb-3">
-                                                        {hasPermission('edit_employee_document') ? (
-                                                            <div className="flex items-center gap-4 w-40">
-                                                                <Switch
-                                                                    id={`custom-switch-component-${employeeDocument.id}`}
-                                                                    ripple={false}
-                                                                    checked={switchStates[employeeDocument.id]}
-                                                                    onChange={(e) => handleToggle(employeeDocument.id)}
-                                                                    className="h-full w-full checked:bg-[#446FC7]"
-                                                                    containerProps={{
-                                                                        className: "w-11 h-6",
-                                                                    }}
-                                                                    circleProps={{
-                                                                        className: "before:hidden left-0.5 border-none",
-                                                                    }} onResize={undefined} onResizeCapture={undefined} onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} crossOrigin={undefined} />
+                                    {loading ? (
+                                        <tbody>
+                                            <tr>
+                                                <td colSpan={4} className="py-10">
+                                                    <div className="w-full flex justify-center">
+                                                        <Loader primary />
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    ) : (
+                                        <tbody>
+                                            {paginatedData.length > 0 ? (
+                                                paginatedData.map((employeeDocument, index) => (
+                                                    <tr key={employeeDocument.id}>
+                                                        <td className="text-[#F4F7FF] pt-6 pb-3">
+                                                            {(currentPage - 1) * itemsPerPage + index + 1}
+                                                        </td>
+                                                        <td className="text-[#F4F7FF] pt-6 pb-3">
+                                                            {employeeDocument.name}
+                                                        </td>
+                                                        <td className="text-[#F4F7FF] pt-6 pb-3">
+                                                            {hasPermission('edit_employee_document') ? (
+                                                                <div className="flex items-center gap-4 w-40">
+                                                                    <Switch
+                                                                        id={`custom-switch-component-${employeeDocument.id}`}
+                                                                        ripple={false}
+                                                                        checked={switchStates[employeeDocument.id]}
+                                                                        onChange={(e) => handleToggle(employeeDocument.id)}
+                                                                        className="h-full w-full checked:bg-[#446FC7]"
+                                                                        containerProps={{
+                                                                            className: "w-11 h-6",
+                                                                        }}
+                                                                        circleProps={{
+                                                                            className: "before:hidden left-0.5 border-none",
+                                                                        }} onResize={undefined} onResizeCapture={undefined} onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} crossOrigin={undefined} />
+                                                                    <p className={`font-medium text-sm capitalize ${switchStates[employeeDocument.id] ? 'text-[#19CE74]' : 'text-[#FF7E6A]'}`}>
+                                                                        {switchStates[employeeDocument.id] ? 'active' : 'inactive'}
+                                                                    </p>
+                                                                </div>
+                                                            ) : (
                                                                 <p className={`font-medium text-sm capitalize ${switchStates[employeeDocument.id] ? 'text-[#19CE74]' : 'text-[#FF7E6A]'}`}>
                                                                     {switchStates[employeeDocument.id] ? 'active' : 'inactive'}
                                                                 </p>
-                                                            </div>
-                                                        ) : (
-                                                            <p className={`font-medium text-sm capitalize ${switchStates[employeeDocument.id] ? 'text-[#19CE74]' : 'text-[#FF7E6A]'}`}>
-                                                                {switchStates[employeeDocument.id] ? 'active' : 'inactive'}
-                                                            </p>
-                                                        )}
-                                                    </td>
-                                                    <td className="pt-6 pb-3">
-                                                        {hasPermission('edit_employee_document') && (
-                                                            <div className="flex gap-6 items-center justify-center">
-                                                                <svg
-                                                                    onClick={() => {
-                                                                        setEditEmploy(true);
-                                                                        setEditData(employeeDocument);
-                                                                    }}
-                                                                    className="cursor-pointer"
-                                                                    xmlns="http://www.w3.org/2000/svg"
-                                                                    fill="none"
-                                                                    version="1.1"
-                                                                    width="28"
-                                                                    height="28"
-                                                                    viewBox="0 0 28 28"
-                                                                >
-                                                                    <path
-                                                                        d="M3.5,20.1249V24.5H7.875L20.7783,11.5967L16.4033,7.2217L3.5,20.1249ZM24.1617,8.2133C24.6166,7.7593,24.6166,7.0223,24.1617,6.5683L21.4317,3.8383C20.9777,3.3834,20.2406,3.3834,19.7867,3.8383L17.6517,5.9733L22.0267,10.3483L24.1617,8.2133Z"
-                                                                        fill="#F4F7FF"
-                                                                    />
-                                                                </svg>
-                                                            </div>
-                                                        )}
+                                                            )}
+                                                        </td>
+                                                        <td className="pt-6 pb-3">
+                                                            {hasPermission('edit_employee_document') && (
+                                                                <div className="flex gap-6 items-center justify-center">
+                                                                    <svg
+                                                                        onClick={() => {
+                                                                            setEditEmploy(true);
+                                                                            setEditData(employeeDocument);
+                                                                        }}
+                                                                        className="cursor-pointer"
+                                                                        xmlns="http://www.w3.org/2000/svg"
+                                                                        fill="none"
+                                                                        version="1.1"
+                                                                        width="28"
+                                                                        height="28"
+                                                                        viewBox="0 0 28 28"
+                                                                    >
+                                                                        <path
+                                                                            d="M3.5,20.1249V24.5H7.875L20.7783,11.5967L16.4033,7.2217L3.5,20.1249ZM24.1617,8.2133C24.6166,7.7593,24.6166,7.0223,24.1617,6.5683L21.4317,3.8383C20.9777,3.3834,20.2406,3.3834,19.7867,3.8383L17.6517,5.9733L22.0267,10.3483L24.1617,8.2133Z"
+                                                                            fill="#F4F7FF"
+                                                                        />
+                                                                    </svg>
+                                                                </div>
+                                                            )}
+                                                        </td>
+                                                    </tr>
+                                                ))
+                                            ) : (
+                                                <tr>
+                                                    <td colSpan={4} className="text-center text-white py-4">
+                                                        No documents found.
                                                     </td>
                                                 </tr>
-                                            ))
-                                        ) : (
-                                            <tr>
-                                                <td colSpan={4} className="text-center text-white py-4">
-                                                    No documents found.
-                                                </td>
-                                            </tr>
-                                        )}
-                                    </tbody>
+                                            )}
+                                        </tbody>
+                                    )}
 
                                 </table>
                             </div>
@@ -361,48 +374,108 @@ const EmployeeDocumentPage = () => {
                     </div>
                 </div>
             </div>
-            {editEmploy && (
-                <div className="fixed w-screen h-screen flex justify-center items-center top-0 left-0 z-50 bg-[rgba(0,0,0,0.5)]">
-                    <form onSubmit={handleEdit} className="flex flex-col gap-6 p-6 bg-[#252C38]">
-                        <h2 className='text-2xl leading-[36px] text-white font-noto'>Edit Employee Document</h2>
-                        <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                            <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Employee Document name</label>
-                            <input
-                                type={"text"}
-                                className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
-                                placeholder='Employee Document name'
-                                onChange={(e) => setName(e.target.value)}
-                                value={name}
-                            />
-                        </div>
-                        <div className="flex gap-4">
-                            <button type="submit" className="font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">{loading ? <Loader /> : 'Save'}</button>
-                            <button onClick={() => { setEditEmploy(false); setLoading(false); setEditData(null) }} className="font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border-[1px] border-[#868686] rounded-full transition-all hover:bg-[#868686] hover:text-[#252C38]">Cancel</button>
-                        </div>
-                    </form>
-                </div>
-            )}
-            {addEmploy && (
-                <div className="fixed w-screen h-screen flex justify-center items-center top-0 left-0 z-50 bg-[rgba(0,0,0,0.5)]">
-                    <form onSubmit={handleSubmit} className="flex flex-col gap-6 p-6 bg-[#252C38]">
-                        <h2 className='text-2xl leading-[36px] text-white font-noto'>Add Employee Document</h2>
-                        <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                            <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Employe Document name</label>
-                            <input
-                                type={"text"}
-                                className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
-                                placeholder='Employee Document name'
-                                onChange={(e) => setName(e.target.value)}
-                                required
-                            />
-                        </div>
-                        <div className="flex gap-4">
-                            <button type="submit" className="font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">{loading ? <Loader /> : 'Submit'}</button>
-                            <button onClick={() => setAddEmploy(false)} className="font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border-[1px] border-[#868686] rounded-full transition-all hover:bg-[#868686] hover:text-[#252C38]">Cancel</button>
-                        </div>
-                    </form>
-                </div>
-            )}
+            <AnimatePresence>
+                {editEmploy && (
+                    <motion.div
+                        key="edit-overlay"
+                        className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => { setEditEmploy(false); setLoading(false); setEditData(null); }}
+                    >
+                        <motion.form
+                            onSubmit={handleEdit}
+                            className="flex flex-col gap-6 p-6 bg-[#252C38] rounded-2xl shadow-xl w-[min(92vw,520px)]"
+                            initial={{ y: 20, scale: 0.98, opacity: 0 }}
+                            animate={{ y: 0, scale: 1, opacity: 1 }}
+                            exit={{ y: 12, scale: 0.98, opacity: 0 }}
+                            transition={{ type: "spring", stiffness: 380, damping: 28 }}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <h2 className='text-2xl leading-[36px] text-white font-noto'>Edit Employee Document</h2>
+
+                            <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
+                                <label className="text-xs leading-[21px] text-[#98A1B3]">Employee Document name</label>
+                                <input
+                                    type="text"
+                                    className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base focus-visible:outline-none"
+                                    placeholder='Employee Document name'
+                                    onChange={(e) => setName(e.target.value)}
+                                    value={name}
+                                />
+                            </div>
+
+                            <div className="flex gap-4 justify-end flex-wrap">
+                                <button
+                                    type="button"
+                                    onClick={() => { setEditEmploy(false); setLoading(false); setEditData(null); }}
+                                    className="font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border border-[#868686] rounded-full hover:bg-[#868686] hover:text-[#252C38] transition"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border border-[#EFBF04] rounded-full hover:bg-[#181D26] hover:text-[#EFBF04] transition"
+                                >
+                                    {loading ? <Loader primary /> : 'Save'}
+                                </button>
+                            </div>
+                        </motion.form>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+            <AnimatePresence>
+                {addEmploy && (
+                    <motion.div
+                        key="add-overlay"
+                        className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => setAddEmploy(false)}
+                    >
+                        <motion.form
+                            onSubmit={handleSubmit}
+                            className="flex flex-col gap-6 p-6 bg-[#252C38] rounded-2xl shadow-xl w-[min(92vw,520px)]"
+                            initial={{ y: 20, scale: 0.98, opacity: 0 }}
+                            animate={{ y: 0, scale: 1, opacity: 1 }}
+                            exit={{ y: 12, scale: 0.98, opacity: 0 }}
+                            transition={{ type: "spring", stiffness: 380, damping: 28 }}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <h2 className='text-2xl leading-[36px] text-white font-noto'>Add Employee Document</h2>
+
+                            <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
+                                <label className="text-xs leading-[21px] text-[#98A1B3]">Employee Document name</label>
+                                <input
+                                    type="text"
+                                    className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base focus-visible:outline-none"
+                                    placeholder='Employee Document name'
+                                    onChange={(e) => setName(e.target.value)}
+                                    required
+                                />
+                            </div>
+
+                            <div className="flex gap-4 justify-end flex-wrap">
+                                <button
+                                    type="button"
+                                    onClick={() => setAddEmploy(false)}
+                                    className="font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border border-[#868686] rounded-full hover:bg-[#868686] hover:text-[#252C38] transition"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border border-[#EFBF04] rounded-full hover:bg-[#181D26] hover:text-[#EFBF04] transition"
+                                >
+                                    {loading ? <Loader primary /> : 'Submit'}
+                                </button>
+                            </div>
+                        </motion.form>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </MainLayout>
     )
 }

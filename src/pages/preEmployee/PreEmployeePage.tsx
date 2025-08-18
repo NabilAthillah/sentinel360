@@ -702,7 +702,7 @@ const PreEmployeePage = () => {
                                 ))}
                             </div>
                             <div className="flex gap-4 flex-wrap">
-                                <button type="submit" className="flex justify-center items-center font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">{loading ? <Loader /> : 'Save'}</button>
+                                <button type="submit" className="flex justify-center items-center font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">{loading ? <Loader primary={true} /> : 'Save'}</button>
                                 <button onClick={() => setAddEmployee(false)} className="font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border-[1px] border-[#868686] rounded-full transition-all hover:bg-[#868686] hover:text-[#252C38]">Cancel</button>
                             </div>
                         </form>
@@ -959,7 +959,7 @@ const PreEmployeePage = () => {
                                 onClick={handleEdit}
                                 className="font-medium text-base bg-[#EFBF04] px-12 py-3 border border-[#EFBF04] rounded-full hover:bg-[#181D26] hover:text-[#EFBF04]"
                             >
-                                {loading ? <Loader /> : 'Save'}
+                                {loading ? <Loader primary={true} /> : 'Save'}
                             </button>
                             <button
                                 onClick={() => setEditEmployee(false)}
@@ -976,7 +976,7 @@ const PreEmployeePage = () => {
             {
                 deleteEmployee && (
                     <div className="fixed w-screen h-screen flex justify-center items-center top-0 left-0 z-50 bg-[rgba(0,0,0,0.5)]">
-                        <DeleteModal setModal={setDeleteEmployee} handleDelete={handleDelete} />
+                        <DeleteModal loading={loading} setModal={setDeleteEmployee} handleDelete={handleDelete} />
                     </div>
                 )
             }

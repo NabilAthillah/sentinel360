@@ -2,16 +2,18 @@ import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import Loader from "../../../components/Loader";
 import Navbar from "../../../components/Navbar";
 import MainLayout from "../../../layouts/MainLayout";
 import attendanceSettingService from "../../../services/attendanceSettingService";
-import { RootState } from "../../../store";
 import auditTrialsService from "../../../services/auditTrailsService";
+import { RootState } from "../../../store";
 
 const SettingsAttendancePage = () => {
     const [sidebar, setSidebar] = useState(false);
     const user = useSelector((state: RootState) => state.user.user);
     const navigate = useNavigate();
+    const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState([
         {
             label: 'Grace period (in minutes)',
@@ -76,7 +78,7 @@ const SettingsAttendancePage = () => {
 
                 const mappedData = [
                     { label: 'Grace period (in minutes)', placeholder: 'Grace period (in minutes)', value: data.grace_period.toString() },
-                    { label: 'Geo fencing (in minutes)', placeholder: 'Geo fencing (in minutes)', value: data.geo_fencing.toString() },
+                    { label: 'Geo fencing (in meters)', placeholder: 'Geo fencing (in meters)', value: data.geo_fencing.toString() },
                     { label: 'Day shift start time', placeholder: '00:00', value: data.day_shift_start_time.slice(0, 5) },
                     { label: 'Day shift end time', placeholder: '00:00', value: data.day_shift_end_time.slice(0, 5) },
                     { label: 'Night shift start time', placeholder: '00:00', value: data.night_shift_start_time.slice(0, 5) },
@@ -104,6 +106,7 @@ const SettingsAttendancePage = () => {
 
     const handleSubmit = async (e: React.SyntheticEvent) => {
         e.preventDefault();
+        setLoading(true);
 
         const dataToSend = {
             grace_period: parseInt(formData[0].value) || 0,
@@ -126,6 +129,7 @@ const SettingsAttendancePage = () => {
             toast.error(error.message);
         } finally {
             fetchSettings();
+            setLoading(false);
         }
     };
 
@@ -176,7 +180,7 @@ const SettingsAttendancePage = () => {
                             ))}
                             {hasPermission('edit_attendance_settings') && (
                                 <div className="flex gap-4 flex-wrap">
-                                    <button type="submit" className="font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">Save</button>
+                                    <button type="submit" className="font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">{loading ? <Loader primary={true} /> : 'Save'}</button>
                                     {/* <button className="font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border-[1px] border-[#868686] rounded-full transition-all hover:bg-[#868686] hover:text-[#252C38]">Cancel</button> */}
                                 </div>
                             )}

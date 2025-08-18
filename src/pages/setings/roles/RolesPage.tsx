@@ -1,3 +1,4 @@
+import { AnimatePresence, motion } from "framer-motion";
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -5,10 +6,10 @@ import { toast } from "react-toastify";
 import Loader from "../../../components/Loader";
 import Navbar from "../../../components/Navbar";
 import MainLayout from "../../../layouts/MainLayout";
+import auditTrialsService from "../../../services/auditTrailsService";
 import permissionService from "../../../services/permissionService";
 import roleService from "../../../services/roleService";
 import { RootState } from "../../../store";
-import auditTrialsService from "../../../services/auditTrailsService";
 
 type Role = {
     id: string;
@@ -79,33 +80,40 @@ const RolesPage = () => {
 
     const handleSubmit = async (e: React.SyntheticEvent) => {
         e.preventDefault();
+        if (selectedPermissions.length === 0) {
+            toast.error('Pilih minimal 1 permission');
+            return;
+        }
         setLoading(true);
-
         try {
             const token = localStorage.getItem('token');
             const response = await roleService.addRole(name, token, selectedPermissions);
-
-            if (response.success) {
-                toast.success('Role added successfully');
-            }
+            if (response.success) toast.success('Role added successfully');
         } catch (error: any) {
             toast.error(error.message);
         } finally {
             setSelectedPermissions([]);
             fetchRoles();
-            setLoading(false)
+            setLoading(false);
             setAddRole(false);
         }
-    }
+    };
 
     const handleEditRole = async (e: React.SyntheticEvent) => {
         e.preventDefault();
+        if (!editedRole || editedRole.permissions.length === 0) {
+            toast.error('Pilih minimal 1 permission');
+            return;
+        }
         setLoading(true);
-
         try {
             const token = localStorage.getItem('token');
-            const response = await roleService.updateRole(editedRole?.id, editedRole?.name, token, editedRole?.permissions);
-
+            const response = await roleService.updateRole(
+                editedRole.id,
+                editedRole.name,
+                token,
+                editedRole.permissions
+            );
             if (response.success) {
                 toast.success('Role edited successfully');
                 fetchRoles();
@@ -113,12 +121,13 @@ const RolesPage = () => {
         } catch (error: any) {
             toast.error(error.message);
         } finally {
-            setLoading(false)
+            setLoading(false);
             setEditRole(false);
         }
-    }
+    };
 
     const fetchRoles = async () => {
+        setLoading(true);
         try {
             const response = await roleService.getAllRoles();
 
@@ -127,6 +136,8 @@ const RolesPage = () => {
             }
         } catch (error: any) {
             toast.error(error.message);
+        } finally {
+            setLoading(false);
         }
     }
 
@@ -182,6 +193,24 @@ const RolesPage = () => {
         setFilteredRoles(filtered);
     }, [searchTerm, roles]);
 
+    useEffect(() => {
+        const anyOpen = addRole || editRole || sidebar;
+        document.body.style.overflow = anyOpen ? 'hidden' : '';
+        return () => { document.body.style.overflow = ''; };
+    }, [addRole, editRole, sidebar]);
+
+    useEffect(() => {
+        const onKey = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                setAddRole(false);
+                setEditRole(false);
+                setSidebar(false);
+            }
+        };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    }, []);
+
     return (
         <MainLayout>
             <div className='flex flex-col gap-4 px-6 pb-20 w-full h-full flex-1'>
@@ -226,23 +255,35 @@ const RolesPage = () => {
                                             <th className="font-semibold text-[#98A1B3] text-center">Actions</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
-                                        {currentItems.map((data, index) => (
+                                    {loading ? (
+                                        <tbody>
                                             <tr>
-                                                <td className="text-[#F4F7FF] pt-6 pb-3">{indexOfFirstItem + index + 1}</td>
-                                                <td className="text-[#F4F7FF] pt-6 pb-3 ">{data.name}</td>
-                                                <td className="pt-6 pb-3">
-                                                    <div className="flex gap-6 items-center justify-center">
-                                                        {/* <svg xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="28" height="28" viewBox="0 0 28 28"><defs><clipPath id="master_svg0_247_14305"><rect x="0" y="0" width="28" height="28" rx="0"/></clipPath></defs><g><g clip-path="url(#master_svg0_247_14305)"><g><path d="M11.46283298828125,19.6719859375L16.76641298828125,19.6719859375C17.495712988281248,19.6719859375,18.09231298828125,19.0752859375,18.09231298828125,18.3460859375L18.09231298828125,11.7165359375L20.20051298828125,11.7165359375C21.38061298828125,11.7165359375,21.97721298828125,10.2845659375,21.14191298828125,9.449245937499999L15.05601298828125,3.3633379375C14.54009298828125,2.8463349375,13.70246298828125,2.8463349375,13.18651298828125,3.3633379375L7.1006129882812505,9.449245937499999C6.26529298828125,10.2845659375,6.84869298828125,11.7165359375,8.02874298828125,11.7165359375L10.136932988281249,11.7165359375L10.136932988281249,18.3460859375C10.136932988281249,19.0752859375,10.73359298828125,19.6719859375,11.46283298828125,19.6719859375ZM6.15921298828125,22.3237859375L22.07011298828125,22.3237859375C22.79931298828125,22.3237859375,23.39601298828125,22.9203859375,23.39601298828125,23.6496859375C23.39601298828125,24.3788859375,22.79931298828125,24.9755859375,22.07011298828125,24.9755859375L6.15921298828125,24.9755859375C5.42996998828125,24.9755859375,4.83331298828125,24.3788859375,4.83331298828125,23.6496859375C4.83331298828125,22.9203859375,5.42996998828125,22.3237859375,6.15921298828125,22.3237859375Z" fill="#F4F7FF" fill-opacity="1"/></g></g></g></svg> */}
-                                                        {hasPermission('edit_role') && (
-                                                            <svg onClick={() => { setEditedRole(data); setEditRole(true) }} className="cursor-pointer" xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="28" height="28" viewBox="0 0 28 28"><defs><clipPath id="master_svg0_247_14308"><rect x="0" y="0" width="28" height="28" rx="0" /></clipPath></defs><g><g clip-path="url(#master_svg0_247_14308)"><g><path d="M3.5,20.124948752212525L3.5,24.499948752212525L7.875,24.499948752212525L20.7783,11.596668752212524L16.4033,7.2216687522125245L3.5,20.124948752212525ZM24.1617,8.213328752212524C24.6166,7.759348752212524,24.6166,7.0223187522125246,24.1617,6.568328752212524L21.4317,3.8383337522125243C20.9777,3.3834207522125244,20.2406,3.3834207522125244,19.7867,3.8383337522125243L17.651699999999998,5.973328752212524L22.0267,10.348338752212523L24.1617,8.213328752212524Z" fill="#F4F7FF" fill-opacity="1" /></g></g></g></svg>
-                                                        )}
-                                                        {/* <svg xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="28" height="28" viewBox="0 0 28 28"><defs><clipPath id="master_svg0_247_14302"><rect x="0" y="0" width="28" height="28" rx="0" /></clipPath></defs><g><g clip-path="url(#master_svg0_247_14302)"><g><path d="M6.9996778125,24.5L20.9997078125,24.5L20.9997078125,8.16667L6.9996778125,8.16667L6.9996778125,24.5ZM22.1663078125,4.66667L18.0830078125,4.66667L16.9163078125,3.5L11.0830078125,3.5L9.9163378125,4.66667L5.8330078125,4.66667L5.8330078125,7L22.1663078125,7L22.1663078125,4.66667Z" fill="#F4F7FF" fill-opacity="1" /></g></g></g></svg> */}
+                                                <td colSpan={4} className="py-10">
+                                                    <div className="w-full flex justify-center">
+                                                        <Loader primary />
                                                     </div>
                                                 </td>
                                             </tr>
-                                        ))}
-                                    </tbody>
+                                        </tbody>
+                                    ) : (
+                                        <tbody>
+                                            {currentItems.map((data, index) => (
+                                                <tr>
+                                                    <td className="text-[#F4F7FF] pt-6 pb-3">{indexOfFirstItem + index + 1}</td>
+                                                    <td className="text-[#F4F7FF] pt-6 pb-3 ">{data.name}</td>
+                                                    <td className="pt-6 pb-3">
+                                                        <div className="flex gap-6 items-center justify-center">
+                                                            {/* <svg xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="28" height="28" viewBox="0 0 28 28"><defs><clipPath id="master_svg0_247_14305"><rect x="0" y="0" width="28" height="28" rx="0"/></clipPath></defs><g><g clip-path="url(#master_svg0_247_14305)"><g><path d="M11.46283298828125,19.6719859375L16.76641298828125,19.6719859375C17.495712988281248,19.6719859375,18.09231298828125,19.0752859375,18.09231298828125,18.3460859375L18.09231298828125,11.7165359375L20.20051298828125,11.7165359375C21.38061298828125,11.7165359375,21.97721298828125,10.2845659375,21.14191298828125,9.449245937499999L15.05601298828125,3.3633379375C14.54009298828125,2.8463349375,13.70246298828125,2.8463349375,13.18651298828125,3.3633379375L7.1006129882812505,9.449245937499999C6.26529298828125,10.2845659375,6.84869298828125,11.7165359375,8.02874298828125,11.7165359375L10.136932988281249,11.7165359375L10.136932988281249,18.3460859375C10.136932988281249,19.0752859375,10.73359298828125,19.6719859375,11.46283298828125,19.6719859375ZM6.15921298828125,22.3237859375L22.07011298828125,22.3237859375C22.79931298828125,22.3237859375,23.39601298828125,22.9203859375,23.39601298828125,23.6496859375C23.39601298828125,24.3788859375,22.79931298828125,24.9755859375,22.07011298828125,24.9755859375L6.15921298828125,24.9755859375C5.42996998828125,24.9755859375,4.83331298828125,24.3788859375,4.83331298828125,23.6496859375C4.83331298828125,22.9203859375,5.42996998828125,22.3237859375,6.15921298828125,22.3237859375Z" fill="#F4F7FF" fill-opacity="1"/></g></g></g></svg> */}
+                                                            {hasPermission('edit_role') && (
+                                                                <svg onClick={() => { setEditedRole(data); setEditRole(true) }} className="cursor-pointer" xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="28" height="28" viewBox="0 0 28 28"><defs><clipPath id="master_svg0_247_14308"><rect x="0" y="0" width="28" height="28" rx="0" /></clipPath></defs><g><g clip-path="url(#master_svg0_247_14308)"><g><path d="M3.5,20.124948752212525L3.5,24.499948752212525L7.875,24.499948752212525L20.7783,11.596668752212524L16.4033,7.2216687522125245L3.5,20.124948752212525ZM24.1617,8.213328752212524C24.6166,7.759348752212524,24.6166,7.0223187522125246,24.1617,6.568328752212524L21.4317,3.8383337522125243C20.9777,3.3834207522125244,20.2406,3.3834207522125244,19.7867,3.8383337522125243L17.651699999999998,5.973328752212524L22.0267,10.348338752212523L24.1617,8.213328752212524Z" fill="#F4F7FF" fill-opacity="1" /></g></g></g></svg>
+                                                            )}
+                                                            {/* <svg xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="28" height="28" viewBox="0 0 28 28"><defs><clipPath id="master_svg0_247_14302"><rect x="0" y="0" width="28" height="28" rx="0" /></clipPath></defs><g><g clip-path="url(#master_svg0_247_14302)"><g><path d="M6.9996778125,24.5L20.9997078125,24.5L20.9997078125,8.16667L6.9996778125,8.16667L6.9996778125,24.5ZM22.1663078125,4.66667L18.0830078125,4.66667L16.9163078125,3.5L11.0830078125,3.5L9.9163378125,4.66667L5.8330078125,4.66667L5.8330078125,7L22.1663078125,7L22.1663078125,4.66667Z" fill="#F4F7FF" fill-opacity="1" /></g></g></g></svg> */}
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    )}
                                 </table>
                             </div>
                             <div className="grid grid-cols-3 w-[162px] absolute bottom-0 right-0">
@@ -266,104 +307,168 @@ const RolesPage = () => {
                     </div>
                 </div>
             </div>
-            {
-                addRole && (
-                    <div className="fixed w-screen h-screen flex justify-end items-start top-0 left-0 z-50 bg-[rgba(0,0,0,0.5)]">
-                        <form onSubmit={handleSubmit} className="flex flex-col gap-6 p-6 bg-[#252C38] max-w-[568px] w-full max-h-screen overflow-auto h-full">
-                            <h2 className='text-2xl leading-[36px] text-white font-noto'>Add Role</h2>
-                            <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Role name</label>
-                                <input
-                                    type={"text"}
-                                    className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
-                                    placeholder='Role name'
-                                    onChange={(e) => setName(e.target.value)}
-                                    required
-                                />
-                            </div>
-                            {Object.entries(permissions).map(([category, permissionList]) => (
-                                <div key={category} className="flex flex-col gap-2 mb-4">
-                                    <label className="text-xs leading-[21px] text-[#98A1B3]">{category}</label>
-                                    <div className="flex flex-wrap gap-x-3 gap-y-[14px]">
-                                        {permissionList.map((permission) => {
-                                            const isSelected = selectedPermissions.includes(permission.id);
-                                            return (
-                                                <button
-                                                    key={permission.id}
-                                                    type="button"
-                                                    onClick={() => togglePermission(permission.id)}
-                                                    className={`font-medium text-sm leading-[20px] w-fit px-4 py-2 rounded-full transition-all
-              ${isSelected
-                                                            ? 'bg-[#446FC7] text-white'
-                                                            : 'bg-[#303847] text-[#F4F7FF] hover:bg-[#446FC7] hover:text-white'}`}
-                                                >
-                                                    {permission.name}
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
+            <AnimatePresence>
+                {addRole && (
+                    <motion.div
+                        key="add-overlay"
+                        className="fixed inset-0 z-50 bg-black/50"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => setAddRole(false)}
+                    >
+                        <motion.aside
+                            role="dialog"
+                            aria-modal="true"
+                            className="absolute right-0 top-0 h-full w-full max-w-[568px] bg-[#252C38] shadow-xl overflow-auto"
+                            initial={{ x: '100%' }}
+                            animate={{ x: 0 }}
+                            exit={{ x: '100%' }}
+                            transition={{ type: 'spring', stiffness: 320, damping: 32 }}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <form onSubmit={handleSubmit} className="flex flex-col gap-6 p-6">
+                                <div className="flex items-center justify-between">
+                                    <h2 className="text-2xl leading-[36px] text-white font-noto">Add Role</h2>
+                                    <button type="button" onClick={() => setAddRole(false)} className="text-[#98A1B3] hover:text-white">
+                                        ✕
+                                    </button>
                                 </div>
-                            ))}
-                            <div className="flex gap-4">
-                                <button type="submit" className="flex justify-center items-center font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">{loading ? <Loader /> : 'Save'}</button>
-                                <button onClick={() => setAddRole(false)} className="font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border-[1px] border-[#868686] rounded-full transition-all hover:bg-[#868686] hover:text-[#252C38]">Cancel</button>
-                            </div>
-                        </form>
-                    </div>
-                )
-            }
-            {
-                editRole && editedRole && (
-                    <div className="fixed w-screen h-screen flex justify-end items-start top-0 left-0 z-50 bg-[rgba(0,0,0,0.5)]">
-                        <div className="flex flex-col gap-6 p-6 bg-[#252C38] max-w-[568px] w-full max-h-screen overflow-auto h-full">
-                            <h2 className='text-2xl leading-[36px] text-white font-noto'>Edit Role</h2>
-                            <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Role name</label>
-                                <input
-                                    type={"text"}
-                                    className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
-                                    placeholder='Role name'
-                                    value={editedRole.name}
-                                    onChange={(e) =>
-                                        setEditedRole({
-                                            ...editedRole,
-                                            name: e.target.value,
-                                        })
-                                    }
-                                    required
-                                />
-                            </div>
-                            {Object.entries(permissions).map(([category, permissionList]) => (
-                                <div key={category}>
-                                    <label className="text-xs text-gray-400">{category}</label>
-                                    <div className="flex flex-wrap gap-2 mt-2">
-                                        {permissionList.map((permission) => {
-                                            const isSelected = editedRole.permissions.some((p) => p.id === permission.id);
 
-                                            return (
-                                                <button
-                                                    key={permission.id}
-                                                    onClick={() => toggleEditPermission(permission.id)}
-                                                    className={`px-4 py-2 rounded-full text-sm ${isSelected
-                                                        ? 'bg-blue-600 text-white'
-                                                        : 'bg-gray-700 text-white hover:bg-blue-600 hover:text-white'
-                                                        }`}
-                                                >
-                                                    {permission.name}
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
+                                <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b border-b-[#98A1B3]">
+                                    <label className="text-xs leading-[21px] text-[#98A1B3]">Role name</label>
+                                    <input
+                                        type="text"
+                                        className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] focus-visible:outline-none"
+                                        placeholder="Role name"
+                                        onChange={(e) => setName(e.target.value)}
+                                        required
+                                    />
                                 </div>
-                            ))}
-                            <div className="flex gap-4">
-                                <button onClick={handleEditRole} className="flex items-center justify-center font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">{loading ? <Loader /> : 'Save'}</button>
-                                <button onClick={() => setEditRole(false)} className="font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border-[1px] border-[#868686] rounded-full transition-all hover:bg-[#868686] hover:text-[#252C38]">Cancel</button>
+
+                                {Object.entries(permissions).map(([category, permissionList]) => (
+                                    <div key={category} className="flex flex-col gap-2 mb-4">
+                                        <label className="text-xs leading-[21px] text-[#98A1B3]">{category}</label>
+                                        <div className="flex flex-wrap gap-x-3 gap-y-[14px]">
+                                            {permissionList.map((permission) => {
+                                                const isSelected = selectedPermissions.includes(permission.id);
+                                                return (
+                                                    <button
+                                                        key={permission.id}
+                                                        type="button"
+                                                        onClick={() => togglePermission(permission.id)}
+                                                        className={`font-medium text-sm leading-[20px] w-fit px-4 py-2 rounded-full transition-all ${isSelected ? 'bg-[#446FC7] text-white' : 'bg-[#303847] text-[#F4F7FF] hover:bg-[#446FC7] hover:text-white'
+                                                            }`}
+                                                    >
+                                                        {permission.name}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                ))}
+
+                                <div className="mt-auto flex gap-4 justify-end flex-wrap">
+                                    <button
+                                        type="button"
+                                        onClick={() => setAddRole(false)}
+                                        className="font-medium text-base text-[#868686] bg-[#252C38] px-12 py-3 border border-[#868686] rounded-full hover:bg-[#868686] hover:text-[#252C38] transition"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="flex justify-center items-center font-medium text-base text-[#181D26] bg-[#EFBF04] px-12 py-3 border border-[#EFBF04] rounded-full hover:bg-[#181D26] hover:text-[#EFBF04] transition"
+                                    >
+                                        {loading ? <Loader primary /> : 'Save'}
+                                    </button>
+                                </div>
+                            </form>
+                        </motion.aside>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+            <AnimatePresence>
+                {editRole && editedRole && (
+                    <motion.div
+                        key="edit-overlay"
+                        className="fixed inset-0 z-50 bg-black/50"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => setEditRole(false)}
+                    >
+                        <motion.aside
+                            role="dialog"
+                            aria-modal="true"
+                            className="absolute right-0 top-0 h-full w-full max-w-[568px] bg-[#252C38] shadow-xl overflow-auto"
+                            initial={{ x: '100%' }}
+                            animate={{ x: 0 }}
+                            exit={{ x: '100%' }}
+                            transition={{ type: 'spring', stiffness: 320, damping: 32 }}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div className="flex flex-col gap-6 p-6">
+                                <div className="flex items-center justify-between">
+                                    <h2 className="text-2xl leading-[36px] text-white font-noto">Edit Role</h2>
+                                    <button type="button" onClick={() => setEditRole(false)} className="text-[#98A1B3] hover:text-white">
+                                        ✕
+                                    </button>
+                                </div>
+
+                                <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b border-b-[#98A1B3]">
+                                    <label className="text-xs leading-[21px] text-[#98A1B3]">Role name</label>
+                                    <input
+                                        type="text"
+                                        className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] focus-visible:outline-none"
+                                        placeholder="Role name"
+                                        value={editedRole.name}
+                                        onChange={(e) => setEditedRole({ ...editedRole, name: e.target.value })}
+                                        required
+                                    />
+                                </div>
+
+                                {Object.entries(permissions).map(([category, permissionList]) => (
+                                    <div key={category} className="flex flex-col gap-2">
+                                        <label className="text-xs leading-[21px] text-[#98A1B3]">{category}</label>
+                                        <div className="flex flex-wrap gap-x-3 gap-y-[14px]">
+                                            {permissionList.map((permission) => {
+                                                const isSelected = editedRole.permissions.some((p) => p.id === permission.id);
+                                                return (
+                                                    <button
+                                                        key={permission.id}
+                                                        onClick={() => toggleEditPermission(permission.id)}
+                                                        className={`px-4 py-2 rounded-full text-sm transition ${isSelected ? 'bg-blue-600 text-white' : 'bg-gray-700 text-white hover:bg-blue-600'
+                                                            }`}
+                                                    >
+                                                        {permission.name}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                ))}
+
+                                <div className="mt-auto flex gap-4 justify-end flex-wrap">
+                                    <button
+                                        type="button"
+                                        onClick={() => setEditRole(false)}
+                                        className="font-medium text-base text-[#868686] bg-[#252C38] px-12 py-3 border border-[#868686] rounded-full hover:bg-[#868686] hover:text-[#252C38] transition"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={handleEditRole}
+                                        className="flex items-center justify-center font-medium text-base text-[#181D26] bg-[#EFBF04] px-12 py-3 border border-[#EFBF04] rounded-full hover:bg-[#181D26] hover:text-[#EFBF04] transition"
+                                    >
+                                        {loading ? <Loader primary /> : 'Save'}
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                )
-            }
+                        </motion.aside>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </MainLayout >
     )
 }

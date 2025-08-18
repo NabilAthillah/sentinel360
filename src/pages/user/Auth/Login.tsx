@@ -166,7 +166,7 @@ const Login: React.FC = () => {
                             disabled={loading}
                             className="w-full bg-[#F4C430] text-black font-bold py-3 px-4 rounded-2xl mt-4 flex justify-center disabled:opacity-70"
                         >
-                            {loading ? <Loader /> : "Login"}
+                            {loading ? <Loader primary={true} /> : "Login"}
                         </button>
                     </form>
                 </div>

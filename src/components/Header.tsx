@@ -1,9 +1,11 @@
+import 'flag-icons/css/flag-icons.min.css'; // <-- add
+import { AnimatePresence, motion } from "framer-motion";
 import { AlignLeft } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { User } from "../types/user";
+import { Link } from "react-router-dom";
 import languageService from "../services/languageService";
+import { User } from "../types/user";
 
 const Header = ({ openSidebar, user, handleLogout }: { openSidebar: any, user: User | null, handleLogout: any }) => {
     const { t, i18n } = useTranslation();
@@ -11,7 +13,10 @@ const Header = ({ openSidebar, user, handleLogout }: { openSidebar: any, user: U
     const [langDropdownOpen, setLangDropdownOpen] = useState(false);
     const [language, setLanguage] = useState(localStorage.getItem("lang") || user?.language || "en");
 
-    const dropdownRef = useRef<HTMLDivElement>(null);
+    const rootRef = useRef<HTMLDivElement>(null);
+    const firstItemRef = useRef<HTMLAnchorElement>(null);
+    const langButtonRef = useRef<HTMLButtonElement>(null);
+
     const baseURL = new URL(process.env.REACT_APP_API_URL || "");
     baseURL.pathname = baseURL.pathname.replace(/\/api$/, "");
 
@@ -31,35 +36,131 @@ const Header = ({ openSidebar, user, handleLogout }: { openSidebar: any, user: U
 
         try {
             if (user?.id) {
-                const token = localStorage.getItem("token"); 
+                const token = localStorage.getItem("token");
                 await languageService.editLanguage(token, user.id, lang);
-                console.log("Language updated to:", lang);
             }
         } catch (err) {
             console.error("Failed to update language", err);
         }
     };
 
-
     useEffect(() => {
-        const handleClickOutside = (e: MouseEvent) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        const onDown = (e: MouseEvent) => {
+            if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
                 setDropdownOpen(false);
                 setLangDropdownOpen(false);
             }
         };
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
+        document.addEventListener("mousedown", onDown);
+        return () => document.removeEventListener("mousedown", onDown);
     }, []);
+
+    useEffect(() => {
+        const onKey = (e: KeyboardEvent) => {
+            if (e.key === "Escape") {
+                setDropdownOpen(false);
+                setLangDropdownOpen(false);
+            }
+        };
+        window.addEventListener("keydown", onKey);
+        return () => window.removeEventListener("keydown", onKey);
+    }, []);
+
+    useEffect(() => {
+        if (dropdownOpen) {
+            const t = setTimeout(() => firstItemRef.current?.focus(), 0);
+            return () => clearTimeout(t);
+        }
+    }, [dropdownOpen]);
+
+    const menuVariants = {
+        hidden: { opacity: 0, y: -6, scale: 0.98 },
+        show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.16, ease: "easeOut" } },
+        exit: { opacity: 0, y: -6, scale: 0.98, transition: { duration: 0.12, ease: "easeIn" } }
+    };
+
+    const listVariants = {
+        hidden: { opacity: 0, y: -6 },
+        show: { opacity: 1, y: 0, transition: { duration: 0.14, ease: "easeOut" } },
+        exit: { opacity: 0, y: -6, transition: { duration: 0.1, ease: "easeIn" } }
+    };
+
+    // Map bahasa -> kode bendera (flag-icons)
+    const langToFlag = (lng: string) => (lng === "ms" ? "my" : "gb"); // ms -> Malaysia, en -> UK
 
     return (
         <nav className="w-full bg-transparent p-6 flex items-center justify-between z-40 md:justify-end relative sm:gap-4">
             <AlignLeft onClick={() => openSidebar(true)} color="#ffffff" className="cursor-pointer md:hidden" />
 
-            <div ref={dropdownRef} className="flex items-center justify-end gap-1 relative sm:gap-4">
-                <div className="flex items-center gap-1 cursor-pointer" onClick={() => setDropdownOpen(!dropdownOpen)}>
+            <div ref={rootRef} className="flex items-center justify-end gap-2 relative sm:gap-4">
+                <div className="relative">
+                    <button
+                        ref={langButtonRef}
+                        type="button"
+                        aria-haspopup="listbox"
+                        aria-expanded={langDropdownOpen}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setLangDropdownOpen((v) => !v);
+                            setDropdownOpen(false);
+                        }}
+                        className="h-8 w-8 rounded-full flex items-center justify-center ring-1 ring-white/10 hover:ring-white/20 bg-[#252C38]/80 backdrop-blur-sm"
+                        title="Change language"
+                    >
+                        <span className={`fi fis fi-${langToFlag(language)}`} aria-hidden="true" />
+                        <span className="sr-only">Change language</span>
+                    </button>
+
+                    <AnimatePresence>
+                        {langDropdownOpen && (
+                            <motion.ul
+                                role="listbox"
+                                aria-label="Select language"
+                                variants={listVariants}
+                                initial="hidden"
+                                animate="show"
+                                exit="exit"
+                                className="absolute left-0 mt-2 min-w-[44px] bg-[#252C38]/95 rounded-md shadow-lg overflow-hidden z-50 p-1 ring-1 ring-white/10"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <li
+                                    role="option"
+                                    aria-selected={language === "en"}
+                                    className="p-1 rounded hover:bg-white/10 cursor-pointer flex items-center justify-center"
+                                    onClick={() => handleLanguageChange("en")}
+                                    title="English"
+                                >
+                                    <span className="fi fis fi-gb" />
+                                </li>
+                                <li
+                                    role="option"
+                                    aria-selected={language === "ms"}
+                                    className="p-1 rounded hover:bg-white/10 cursor-pointer flex items-center justify-center"
+                                    onClick={() => handleLanguageChange("ms")}
+                                    title="Malay"
+                                >
+                                    <span className="fi fis fi-my" />
+                                </li>
+                            </motion.ul>
+                        )}
+                    </AnimatePresence>
+                </div>
+                {/* === END language flag === */}
+
+                {/* User button */}
+                <button
+                    type="button"
+                    aria-haspopup="menu"
+                    aria-expanded={dropdownOpen}
+                    aria-controls="user-menu"
+                    onClick={() => {
+                        setDropdownOpen((v) => !v);
+                        setLangDropdownOpen(false); // close language popover if open
+                    }}
+                    className="flex items-center gap-2 cursor-pointer outline-none rounded-md px-1"
+                >
                     <div className="relative flex w-fit">
-                        <div className="w-[14px] h-[14px] bg-[#22CAAD] border-2 border-[#07080B] rounded-full absolute bottom-[-2px] right-[-2px]"></div>
+                        <span className="w-[14px] h-[14px] bg-[#22CAAD] border-2 border-[#07080B] rounded-full absolute bottom-[-2px] right-[-2px]" />
                         {user?.profile_image ? (
                             <img
                                 src={`${baseURL.toString() !== "" ? baseURL.toString() : "http://localhost:8000/"}storage/${user?.profile_image}`}
@@ -67,61 +168,73 @@ const Header = ({ openSidebar, user, handleLogout }: { openSidebar: any, user: U
                                 className="h-8 w-8 rounded-full object-cover"
                             />
                         ) : (
-                            <img src="/images/profile.png" alt="" className="profile" />
+                            <img src="/images/profile.png" alt="" className="h-8 w-8 rounded-full object-cover" />
                         )}
                     </div>
-                    <div className="flex flex-col gap-[2px]">
+                    <div className="hidden sm:flex flex-col gap-[2px] text-left">
                         <p className="text-sm text-white">{user?.name}</p>
                         <p className="text-xs leading-[21px] text-[#A3A9B6]">{user?.role.name}</p>
                     </div>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24">
-                        <path d="M7.8 9.75h8.38a.75.75 0 0 1 .49 1.28l-4.19 4.19a.75.75 0 0 1-1.06 0L7.28 11.03A.75.75 0 0 1 7.8 9.75Z" fill="#A3A9B6" />
-                    </svg>
-                </div>
 
-                {dropdownOpen && (
-                    <div className="min-w-[200px] px-6 py-4 bg-[#252C38] rounded-lg flex flex-col gap-4 absolute bottom-[-200px] right-[8px] transition-all">
-                        <Link to="/dashboard/settings/profile" className="text-[#F4F7FF] hover:underline">
-                            {t("profile")}
-                        </Link>
-                        <Link to="/dashboard/settings/attendance" className="text-[#F4F7FF] hover:underline">
-                            {t("Master Settings")}
-                        </Link>
-                        <div className="flex flex-col gap-2 relative">
-                            <label className="text-[#F4F7FF] text-sm">{t("language")}</label>
-                            <div
-                                className="bg-[#1f2937] text-white px-2 py-1 rounded cursor-pointer flex justify-between items-center"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setLangDropdownOpen(!langDropdownOpen);
-                                }}
+                    <motion.svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="20"
+                        height="20"
+                        initial={false}
+                        animate={{ rotate: dropdownOpen ? 180 : 0 }}
+                        transition={{ duration: 0.18 }}
+                    >
+                        <path d="M7.8 7.25h8.38a.75.75 0 0 1 .49 1.28l-4.19 4.19a.75.75 0 0 1-1.06 0L7.28 8.53A.75.75 0 0 1 7.8 7.25Z" fill="#A3A9B6" />
+                    </motion.svg>
+                </button>
+
+                {/* User dropdown menu */}
+                <AnimatePresence>
+                    {dropdownOpen && (
+                        <motion.div
+                            id="user-menu"
+                            role="menu"
+                            aria-label="User Menu"
+                            variants={menuVariants}
+                            initial="hidden"
+                            animate="show"
+                            exit="exit"
+                            className="min-w-[240px] px-4 py-3 bg-[#252C38]/95 backdrop-blur-sm rounded-xl flex flex-col gap-3 absolute right-0 top-[calc(100%+10px)] z-50 shadow-xl ring-1 ring-white/10"
+                        >
+                            <Link
+                                ref={firstItemRef}
+                                to="/dashboard/settings/profile"
+                                role="menuitem"
+                                className="text-[#F4F7FF] rounded-md px-2 py-2 hover:bg-white/5 transition-colors"
+                                onClick={() => setDropdownOpen(false)}
                             >
-                                {language === "en" ? "English" : "Malay"}
-                                <span>▼</span>
-                            </div>
-                            {langDropdownOpen && (
-                                <ul className="absolute top-full left-0 bg-[#1f2937] mt-1 rounded shadow-lg w-full">
-                                    <li
-                                        onClick={() => handleLanguageChange("en")}
-                                        className="px-3 py-2 hover:bg-gray-700 cursor-pointer"
-                                    >
-                                        English
-                                    </li>
-                                    <li
-                                        onClick={() => handleLanguageChange("ms")}
-                                        className="px-3 py-2 hover:bg-gray-700 cursor-pointer"
-                                    >
-                                        Malay
-                                    </li>
-                                </ul>
-                            )}
-                        </div>
+                                {t("profile")}
+                            </Link>
 
-                        <p onClick={handleLogout} className="text-[#F4F7FF] hover:underline cursor-pointer">
-                            {t("logout")}
-                        </p>
-                    </div>
-                )}
+                            <Link
+                                to="/dashboard/settings/attendance"
+                                role="menuitem"
+                                className="text-[#F4F7FF] rounded-md px-2 py-2 hover:bg-white/5 transition-colors"
+                                onClick={() => setDropdownOpen(false)}
+                            >
+                                {t("Master Settings")}
+                            </Link>
+
+                            {/* Language section REMOVED from this dropdown */}
+
+                            <button
+                                role="menuitem"
+                                onClick={() => {
+                                    setDropdownOpen(false);
+                                    handleLogout();
+                                }}
+                                className="text-[#F4F7FF] rounded-md px-2 py-2 hover:bg-white/5 transition-colors text-left"
+                            >
+                                {t("logout")}
+                            </button>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
         </nav>
     );

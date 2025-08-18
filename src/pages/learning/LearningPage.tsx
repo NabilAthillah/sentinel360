@@ -12,7 +12,8 @@ const LearningPage = () => {
     const [editData, setEditData] = useState(false);
     const [deleteModal, setDeleteModal] = useState(false);
     const [addData, setAddData] = useState(false);
-    const [data1, setData1] = useState(true)
+    const [data1, setData1] = useState(true);
+    const [loading, setLoading] = useState(false);
 
     const handleDelete = () => {
         setDeleteModal(false);
@@ -177,7 +178,7 @@ const LearningPage = () => {
             }
             {deleteModal && (
                 <div className="fixed w-screen h-screen flex justify-center items-center top-0 left-0 z-50 bg-[rgba(0,0,0,0.5)]">
-                    <DeleteModal setModal={setDeleteModal} handleDelete={handleDelete} />
+                    <DeleteModal loading={loading} setModal={setDeleteModal} handleDelete={handleDelete} />
                 </div>
             )}
         </MainLayout>

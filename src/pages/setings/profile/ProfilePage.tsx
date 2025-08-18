@@ -4,9 +4,9 @@ import { toast } from "react-toastify";
 import Loader from "../../../components/Loader";
 import { setUser } from "../../../features/user/userSlice";
 import MainLayout from "../../../layouts/MainLayout";
+import auditTrialsService from "../../../services/auditTrailsService";
 import authService from "../../../services/authService";
 import { RootState } from "../../../store";
-import auditTrialsService from "../../../services/auditTrailsService";
 
 
 const ProfilePage = () => {
@@ -31,6 +31,7 @@ const ProfilePage = () => {
 
     const handleSubmit = async (e: React.SyntheticEvent) => {
         e.preventDefault();
+        setLoading(true);
 
         try {
             const token = localStorage.getItem('token');
@@ -194,7 +195,7 @@ const ProfilePage = () => {
                                 <img
                                     src={URL.createObjectURL(imageFile)}
                                     alt="Preview"
-                                    className="h-14 w-auto rounded"
+                                    className="h-20 w-fit rounded"
                                 />
                             ) : user ? (
                                 <img src={`${baseURL.toString() != '' ? baseURL.toString() : 'http://localhost:8000/'}storage/${user.profile_image}`} alt="Image" className='h-14 w-fit' />
@@ -224,7 +225,7 @@ const ProfilePage = () => {
                         </div>
 
                         <div className="flex gap-4 flex-wrap">
-                            <button type="submit" className="font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">{loading ? <Loader /> : 'Save'}</button>
+                            <button type="submit" className="font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">{loading ? <Loader primary={true} /> : 'Save'}</button>
                             <button className="font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border-[1px] border-[#868686] rounded-full transition-all hover:bg-[#868686] hover:text-[#252C38]">Cancel</button>
                         </div>
                     </form>

@@ -28,7 +28,7 @@ const Navbar = () => {
                     Employee Document
                 </Link>
             )}
-            {hasPermission('list_incident_type') && (
+            {hasPermission('list_incident_types') && (
                 <Link to="/dashboard/settings/incident" className={`font-medium text-sm text-[#F4F7FF] px-6 ${pathname === '/dashboard/settings/incident' ? 'pt-[14px] pb-3 border-b-2 border-b-[#F3C511]' : 'py-[14px] border-b-0'}`}>
                     Incident
                 </Link>

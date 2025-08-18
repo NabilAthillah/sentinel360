@@ -112,7 +112,7 @@ const LoginPage: React.FC = () => {
   }, [navigate])
 
   return (
-    <div className='max-w-screen w-full h-screen bg-[#181D26] flex flex-col justify-center items-center gap-32 px-5 sm:px-0'>
+    <div className='max-w-screen w-full h-screen bg-[#181D26] flex flex-col justify-center items-center gap-20 lg:gap-32 px-5 sm:px-0'>
       <ToastContainer
         position="top-right"
         autoClose={5000}
@@ -157,7 +157,7 @@ const LoginPage: React.FC = () => {
           </button>
         </div>
         <button type="submit" onClick={handleSubmit} className='w-full flex justify-center items-center py-4 text-center text-[#181D26] font-medium bg-[#EFBF04] border-[1px] border-[#EFBF04] rounded-full transition-all hover:text-[#EFBF04] hover:bg-[#181D26]'>
-          {loading ? <Loader /> : 'Login'}
+          {loading ? <Loader primary={true}/> : 'Login'}
         </button>
       </form>
     </div>
