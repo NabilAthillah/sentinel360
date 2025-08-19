@@ -11,6 +11,7 @@ import auditTrialsService from "../../../services/auditTrailsService";
 import IncidentTypesService from "../../../services/incidentTypeService";
 import { RootState } from "../../../store";
 import { IncidentType } from "../../../types/incidentType";
+import { useTranslation } from 'react-i18next';
 
 const IncidentPageMaster = () => {
     const [sidebar, setSidebar] = useState(false);
@@ -28,6 +29,7 @@ const IncidentPageMaster = () => {
     const itemsPerPage = 5;
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
     const user = useSelector((state: RootState) => state.user.user);
+    const { t, i18n } = useTranslation();
     const filteredData = datas.filter(doc =>
         doc.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -224,7 +226,7 @@ const IncidentPageMaster = () => {
     return (
         <MainLayout>
             <div className='flex flex-col gap-4 px-6 pb-20 w-full h-full flex-1'>
-                <h2 className='text-2xl leading-9 text-white font-noto'>Settings</h2>
+                <h2 className='text-2xl leading-9 text-white font-noto'>{t('Settings')}</h2>
                 <div className="flex flex-col gap-8 w-full h-full flex-1">
                     <Navbar />
                     <div className="flex flex-col gap-10 bg-[#252C38] p-6 rounded-lg w-full h-full flex-1">
@@ -252,7 +254,7 @@ const IncidentPageMaster = () => {
                             </div>
                             {hasPermission('add_incident_type') && (
                                 <div className="w-[200px]">
-                                    <button onClick={() => setAddIncident(true)} className="font-medium text-base min-w-[200px] text-[#181d26] px-[46.5px] py-3 border-[1px] border-[#EFBF04] bg-[#EFBF04] rounded-full hover:bg-[#181d26] hover:text-[#EFBF04] transition-all">Add Incident</button>
+                                    <button onClick={() => setAddIncident(true)} className="font-medium text-base min-w-[200px] text-[#181d26] px-[46.5px] py-3 border-[1px] border-[#EFBF04] bg-[#EFBF04] rounded-full hover:bg-[#181d26] hover:text-[#EFBF04] transition-all">{t('Add Incident')}</button>
                                 </div>
                             )}
                         </div>
@@ -261,10 +263,10 @@ const IncidentPageMaster = () => {
                                 <table className="min-w-[700px] w-full">
                                     <thead>
                                         <tr>
-                                            <th className="font-semibold text-[#98A1B3] text-start">S/NO</th>
-                                            <th className="font-semibold text-[#98A1B3] text-start">Incident</th>
-                                            <th className="font-semibold text-[#98A1B3] text-start flex items-center gap-2 cursor-pointer" onClick={handleSortByStatus}>Status <svg xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="14.689416885375977" height="20.504201889038086" viewBox="0 0 14.689416885375977 20.504201889038086"><g><path d="M12.0068,16.103L12.0068,9.09128C12.0068,8.44962,11.4818,7.92462,10.8401,7.92462C10.1985,7.92462,9.67346,8.44962,9.67346,9.09128L9.67346,16.103L7.58512,16.103C7.06012,16.103,6.80346,16.733,7.17679,17.0946L10.4318,20.338C10.6651,20.5596,11.0268,20.5596,11.2601,20.338L14.5151,17.0946C14.8885,16.733,14.6201,16.103,14.1068,16.103L12.0068,16.103ZM3.43179,0.166284L0.17679,3.42128C-0.196543,3.78295,0.0601238,4.41295,0.585124,4.41295L2.67346,4.41295L2.67346,11.4246C2.67346,12.0663,3.19846,12.5913,3.84012,12.5913C4.48179,12.5913,5.00679,12.0663,5.00679,11.4246L5.00679,4.41295L7.09512,4.41295C7.62012,4.41295,7.87679,3.78295,7.50346,3.42128L4.24846,0.166284C4.02138,-0.0554282,3.65887,-0.0554282,3.43179,0.166284Z" fill="#98A1B3" fill-opacity="1" /></g></svg></th>
-                                            <th className="font-semibold text-[#98A1B3] text-center">Actions</th>
+                                            <th className="font-semibold text-[#98A1B3] text-start">{t('S/NO')}</th>
+                                            <th className="font-semibold text-[#98A1B3] text-start">{t('Incindent')}</th>
+                                            <th className="font-semibold text-[#98A1B3] text-start flex items-center gap-2 cursor-pointer" onClick={handleSortByStatus}>{t('Status')} <svg xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="14.689416885375977" height="20.504201889038086" viewBox="0 0 14.689416885375977 20.504201889038086"><g><path d="M12.0068,16.103L12.0068,9.09128C12.0068,8.44962,11.4818,7.92462,10.8401,7.92462C10.1985,7.92462,9.67346,8.44962,9.67346,9.09128L9.67346,16.103L7.58512,16.103C7.06012,16.103,6.80346,16.733,7.17679,17.0946L10.4318,20.338C10.6651,20.5596,11.0268,20.5596,11.2601,20.338L14.5151,17.0946C14.8885,16.733,14.6201,16.103,14.1068,16.103L12.0068,16.103ZM3.43179,0.166284L0.17679,3.42128C-0.196543,3.78295,0.0601238,4.41295,0.585124,4.41295L2.67346,4.41295L2.67346,11.4246C2.67346,12.0663,3.19846,12.5913,3.84012,12.5913C4.48179,12.5913,5.00679,12.0663,5.00679,11.4246L5.00679,4.41295L7.09512,4.41295C7.62012,4.41295,7.87679,3.78295,7.50346,3.42128L4.24846,0.166284C4.02138,-0.0554282,3.65887,-0.0554282,3.43179,0.166284Z" fill="#98A1B3" fill-opacity="1" /></g></svg></th>
+                                            <th className="font-semibold text-[#98A1B3] text-center">{t('Action')}</th>
                                         </tr>
                                     </thead>
                                     {loading ? (
@@ -351,13 +353,13 @@ const IncidentPageMaster = () => {
                                 </table>
                             </div>
                             <div className="grid grid-cols-3 w-[162px] absolute bottom-0 right-0">
-                                <div className="grid grid-cols-3 w-[162px] absolute bottom-0 right-0">
+                                <div className="grid grid-cols-3 w-[250px] absolute bottom-0 right-0">
                                     <button
                                         onClick={goToPrevPage}
                                         disabled={currentPage === 1}
                                         className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[8px_0px_0px_8px] bg-[#575F6F] disabled:opacity-50"
                                     >
-                                        Prev
+                                        {t('Prev')}
                                     </button>
                                     <button
                                         className="font-medium text-xs leading-[21px] text-[#181D26] py-1 px-3 bg-[#D4AB0B]"
@@ -369,7 +371,7 @@ const IncidentPageMaster = () => {
                                         disabled={currentPage === totalPages}
                                         className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[0px_8px_8px_0px] bg-[#575F6F] disabled:opacity-50"
                                     >
-                                        Next
+                                        {t('Next')}
                                     </button>
                                 </div>
                             </div>

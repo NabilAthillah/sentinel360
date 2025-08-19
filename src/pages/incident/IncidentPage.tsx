@@ -2,12 +2,14 @@ import { useState } from "react";
 import { toast } from "react-toastify";
 import { SwitchCustomStyleToggleable } from "../../components/SwitchCustomStyleToggleable";
 import MainLayout from "../../layouts/MainLayout";
+import { useTranslation } from "react-i18next";
 
 const IncidentTypePage = () => {
     const [sidebar, setSidebar] = useState(false);
     const [view, setView] = useState(false);
     const [edit, setEdit] = useState(false);
     const [deleteModal, setDeleteModal] = useState(false);
+    const { t, i18n } = useTranslation();
 
     const data = [
         'Reported to management?',
@@ -20,7 +22,7 @@ const IncidentTypePage = () => {
     return (
         <MainLayout>
             <div className='flex flex-col gap-6 px-6 pb-20 w-full h-full flex-1'>
-                <h2 className='text-2xl leading-9 text-white font-noto'>Incidents</h2>
+                <h2 className='text-2xl leading-9 text-white font-noto'>{t('Incidents')}</h2>
                 <div className="flex flex-col gap-10 bg-[#252C38] p-6 rounded-lg w-full h-full flex-1">
                     <div className="w-full flex flex-col gap-4 flex-wrap">
                         <div className="flex items-end gap-4 w-fit flex-wrap md:flex-nowrap">
@@ -38,7 +40,7 @@ const IncidentTypePage = () => {
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="32" height="32" viewBox="0 0 32 32"><defs><clipPath id="master_svg0_247_12873"><rect x="0" y="0" width="32" height="32" rx="0" /></clipPath></defs><g clip-path="url(#master_svg0_247_12873)"><g><path d="M20.666698807907103,18.666700953674315L19.613298807907107,18.666700953674315L19.239998807907106,18.306700953674316C20.591798807907104,16.738700953674318,21.334798807907106,14.736900953674317,21.333298807907106,12.666670953674316C21.333298807907106,7.880200953674317,17.453098807907104,4.000000953674316,12.666668807907104,4.000000953674316C7.880198807907105,4.000000953674316,4.000000715257104,7.880200953674317,4.000000715257104,12.666670953674316C4.000000715257104,17.453100953674316,7.880198807907105,21.333300953674318,12.666668807907104,21.333300953674318C14.813298807907104,21.333300953674318,16.786698807907104,20.546700953674318,18.306698807907104,19.24000095367432L18.666698807907103,19.61330095367432L18.666698807907103,20.666700953674315L25.333298807907106,27.320000953674317L27.319998807907105,25.333300953674318L20.666698807907103,18.666700953674315ZM12.666668807907104,18.666700953674315C9.346668807907104,18.666700953674315,6.666668807907104,15.986700953674317,6.666668807907104,12.666670953674316C6.666668807907104,9.346670953674316,9.346668807907104,6.666670953674316,12.666668807907104,6.666670953674316C15.986698807907105,6.666670953674316,18.666698807907103,9.346670953674316,18.666698807907103,12.666670953674316C18.666698807907103,15.986700953674317,15.986698807907105,18.666700953674315,12.666668807907104,18.666700953674315Z" fill="#98A1B3" fill-opacity="1" /></g></g></svg>
                                 </button>
                             </div>
-                            <button className="font-medium text-sm min-w-[142px] text-[#EFBF04] px-4 py-[9.5px] border-[1px] border-[#EFBF04] rounded-full hover:bg-[#EFBF04] hover:text-[#252C38] transition-all">Download Report</button>
+                            <button className="font-medium text-sm min-w-[142px] text-[#EFBF04] px-4 py-[9.5px] border-[1px] border-[#EFBF04] rounded-full hover:bg-[#EFBF04] hover:text-[#252C38] transition-all">{t('Download Report')}</button>
                         </div>
                         <div className="flex items-end gap-4 w-full flex-wrap">
                             <input
@@ -63,13 +65,13 @@ const IncidentTypePage = () => {
                             <table className="min-w-[800px] w-full">
                                 <thead>
                                     <tr>
-                                        <th className="font-semibold text-[#98A1B3] text-start">S/NO</th>
-                                        <th className="font-semibold text-[#98A1B3] text-start">Date</th>
-                                        <th className="font-semibold text-[#98A1B3] text-start">Time</th>
-                                        <th className="font-semibold text-[#98A1B3] text-start">Site name</th>
-                                        <th className="font-semibold text-[#98A1B3] text-start">What happended</th>
-                                        <th className="font-semibold text-[#98A1B3] text-start">Reported by</th>
-                                        <th className="font-semibold text-[#98A1B3] text-center">Actions</th>
+                                        <th className="font-semibold text-[#98A1B3] text-start">{t('S/NO')}</th>
+                                        <th className="font-semibold text-[#98A1B3] text-start">{t('Date')}</th>
+                                        <th className="font-semibold text-[#98A1B3] text-start">{t('Time')}</th>
+                                        <th className="font-semibold text-[#98A1B3] text-start">{t('Site Name')}</th>
+                                        <th className="font-semibold text-[#98A1B3] text-start">{t('What Happened')}</th>
+                                        <th className="font-semibold text-[#98A1B3] text-start">{t('Reported By')}</th>
+                                        <th className="font-semibold text-[#98A1B3] text-center">{t('Action')}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -93,10 +95,10 @@ const IncidentTypePage = () => {
                                 </tbody>
                             </table>
                         </div>
-                        <div className="grid grid-cols-3 w-[162px] absolute bottom-0 right-0">
-                            <button className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[8px_0px_0px_8px] bg-[#575F6F]">Prev</button>
+                        <div className="grid grid-cols-3 w-fit absolute bottom-0 right-0">
+                            <button className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[8px_0px_0px_8px] bg-[#575F6F]">{t('Prev')}</button>
                             <button className="font-medium text-xs leading-[21px] text-[#181D26] py-1 px-3 bg-[#D4AB0B]">1</button>
-                            <button className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[0px_8px_8px_0px] bg-[#575F6F]">Next</button>
+                            <button className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[0px_8px_8px_0px] bg-[#575F6F]">{t('Next')}</button>
                         </div>
                     </div>
                 </div>
@@ -105,9 +107,9 @@ const IncidentTypePage = () => {
                 edit && (
                     <div className="fixed w-screen h-screen flex justify-end items-start top-0 left-0 z-50 bg-[rgba(0,0,0,0.5)]">
                         <div className="flex flex-col gap-6 p-6 bg-[#252C38] max-w-[568px] w-full max-h-screen overflow-auto h-full">
-                            <h2 className='text-2xl leading-[36px] text-white font-noto'>Edit incident details</h2>
+                            <h2 className='text-2xl leading-[36px] text-white font-noto'>{t('Edit Incident Details')}</h2>
                             <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Site name</label>
+                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">{t('Site Name')}</label>
                                 <input
                                     type={"text"}
                                     className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
@@ -116,7 +118,7 @@ const IncidentTypePage = () => {
                                 />
                             </div>
                             <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">What happened</label>
+                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">{t('What happened')}</label>
                                 <input
                                     type={"text"}
                                     className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
@@ -125,7 +127,7 @@ const IncidentTypePage = () => {
                                 />
                             </div>
                             <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Why it happened</label>
+                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">{t('Why it happened')}</label>
                                 <input
                                     type={"text"}
                                     className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
@@ -134,7 +136,7 @@ const IncidentTypePage = () => {
                                 />
                             </div>
                             <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">How it happened</label>
+                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">{t('How it happened')}</label>
                                 <input
                                     type={"text"}
                                     className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
@@ -143,7 +145,7 @@ const IncidentTypePage = () => {
                                 />
                             </div>
                             <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">When it happened</label>
+                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">{t('When it happened')}</label>
                                 <input
                                     type={"text"}
                                     className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
@@ -152,7 +154,7 @@ const IncidentTypePage = () => {
                                 />
                             </div>
                             <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Details of incident</label>
+                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">{t('Details of incident')}t</label>
                                 <input
                                     type={"text"}
                                     className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
@@ -161,7 +163,7 @@ const IncidentTypePage = () => {
                                 />
                             </div>
                             <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Persons injuried</label>
+                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">{t('Person injuried')}</label>
                                 <input
                                     type={"text"}
                                     className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
@@ -170,7 +172,7 @@ const IncidentTypePage = () => {
                                 />
                             </div>
                             <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Persons involved</label>
+                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">{t('Person involved')}</label>
                                 <input
                                     type={"text"}
                                     className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
@@ -179,7 +181,7 @@ const IncidentTypePage = () => {
                                 />
                             </div>
                             <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Ops executive in-charge</label>
+                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">{t('Ops executive in-charge')}</label>
                                 <input
                                     type={"text"}
                                     className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
@@ -188,7 +190,7 @@ const IncidentTypePage = () => {
                                 />
                             </div>
                             <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#D65656]">
-                                <label htmlFor="" className="text-xs leading-[21px] text-[#D65656]">Report by</label>
+                                <label htmlFor="" className="text-xs leading-[21px] text-[#D65656]">{t('Report by')}y</label>
                                 <input
                                     type={"text"}
                                     className="w-full bg-[#222834] text-[#D65656] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
@@ -205,7 +207,7 @@ const IncidentTypePage = () => {
                                 ))}
                             </div>
                             <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Remarks</label>
+                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">{t('Remarks')}</label>
                                 <input
                                     type={"text"}
                                     className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
@@ -215,7 +217,7 @@ const IncidentTypePage = () => {
                             </div>
                             <div className="flex gap-4 flex-wrap">
                                 <button onClick={() => { setEdit(false); toast.success('Employee edited successfully') }} className="font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">Save</button>
-                                <button onClick={() => setEdit(false)} className="font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border-[1px] border-[#868686] rounded-full transition-all hover:bg-[#868686] hover:text-[#252C38]">Cancel</button>
+                                <button onClick={() => setEdit(false)} className="font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border-[1px] border-[#868686] rounded-full transition-all hover:bg-[#868686] hover:text-[#252C38]">{t('Cancel')}</button>
                             </div>
                         </div>
                     </div>
@@ -224,9 +226,9 @@ const IncidentTypePage = () => {
             {view && (
                 <div className="fixed w-screen h-screen flex justify-center items-center top-0 left-0 z-50 bg-[rgba(0,0,0,0.5)]">
                     <div className="flex flex-col gap-6 pr-[150px] pl-6 py-6 bg-[#252C38]">
-                        <h2 className='text-2xl leading-[36px] text-white font-noto'>View image</h2>
+                        <h2 className='text-2xl leading-[36px] text-white font-noto'>{t('View Image')}</h2>
                         <div className="w-[394px] h-[289px] rounded-lg bg-[#868686]"></div>
-                        <button className="w-fit font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border-[1px] border-[#868686] rounded-full transition-all hover:bg-[#868686] hover:text-[#252C38]" onClick={() => setView(false)}>Close</button>
+                        <button className="w-fit font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border-[1px] border-[#868686] rounded-full transition-all hover:bg-[#868686] hover:text-[#252C38]" onClick={() => setView(false)}>{t('Vlose')}</button>
                     </div>
                 </div>
             )}

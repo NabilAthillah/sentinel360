@@ -11,7 +11,7 @@ import auditTrialsService from '../../services/auditTrailsService';
 import siteService from '../../services/siteService';
 import { RootState } from '../../store';
 import { Site } from '../../types/site';
-
+import { useTranslation } from 'react-i18next';
 /* ================= Helpers: Animations & Scroll Lock ================= */
 function useBodyScrollLock(locked: boolean) {
     useEffect(() => {
@@ -156,7 +156,7 @@ const SitePage = () => {
     const [chartName, setChartName] = useState<string | null>(null);
     const [chartFile, setChartFile] = useState<File | null>(null);
     const user = useSelector((state: RootState) => state.user.user);
-
+    const { t, i18n } = useTranslation();
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [MCSTNumber, setMCSTNumber] = useState('');
@@ -384,14 +384,14 @@ const SitePage = () => {
     return (
         <MainLayout>
             <div className="flex flex-col gap-6 px-6 pb-20 w-full h-full flex-1">
-                <h2 className="text-2xl leading-9 text-white font-noto">Sites</h2>
+                <h2 className="text-2xl leading-9 text-white font-noto">{t('Sites')}</h2>
                 <nav className="flex flex-wrap">
                     <Link
                         to="/dashboard/sites"
                         className={`font-medium text-sm text-[#F4F7FF] px-6 ${pathname === '/dashboard/sites' ? 'pt-[14px] pb-3 border-b-2 border-b-[#F3C511]' : 'py-[14px] border-b-0'
                             }`}
                     >
-                        Sites
+                        {t('Sites')}
                     </Link>
                     {hasPermission('site_map') && (
                         <Link
@@ -399,7 +399,7 @@ const SitePage = () => {
                             className={`font-medium text-sm text-[#F4F7FF] px-6 ${pathname === '/dashboard/sites/map' ? 'pt-[14px] pb-3 border-b-2 border-b-[#F3C511]' : 'py-[14px] border-b-0'
                                 }`}
                         >
-                            Map
+                            {t('Map')}
                         </Link>
                     )}
                     {hasPermission('site_allocation') && (
@@ -408,7 +408,7 @@ const SitePage = () => {
                             className={`font-medium text-sm text-[#F4F7FF] px-6 ${pathname === '/dashboard/sites/allocation' ? 'pt-[14px] pb-3 border-b-2 border-b-[#F3C511]' : 'py-[14px] border-b-0'
                                 }`}
                         >
-                            Allocation List
+                            {t('Allocation List')}
                         </Link>
                     )}
                 </nav>
@@ -448,7 +448,7 @@ const SitePage = () => {
                                     onClick={() => setAddData(true)}
                                     className="font-medium text-base text-[#181d26] px-[46.5px] py-[13.5px] border-[1px] border-[#EFBF04] bg-[#EFBF04] rounded-full hover:bg-[#181d26] hover:text-[#EFBF04] transition-all"
                                 >
-                                    Add site
+                                    {t("Add site")}
                                 </button>
                             </div>
                         )}
@@ -459,13 +459,13 @@ const SitePage = () => {
                             <table className="min-w-[700px] w-full">
                                 <thead>
                                     <tr>
-                                        <th className="font-semibold text-[#98A1B3] text-start">S/NO</th>
-                                        <th className="font-semibold text-[#98A1B3] text-start">Image</th>
-                                        <th className="font-semibold text-[#98A1B3] text-start">Site</th>
-                                        <th className="font-semibold text-[#98A1B3] text-start">Address</th>
-                                        <th className="font-semibold text-[#98A1B3] text-start">Latitude</th>
-                                        <th className="font-semibold text-[#98A1B3] text-start">Longitude</th>
-                                        <th className="font-semibold text-[#98A1B3] text-center">Actions</th>
+                                        <th className="font-semibold text-[#98A1B3] text-start">{t('S/NO')}</th>
+                                        <th className="font-semibold text-[#98A1B3] text-start">{t('Images')}</th>
+                                        <th className="font-semibold text-[#98A1B3] text-start">{t('Sites')}</th>
+                                        <th className="font-semibold text-[#98A1B3] text-start">{t('Adress')}</th>
+                                        <th className="font-semibold text-[#98A1B3] text-start">{t('Latittude')}</th>
+                                        <th className="font-semibold text-[#98A1B3] text-start">{t('Longitude')}</th>
+                                        <th className="font-semibold text-[#98A1B3] text-center">{t('Action')}</th>
                                     </tr>
                                 </thead>
 
@@ -589,13 +589,13 @@ const SitePage = () => {
                             </table>
                         </div>
 
-                        <div className="grid grid-cols-3 w-[162px] absolute bottom-0 right-0">
+                        <div className="grid grid-cols-3 w-fit absolute bottom-0 right-0">
                             <button className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[8px_0px_0px_8px] bg-[#575F6F]">
-                                Prev
+                                {t("Prev")}
                             </button>
                             <button className="font-medium text-xs leading-[21px] text-[#181D26] py-1 px-3 bg-[#D4AB0B]">1</button>
                             <button className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[0px_8px_8px_0px] bg-[#575F6F]">
-                                Next
+                                {t("Next")}
                             </button>
                         </div>
                     </div>

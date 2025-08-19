@@ -12,7 +12,7 @@ import siteService from '../../services/siteService';
 import { RootState } from '../../store';
 import { Route } from '../../types/route';
 import { Site } from '../../types/site';
-
+import { useTranslation } from 'react-i18next';
 const RoutePage = () => {
     const params = useParams();
     const location = useLocation();
@@ -24,7 +24,7 @@ const RoutePage = () => {
     const [deleteModal, setDeleteModal] = useState(false);
     const [loading, setLoading] = useState(false);
     const [site, setSite] = useState<Site>();
-
+    const { t, i18n } = useTranslation();
     const [name, setName] = useState('');
 
     const user = useSelector((state: RootState) => state.user.user)
@@ -214,7 +214,7 @@ const RoutePage = () => {
     return (
         <MainLayout>
             <div className='flex flex-col gap-6 px-6 pb-20 w-full h-full flex-1'>
-                <h2 className='text-2xl leading-9 text-white font-noto'>Routes</h2>
+                <h2 className='text-2xl leading-9 text-white font-noto'>{t('Routes')}</h2>
                 <div className="flex flex-col gap-10 bg-[#252C38] p-6 rounded-lg w-full h-full flex-1">
                     <div className="w-full flex justify-between items-center gap-4 flex-wrap md:flex-nowrap">
                         <div className="flex items-end gap-4 w-full">
@@ -235,7 +235,7 @@ const RoutePage = () => {
                         </div>
                         {hasPermission('add_site_route') && (
                             <div className="min-w-[180px] max-w-[200px] w-fit">
-                                <button onClick={() => setAddData(true)} className="font-medium text-base text-[#181d26] px-[46.5px] py-[13.5px] border-[1px] border-[#EFBF04] bg-[#EFBF04] rounded-full hover:bg-[#181d26] hover:text-[#EFBF04] transition-all">Add route</button>
+                                <button onClick={() => setAddData(true)} className="font-medium text-base text-[#181d26] px-[46.5px] py-[13.5px] border-[1px] border-[#EFBF04] bg-[#EFBF04] rounded-full hover:bg-[#181d26] hover:text-[#EFBF04] transition-all">{t('Add Route')}</button>
                             </div>
                         )}
                     </div>
@@ -244,10 +244,10 @@ const RoutePage = () => {
                             <table className="min-w-[700px] w-full">
                                 <thead>
                                     <tr>
-                                        <th className="font-semibold text-[#98A1B3] text-start">S/NO</th>
-                                        <th className="font-semibold text-[#98A1B3] text-start">Route name</th>
-                                        <th className="font-semibold text-[#98A1B3] text-start">Status</th>
-                                        <th className="font-semibold text-[#98A1B3] text-center">Actions</th>
+                                        <th className="font-semibold text-[#98A1B3] text-start">{t('S/No')}</th>
+                                        <th className="font-semibold text-[#98A1B3] text-start">{t('Route Name')}</th>
+                                        <th className="font-semibold text-[#98A1B3] text-start">{t('Status')}</th>
+                                        <th className="font-semibold text-[#98A1B3] text-center">{t('Action')}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -296,10 +296,10 @@ const RoutePage = () => {
                                 </tbody>
                             </table>
                         </div>
-                        <div className="grid grid-cols-3 w-[162px] absolute bottom-0 right-0">
-                            <button className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[8px_0px_0px_8px] bg-[#575F6F]">Prev</button>
+                        <div className="grid grid-cols-3 w-fit absolute bottom-0 right-0">
+                            <button className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[8px_0px_0px_8px] bg-[#575F6F]">{t('prev')}</button>
                             <button className="font-medium text-xs leading-[21px] text-[#181D26] py-1 px-3 bg-[#D4AB0B]">1</button>
-                            <button className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[0px_8px_8px_0px] bg-[#575F6F]">Next</button>
+                            <button className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[0px_8px_8px_0px] bg-[#575F6F]">{t('Next')}</button>
                         </div>
                     </div>
                 </div>
@@ -308,9 +308,9 @@ const RoutePage = () => {
                 addData && (
                     <form onSubmit={handleSubmit} className="fixed w-screen h-screen flex justify-end items-start top-0 left-0 z-50 bg-[rgba(0,0,0,0.5)]">
                         <div className="flex flex-col gap-6 p-6 bg-[#252C38] max-w-[568px] w-full max-h-screen overflow-auto h-full">
-                            <h2 className='text-2xl leading-[36px] text-white font-noto'>Add route</h2>
+                            <h2 className='text-2xl leading-[36px] text-white font-noto'>{t('Add ROute')}</h2>
                             <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Route name</label>
+                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">{t('Route Name')}</label>
                                 <input
                                     type={"text"}
                                     className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
@@ -321,7 +321,7 @@ const RoutePage = () => {
                             </div>
                             <div className="flex gap-4 flex-wrap">
                                 <button type='submit' className="flex justify-center items-center font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">{loading ? <Loader primary={true} /> : 'Save'}</button>
-                                <p onClick={() => setAddData(false)} className="cursor-pointer font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border-[1px] border-[#868686] rounded-full transition-all hover:bg-[#868686] hover:text-[#252C38]">Cancel</p>
+                                <p onClick={() => setAddData(false)} className="cursor-pointer font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border-[1px] border-[#868686] rounded-full transition-all hover:bg-[#868686] hover:text-[#252C38]">{t('Cancel')}</p>
                             </div>
                         </div>
                     </form>
@@ -331,9 +331,9 @@ const RoutePage = () => {
                 editRoute && editData && (
                     <form onSubmit={handleEdit} className="fixed w-screen h-screen flex justify-end items-start top-0 left-0 z-50 bg-[rgba(0,0,0,0.5)]">
                         <div className="flex flex-col gap-6 p-6 bg-[#252C38] max-w-[568px] w-full max-h-screen overflow-auto h-full">
-                            <h2 className='text-2xl leading-[36px] text-white font-noto'>Edit route</h2>
+                            <h2 className='text-2xl leading-[36px] text-white font-noto'>{t('Edit Route')}</h2>
                             <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">Route name</label>
+                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">{t('Route Name')}</label>
                                 <input
                                     type={"text"}
                                     className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
@@ -345,7 +345,7 @@ const RoutePage = () => {
                             </div>
                             <div className="flex gap-4 flex-wrap">
                                 <button type='submit' className="flex justify-center items-center font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">{loading ? <Loader primary={true} /> : 'Save'}</button>
-                                <p onClick={() => { setEditData(false); setEditRoute(null) }} className="cursor-pointer font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border-[1px] border-[#868686] rounded-full transition-all hover:bg-[#868686] hover:text-[#252C38]">Cancel</p>
+                                <p onClick={() => { setEditData(false); setEditRoute(null) }} className="cursor-pointer font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border-[1px] border-[#868686] rounded-full transition-all hover:bg-[#868686] hover:text-[#252C38]">{t('Cancel')}</p>
                             </div>
                         </div>
                     </form>

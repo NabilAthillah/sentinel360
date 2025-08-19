@@ -8,11 +8,12 @@ import MainLayout from "../../../layouts/MainLayout";
 import attendanceSettingService from "../../../services/attendanceSettingService";
 import auditTrialsService from "../../../services/auditTrailsService";
 import { RootState } from "../../../store";
-
+import { useTranslation } from 'react-i18next';
 const SettingsAttendancePage = () => {
     const [sidebar, setSidebar] = useState(false);
     const user = useSelector((state: RootState) => state.user.user);
     const navigate = useNavigate();
+    const { t, i18n } = useTranslation();
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState([
         {
@@ -161,7 +162,7 @@ const SettingsAttendancePage = () => {
     return (
         <MainLayout>
             <div className='flex flex-col gap-4 px-6 pb-20 w-full h-full'>
-                <h2 className='text-2xl leading-9 text-white font-noto'>Settings</h2>
+                <h2 className='text-2xl leading-9 text-white font-noto'>{t('Settings')}</h2>
                 <div className="flex flex-col gap-8 w-full h-full">
                     <Navbar />
                     <div className="bg-[#252C38] p-6 rounded-lg w-full h-full">

@@ -16,6 +16,7 @@ import { RootState } from "../../store";
 import { Employee } from "../../types/employee";
 import { Role } from "../../types/role";
 import EmployeeDocumentPivot from "./EmployeesDocumentPivot";
+import { useTranslation } from "react-i18next";
 
 const EmployeesPage = () => {
     const user = useSelector((state: RootState) => state.user.user);
@@ -37,7 +38,7 @@ const EmployeesPage = () => {
     const [switchStates, setSwitchStates] = useState<{ [key: number]: boolean }>({});
     const [reasons, setReasons] = useState<{ [key: number]: string }>({});
     const [searchTerm, setSearchTerm] = useState('');
-
+    const { t, i18n } = useTranslation();
     const imageInputRef = useRef<HTMLInputElement | null>(null);
     const [imageName, setImageName] = useState<string | null>(null);
 
@@ -441,8 +442,7 @@ const EmployeesPage = () => {
     return (
         <MainLayout>
             <div className='flex flex-col gap-6 px-6 pb-20 w-full min-h-[calc(100vh-91px)] h-full'>
-                <h2 className='text-2xl leading-9 text-white font-noto'>Employees</h2>
-
+                <h2 className='text-2xl leading-9 text-white font-noto'>{t('Employees')}</h2>
                 <div className="flex flex-col flex-1 gap-10 bg-[#252C38] p-6 rounded-lg w-full h-full">
                     <div className="w-full flex justify-between items-center gap-4 flex-wrap">
                         <div className="flex items-end gap-4 w-fit flex-wrap md:flex-nowrap">
@@ -463,7 +463,7 @@ const EmployeesPage = () => {
                                 onClick={handleDownload}
                                 className="font-medium text-sm min-w-[142px] text-[#EFBF04] px-4 py-[9.5px] border-[1px] border-[#EFBF04] rounded-full hover:bg-[#EFBF04] hover:text-[#252C38] transition-all"
                             >
-                                Download Report
+                                {t('Download Report')}
                             </button>
                         </div>
 
@@ -473,7 +473,7 @@ const EmployeesPage = () => {
                                     onClick={() => setAddEmployee(true)}
                                     className="font-medium text-base text-[#181d26] px-7 py-[13.5px] border-[1px] border-[#EFBF04] bg-[#EFBF04] rounded-full hover:bg-[#181d26] hover:text-[#EFBF04] transition-all"
                                 >
-                                    Add employee
+                                    {t('Add Employee')}
                                 </button>
                             </div>
                         )}
@@ -484,13 +484,13 @@ const EmployeesPage = () => {
                             <table className="min-w-[700px] w-full">
                                 <thead>
                                     <tr>
-                                        <th className="font-semibold text-[#98A1B3] text-start">S/NO</th>
-                                        <th className="font-semibold text-[#98A1B3] text-start">Name</th>
-                                        <th className="font-semibold text-[#98A1B3] text-start">NIRC/FIN</th>
-                                        <th className="font-semibold text-[#98A1B3] text-start">Mobile</th>
-                                        <th className="font-semibold text-[#98A1B3] text-start">Role</th>
-                                        <th className="font-semibold text-[#98A1B3] text-center">Status</th>
-                                        <th className="font-semibold text-[#98A1B3] text-center">Actions</th>
+                                        <th className="font-semibold text-[#98A1B3] text-start">{t('S/NO')}</th>
+                                        <th className="font-semibold text-[#98A1B3] text-start">{t('Name')}</th>
+                                        <th className="font-semibold text-[#98A1B3] text-start">{t('NRIC/FIN')}</th>
+                                        <th className="font-semibold text-[#98A1B3] text-start">{t('Mobile')}</th>
+                                        <th className="font-semibold text-[#98A1B3] text-start">{t('Role')}</th>
+                                        <th className="font-semibold text-[#98A1B3] text-center">{t('Status')}</th>
+                                        <th className="font-semibold text-[#98A1B3] text-center">{t('Action')}</th>
                                     </tr>
                                 </thead>
 
@@ -582,13 +582,13 @@ const EmployeesPage = () => {
                         </div>
 
                         {searchTerm.trim() === '' && !listLoading && (
-                            <div className="grid grid-cols-3 w-[162px] absolute bottom-0 right-0">
+                            <div className="grid grid-cols-3 w-fit absolute bottom-0 right-0">
                                 <button
                                     onClick={goToPrevPage}
                                     disabled={currentPage === 1}
                                     className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[8px_0px_0px_8px] bg-[#575F6F] disabled:opacity-50"
                                 >
-                                    Prev
+                                    {t('Prev')}
                                 </button>
                                 <button className="font-medium text-xs leading-[21px] text-[#181D26] py-1 px-3 bg-[#D4AB0B]">
                                     {currentPage}
@@ -598,7 +598,7 @@ const EmployeesPage = () => {
                                     disabled={currentPage === totalPages}
                                     className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[0px_8px_8px_0px] bg-[#575F6F] disabled:opacity-50"
                                 >
-                                    Next
+                                    {t('Next')}
                                 </button>
                             </div>
                         )}
@@ -627,10 +627,10 @@ const EmployeesPage = () => {
                             onClick={(e) => e.stopPropagation()}
                         >
                             <form onSubmit={handleSubmit} className="flex flex-col gap-6 p-6">
-                                <h2 className='text-2xl leading-[36px] text-white font-noto'>Add Employee Details</h2>
+                                <h2 className='text-2xl leading-[36px] text-white font-noto'>{t('Add Employee Details')}</h2>
 
                                 <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b border-b-[#98A1B3]">
-                                    <label className="text-xs leading-[21px] text-[#98A1B3]">Name</label>
+                                    <label className="text-xs leading-[21px] text-[#98A1B3]">{t('Name')}</label>
                                     <input
                                         type="text"
                                         className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] focus-visible:outline-none"
@@ -641,7 +641,7 @@ const EmployeesPage = () => {
                                 </div>
 
                                 <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b border-b-[#98A1B3]">
-                                    <label className="text-xs leading-[21px] text-[#98A1B3]">Email</label>
+                                    <label className="text-xs leading-[21px] text-[#98A1B3]">{t('Email')}</label>
                                     <input
                                         type="email"
                                         className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] focus-visible:outline-none"
@@ -652,7 +652,7 @@ const EmployeesPage = () => {
                                 </div>
 
                                 <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b border-b-[#98A1B3]">
-                                    <label className="text-xs leading-[21px] text-[#98A1B3]">NRIC/FIN</label>
+                                    <label className="text-xs leading-[21px] text-[#98A1B3]">{t('NRIC/FIN')}</label>
                                     <input
                                         type="text"
                                         className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] focus-visible:outline-none"
@@ -663,7 +663,7 @@ const EmployeesPage = () => {
                                 </div>
 
                                 <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b border-b-[#98A1B3]">
-                                    <label className="text-xs leading-[21px] text-[#98A1B3]">Mobile</label>
+                                    <label className="text-xs leading-[21px] text-[#98A1B3]">{t('Mobile')}</label>
                                     <PhoneInput
                                         country={'sg'}
                                         onChange={(phone) => {
@@ -682,7 +682,7 @@ const EmployeesPage = () => {
                                 </div>
 
                                 <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b border-b-[#98A1B3]">
-                                    <label className="text-xs leading-[21px] text-[#98A1B3]">Address</label>
+                                    <label className="text-xs leading-[21px] text-[#98A1B3]">{t('Address')}</label>
                                     <input
                                         type="text"
                                         className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] focus-visible:outline-none"
@@ -694,7 +694,7 @@ const EmployeesPage = () => {
 
                                 <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b border-b-[#98A1B3]">
                                     <style>{`input[type="date"]::-webkit-calendar-picker-indicator{ filter: invert(1); }`}</style>
-                                    <label className="text-xs leading-[21px] text-[#98A1B3]">Briefing date</label>
+                                    <label className="text-xs leading-[21px] text-[#98A1B3]">{t('Briefing date')}</label>
                                     <input
                                         type="date"
                                         className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] focus-visible:outline-none"
@@ -705,7 +705,7 @@ const EmployeesPage = () => {
                                 </div>
 
                                 <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b border-b-[#98A1B3]">
-                                    <label className="text-xs leading-[21px] text-[#98A1B3]">Date joined</label>
+                                    <label className="text-xs leading-[21px] text-[#98A1B3]">{t('Date Joined')}</label>
                                     <input
                                         type="date"
                                         className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] focus-visible:outline-none"
@@ -716,19 +716,39 @@ const EmployeesPage = () => {
                                 </div>
 
                                 <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b border-b-[#98A1B3]">
-                                    <label className="text-xs leading-[21px] text-[#98A1B3]">Briefing conducted</label>
+                                    <label className="text-xs leading-[21px] text-[#98A1B3]">{t('Briefing Conducted')}</label>
                                     <select
                                         onChange={(e) => setAddData((prev) => ({ ...prev, briefing_conducted: e.target.value }))}
                                         className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] focus-visible:outline-none"
                                         required
                                     >
-                                        <option value="yes">Yes</option>
-                                        <option value="no">No</option>
+                                        <option value="yes">{t('Yes')}</option>
+                                        <option value="no">{t('No')}</option>
                                     </select>
                                 </div>
 
+                                {/* {Object.entries(roles[1]).map(([category, roles]) => (
+                    <div className="flex flex-col gap-2">
+                        <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">{category}</label>
+                        <div className="flex flex-wrap gap-x-3 gap-y-[14px]">
+                            {roles.map((role: any) => {
+                                const isSelected = selectedRoles.includes(role);
+                                return (
+                                    <button
+                                        key={role}
+                                        onClick={() => toggleRole(role)}
+                                        className={`font-medium text-sm leading-[20px] w-fit px-4 py-2 rounded-full bg-[#303847] text-[#F4F7FF]
+                ${isSelected ? 'bg-[#446FC7] text-[#F4F7FF]' : 'bg-[#303847] text-[#F4F7FF] hover:bg-[#446FC7] hover:text-[#F4F7FF]'}`}
+                                    >
+                                        {role}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+                ))} */}
                                 <div className="flex flex-col gap-2">
-                                    <label className="text-xs leading-[21px] text-[#98A1B3]">Role</label>
+                                    <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">{t('Role')}</label>
                                     <div className="flex flex-wrap gap-x-3 gap-y-[14px]">
                                         {roles && roles.map((r) => {
                                             const isSelected = addData.id_role === r.id;
@@ -736,7 +756,8 @@ const EmployeesPage = () => {
                                                 <p
                                                     key={r.id}
                                                     onClick={() => setAddData(prev => ({ ...prev, id_role: r.id }))}
-                                                    className={`cursor-pointer font-medium text-sm leading-[20px] w-fit px-4 py-2 rounded-full transition-all ${isSelected ? 'bg-[#446FC7] text-white' : 'bg-[#303847] text-[#F4F7FF] hover:bg-[#446FC7] hover:text-white'}`}
+                                                    className={`cursor-pointer font-medium text-sm leading-[20px] w-fit px-4 py-2 rounded-full bg-[#303847] text-[#F4F7FF]
+                ${isSelected ? 'bg-[#446FC7] text-[#F4F7FF]' : 'bg-[#303847] text-[#F4F7FF] hover:bg-[#446FC7] hover:text-[#F4F7FF]'}`}
                                                 >
                                                     {r.name}
                                                 </p>
@@ -744,12 +765,14 @@ const EmployeesPage = () => {
                                         })}
                                     </div>
                                 </div>
-
                                 <div className="pt-3 flex flex-col gap-6">
                                     {data.map((item, index) => (
                                         <div key={index} className="flex flex-col gap-2">
                                             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 py-2">
+                                                {/* Label pertanyaan */}
                                                 <p className="text-[#F4F7FF] text-sm flex-1">{item}</p>
+
+                                                {/* Switch + status */}
                                                 <div className="flex items-center gap-3 min-w-[120px] justify-end">
                                                     <Switch
                                                         id={`custom-switch-${index}`}
@@ -769,18 +792,25 @@ const EmployeesPage = () => {
                                                         onPointerLeaveCapture={() => { }}
                                                         crossOrigin=""
                                                     />
-                                                    <p className={`text-sm font-medium capitalize ${switchStates[index] ? 'text-[#19CE74]' : 'text-[#FF7E6A]'}`}>
+                                                    <p
+                                                        className={`text-sm font-medium capitalize ${switchStates[index] ? 'text-[#19CE74]' : 'text-[#FF7E6A]'
+                                                            }`}
+                                                    >
                                                         {switchStates[index] ? 'Active' : 'Inactive'}
                                                     </p>
                                                 </div>
                                             </div>
-
                                             {!switchStates[index] && (
                                                 <input
                                                     type="text"
                                                     placeholder="Reason"
                                                     value={reasons[index] || ''}
-                                                    onChange={(e) => setReasons((prev) => ({ ...prev, [index]: e.target.value }))}
+                                                    onChange={(e) =>
+                                                        setReasons((prev) => ({
+                                                            ...prev,
+                                                            [index]: e.target.value,
+                                                        }))
+                                                    }
                                                     className="w-full px-4 py-2 border border-gray-300 rounded bg-white text-black"
                                                 />
                                             )}
@@ -790,10 +820,10 @@ const EmployeesPage = () => {
 
                                 <div className="flex gap-4 justify-end flex-wrap">
                                     <button type="button" onClick={() => setAddEmployee(false)} className="font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border border-[#868686] rounded-full hover:bg-[#868686] hover:text-[#252C38]">
-                                        Cancel
+                                        {t("Cancel")}
                                     </button>
                                     <button type="submit" className="flex justify-center items-center font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border border-[#EFBF04] rounded-full hover:bg-[#181D26] hover:text-[#EFBF04]">
-                                        {loading ? <Loader primary /> : 'Save'}
+                                        {loading ? <Loader primary /> : t('Save')}
                                     </button>
                                 </div>
                             </form>
@@ -823,7 +853,7 @@ const EmployeesPage = () => {
                             onClick={(e) => e.stopPropagation()}
                         >
                             <div className="flex flex-col gap-6 p-6">
-                                <h2 className="text-2xl leading-[36px] text-white font-noto">Edit Employee Details</h2>
+                                <h2 className="text-2xl leading-[36px] text-white font-noto">{t('Edit Employee Details')}</h2>
 
                                 <div className="flex flex-col gap-3">
                                     {imageFile ? (
@@ -842,7 +872,7 @@ const EmployeesPage = () => {
                                             if (file) {
                                                 const maxSizeInBytes = 5 * 1024 * 1024;
                                                 if (file.size > maxSizeInBytes) {
-                                                    toast.warning('Maximum file size is 5MB!');
+                                                    toast.warning(t('Maximum file size is 5MB!') as string);
                                                     e.target.value = "";
                                                     return;
                                                 }
@@ -852,21 +882,21 @@ const EmployeesPage = () => {
                                         }}
                                         className="hidden"
                                     />
-                                    <label className="text-xs leading-[21px] text-[#98A1B3]">Profile image <span className='text-xs'>(Maximum image size is 5MB!)</span></label>
+                                    <label className="text-xs leading-[21px] text-[#98A1B3]">{t('Profile Image')} <span className='text-xs'>({t('Maximum image size is 5MB')})</span></label>
                                     <div className="flex items-center gap-4">
                                         <button
                                             type="button"
                                             onClick={() => imageInputRef.current?.click()}
                                             className="font-medium text-sm leading-[21px] text-[#EFBF04] px-5 py-2 border border-[#EFBF04] rounded-full cursor-pointer w-fit transition-all hover:bg-[#EFBF04] hover:text-[#252C38]"
                                         >
-                                            Upload file
+                                            {t('Upload File')}
                                         </button>
                                         {imageName && <span className="text-sm text-[#98A1B3]">{imageName}</span>}
                                     </div>
                                 </div>
 
                                 <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
-                                    <label className="text-xs text-[#98A1B3]">Name</label>
+                                    <label className="text-xs text-[#98A1B3]">{t('Name')}</label>
                                     <input
                                         type="text"
                                         className="bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3]"
@@ -880,7 +910,7 @@ const EmployeesPage = () => {
                                 </div>
 
                                 <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
-                                    <label className="text-xs text-[#98A1B3]">Birth Date</label>
+                                    <label className="text-xs text-[#98A1B3]">{t('Birth Date')}</label>
                                     <input
                                         type="date"
                                         className="bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3]"
@@ -892,7 +922,7 @@ const EmployeesPage = () => {
                                 </div>
 
                                 <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
-                                    <label className="text-xs text-[#98A1B3]">NRIC/FIN</label>
+                                    <label className="text-xs text-[#98A1B3]">{t('NRIC/FIN')}</label>
                                     <input
                                         type="text"
                                         className="bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3]"
@@ -904,7 +934,7 @@ const EmployeesPage = () => {
                                 </div>
 
                                 <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
-                                    <label className="text-xs text-[#98A1B3]">Mobile</label>
+                                    <label className="text-xs text-[#98A1B3]">{t('Mobile')}</label>
                                     <PhoneInput
                                         country={'sg'}
                                         value={editData?.user?.mobile ?? ''}
@@ -924,7 +954,7 @@ const EmployeesPage = () => {
                                 </div>
 
                                 <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
-                                    <label className="text-xs text-[#98A1B3]">Email</label>
+                                    <label className="text-xs text-[#98A1B3]">{t('Email')}</label>
                                     <input
                                         type="text"
                                         className="bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3]"
@@ -936,7 +966,7 @@ const EmployeesPage = () => {
                                 </div>
 
                                 <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
-                                    <label className="text-xs text-[#98A1B3]">Address</label>
+                                    <label className="text-xs text-[#98A1B3]">{t('Address')}</label>
                                     <input
                                         type="text"
                                         className="bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3]"
@@ -948,7 +978,7 @@ const EmployeesPage = () => {
                                 </div>
 
                                 <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
-                                    <label className="text-xs text-[#98A1B3]">Role</label>
+                                    <label className="text-xs text-[#98A1B3]">{t('Role')}</label>
                                     <select
                                         className="bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] outline-none"
                                         value={editData?.user?.role?.id || ''}
@@ -964,7 +994,7 @@ const EmployeesPage = () => {
                                             });
                                         }}
                                     >
-                                        <option value="" disabled>Select role</option>
+                                        <option value="" disabled>{t('Select Role')}</option>
                                         {roles.map((role) => (
                                             <option key={role.id} value={role.id}>{role.name}</option>
                                         ))}
@@ -972,7 +1002,7 @@ const EmployeesPage = () => {
                                 </div>
 
                                 <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
-                                    <label className="text-xs text-[#98A1B3]">Briefing Date</label>
+                                    <label className="text-xs text-[#98A1B3]">{t('Briefing Date')}</label>
                                     <input
                                         type="date"
                                         className="bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3]"
@@ -984,7 +1014,7 @@ const EmployeesPage = () => {
                                 </div>
 
                                 <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
-                                    <label className="text-xs text-[#98A1B3]">Date Joined</label>
+                                    <label className="text-xs text-[#98A1B3]">{t('Date Joined')}</label>
                                     <input
                                         type="date"
                                         className="bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3]"
@@ -996,23 +1026,23 @@ const EmployeesPage = () => {
                                 </div>
 
                                 <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
-                                    <label className="text-xs text-[#98A1B3]">Briefing Conducted</label>
+                                    <label className="text-xs text-[#98A1B3]">{t('Briefing Conducted')}</label>
                                     <select
                                         onChange={(e) => setAddData((prev) => ({ ...prev, briefing_conducted: e.target.value }))}
                                         className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] focus-visible:outline-none"
                                         required
                                     >
-                                        <option value="yes" selected={editData?.briefing_conducted === "yes"}>Yes</option>
-                                        <option value="no" selected={editData?.briefing_conducted === "no"}>No</option>
+                                        <option value="yes" selected={editData?.briefing_conducted === "yes"}>{t('Yes')}</option>
+                                        <option value="no" selected={editData?.briefing_conducted === "no"}>{t('No')}</option>
                                     </select>
                                 </div>
 
                                 <div className="flex gap-4 flex-wrap justify-end">
                                     <button onClick={() => setEditEmployee(false)} className="font-medium text-base text-[#868686] bg-[#252C38] px-12 py-3 border border-[#868686] rounded-full hover:bg-[#868686] hover:text-[#252C38]">
-                                        Cancel
+                                        {t('Cancel')}
                                     </button>
                                     <button onClick={handleEdit} className="font-medium text-base bg-[#EFBF04] px-12 py-3 border border-[#EFBF04] rounded-full hover:bg-[#181D26] hover:text-[#EFBF04]">
-                                        {loading ? <Loader primary /> : 'Save'}
+                                        {loading ? <Loader primary /> : t('Save')}
                                     </button>
                                 </div>
                             </div>

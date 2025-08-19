@@ -19,7 +19,7 @@ const siteEmployeeService = {
         }
     },
 
-    getNearestSiteUser: async (token,user) => {
+    getNearestSiteUser: async (token, user) => {
         try {
             const response = await api.get(`/site-user/user/nearest/${user.employee.id}`, {
                 headers: {
@@ -32,7 +32,7 @@ const siteEmployeeService = {
         }
     },
 
-    getById: async (token,id) => {
+    getById: async (token, id) => {
         try {
             const response = await api.get(`/site-user/${id}`, {
                 headers: {
@@ -45,7 +45,7 @@ const siteEmployeeService = {
         }
     },
 
-    getAllSiteUser: async (token,user) => {
+    getAllSiteUser: async (token, user) => {
         try {
             const response = await api.get(`/site-user/user/data/${user.employee.id}`, {
                 headers: {
@@ -78,6 +78,25 @@ const siteEmployeeService = {
             throw error.response ? error.response.data : { message: 'Network error' };
         }
     },
+
+    editAttendance: async (token, id, status) => {
+        try {
+            const response = await api.put(`/site-user/${id}`, {
+                status,
+            }, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.data) {
+                return response.data;
+            }
+        } catch (error) {
+            throw error.response ? error.response.data : { message: 'Network error' };
+        }
+    }
+
 }
 
 export default siteEmployeeService;

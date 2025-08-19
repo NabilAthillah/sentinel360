@@ -9,11 +9,12 @@ import auditTrialsService from "../../../services/auditTrailsService";
 import clientInfoService from "../../../services/clientInfoService";
 import { RootState } from "../../../store";
 import { Client } from "../../../types/client";
-import Loader from "../../../components/Loader";
+import { useTranslation } from 'react-i18next';import Loader from "../../../components/Loader";
 
 const ClientInfoPage = () => {
     const navigate = useNavigate();
     const user = useSelector((state: RootState) => state.user.user);
+    const { t, i18n } = useTranslation();
     const [client, setClient] = useState<Client>({
         id: "",
         name: "",
@@ -179,7 +180,7 @@ const ClientInfoPage = () => {
     return (
         <MainLayout>
             <div className="flex flex-col gap-4 px-6 pb-20 w-full h-full">
-                <h2 className="text-2xl leading-9 text-white font-noto">Settings</h2>
+                <h2 className="text-2xl leading-9 text-white font-noto">{t('Settings')}</h2>
                 <div className="flex flex-col gap-8 w-full h-full">
                     <Navbar />
                     <div className="flex gap-6 flex-wrap xl:flex-nowrap">

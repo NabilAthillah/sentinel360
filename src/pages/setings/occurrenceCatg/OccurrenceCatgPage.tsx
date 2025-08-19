@@ -11,13 +11,13 @@ import auditTrialsService from "../../../services/auditTrailsService";
 import occurrenceCatgService from "../../../services/occurrenceCatgService";
 import { RootState } from "../../../store";
 import { OccurrenceCategory } from "../../../types/occurrenceCategory";
-
+import { useTranslation } from 'react-i18next';
 const OccurrenceCatgPage = () => {
     const [addCatg, setAddCatg] = useState(false);
     const [editCatg, setEditCatg] = useState(false);
     const [editData, setEditData] = useState<OccurrenceCategory | null>();
     const [loading, setLoading] = useState(false);
-    const [toggling, setToggling] = useState<Record<string, boolean>>({});
+    const { t, i18n } = useTranslation();    const [toggling, setToggling] = useState<Record<string, boolean>>({});
 
     const [categories, setCategories] = useState<OccurrenceCategory[]>([]);
     const [searchTerm, setSearchTerm] = useState("");
@@ -210,7 +210,7 @@ const OccurrenceCatgPage = () => {
     return (
         <MainLayout>
             <div className="flex flex-col gap-4 px-6 pb-20 w-full h-full flex-1">
-                <h2 className="text-2xl leading-9 text-white font-noto">Settings</h2>
+                <h2 className="text-2xl leading-9 text-white font-noto">{t('Settings')}</h2>
 
                 <div className="flex flex-col gap-8 w-full h-full flex-1">
                     <Navbar />
@@ -249,12 +249,7 @@ const OccurrenceCatgPage = () => {
 
                             {hasPermission("add_occurrence_category") && (
                                 <div className="w-[200px]">
-                                    <button
-                                        onClick={() => setAddCatg(true)}
-                                        className="font-medium text-base min-w-[200px] text-[#181d26] px-[46.5px] py-3 border-[1px] border-[#EFBF04] bg-[#EFBF04] rounded-full hover:bg-[#181d26] hover:text-[#EFBF04] transition-all disabled:opacity-60"
-                                    >
-                                        Add category
-                                    </button>
+                                    <button onClick={() => setAddCatg(true)} className="font-medium text-base min-w-[200px] text-[#181d26] px-[46.5px] py-3 border-[1px] border-[#EFBF04] bg-[#EFBF04] rounded-full hover:bg-[#181d26] hover:text-[#EFBF04] transition-all">{t('Add Category')}</button>
                                 </div>
                             )}
                         </div>
@@ -264,18 +259,10 @@ const OccurrenceCatgPage = () => {
                                 <table className="w-full min-w-[500px]">
                                     <thead>
                                         <tr>
-                                            <th className="font-semibold text-[#98A1B3] text-start">
-                                                S/NO
-                                            </th>
-                                            <th className="font-semibold text-[#98A1B3] text-start">
-                                                Category
-                                            </th>
-                                            <th className="font-semibold text-[#98A1B3] text-start">
-                                                Status
-                                            </th>
-                                            <th className="font-semibold text-[#98A1B3] text-center">
-                                                Actions
-                                            </th>
+                                            <th className="font-semibold text-[#98A1B3] text-start">{t('S/NO')}</th>
+                                            <th className="font-semibold text-[#98A1B3] text-start">{t('Category')}</th>
+                                            <th className="font-semibold text-[#98A1B3] text-start flex items-center gap-2">{t('Status')}</th>
+                                            <th className="font-semibold text-[#98A1B3] text-center">{t('Action')}</th>
                                         </tr>
                                     </thead>
 
@@ -382,8 +369,7 @@ const OccurrenceCatgPage = () => {
                                     )}
                                 </table>
                             </div>
-
-                            <div className="grid grid-cols-3 w-[162px] absolute bottom-0 right-0">
+                            <div className="grid grid-cols-3 w-fit absolute bottom-0 right-0">
                                 <button
                                     className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[8px_0px_0px_8px] bg-[#575F6F] disabled:opacity-50"
                                     onClick={goPrev}
@@ -391,15 +377,13 @@ const OccurrenceCatgPage = () => {
                                 >
                                     Prev
                                 </button>
-                                <button className="font-medium text-xs leading-[21px] text-[#181D26] py-1 px-3 bg-[#D4AB0B]">
-                                    {currentPage}
-                                </button>
+                                <button className="font-medium text-xs leading-[21px] text-[#181D26] py-1 px-3 bg-[#D4AB0B]">{currentPage}</button>
                                 <button
                                     className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[0px_8px_8px_0px] bg-[#575F6F] disabled:opacity-50"
                                     onClick={goNext}
                                     disabled={currentPage === totalPages || loading}
                                 >
-                                    Next
+                                    {t('Next')}
                                 </button>
                             </div>
                         </div>

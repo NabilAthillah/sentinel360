@@ -5,6 +5,7 @@ import { IncidentFree } from "../../types/incidentfree";
 import IncidentService from "../../services/incidentFreeService";
 import { Site } from "../../types/site";
 import { IncidentType } from "../../types/incidentType";
+import { useTranslation } from "react-i18next";
 const IncidentPage = () => {
     const [incident, setIncident] = useState<IncidentFree[]>([]);
     const [viewImage, setViewImage] = useState<string | null>(null);
@@ -29,7 +30,7 @@ const IncidentPage = () => {
     const [propertyDamaged, setPropertyDamaged] = useState<boolean>(false);
     const [cctvImage, setCctvImage] = useState<string | null>(null);
     const imageInputRef = useRef<HTMLInputElement | null>(null);
-
+    const { t, i18n } = useTranslation();
     const fetchIncidents = async () => {
         setIsLoading(true);
         try {
@@ -125,13 +126,13 @@ console.log("IncidentTypes: ", incidentTypes);
     return (
         <MainLayout>
             <div className="flex flex-col gap-6 px-6 pb-20 w-full h-full">
-                <h2 className="text-2xl leading-9 text-white font-noto">Incidents</h2>
+                <h2 className="text-2xl leading-9 text-white font-noto">{t('Incindents')}</h2>
                 <div className="w-full flex justify-end items-end gap-4 flex-wrap lg:flex-nowrap">
                     <div className="w-[200px]">
                         <button
                             onClick={() => setAddData(true)}
                             className="font-medium text-base min-w-[200px] text-[#181d26] px-[46.5px] py-3 border-[1px] border-[#EFBF04] bg-[#EFBF04] rounded-full hover:bg-[#181d26] hover:text-[#EFBF04] transition-all">
-                            Add Incident
+                            {t('Add Incindent')}
                         </button>
                     </div>
                 </div>
@@ -141,13 +142,13 @@ console.log("IncidentTypes: ", incidentTypes);
                         <table className="min-w-[800px] w-full">
                             <thead>
                                 <tr>
-                                    <th className="text-left text-[#98A1B3]">S/NO</th>
-                                    <th className="text-left text-[#98A1B3]">Incident Date</th>
-                                    <th className="text-left text-[#98A1B3]">Incident Time</th>
-                                    <th className="text-left text-[#98A1B3]">Site Name</th>
-                                    <th className="text-left text-[#98A1B3]">What Happened</th>
-                                    <th className="text-left text-[#98A1B3]">Reported by</th>
-                                    <th className="text-center text-[#98A1B3]">Actions</th>
+                                    <th className="text-left text-[#98A1B3]">{t('S/NO')}</th>
+                                    <th className="text-left text-[#98A1B3]">{t('Incident Date')}</th>
+                                    <th className="text-left text-[#98A1B3]">{t('Incindent Time')}</th>
+                                    <th className="text-left text-[#98A1B3]">{t('Site Name')}</th>
+                                    <th className="text-left text-[#98A1B3]">{t('What Happened')}</th>
+                                    <th className="text-left text-[#98A1B3]">{t('Reported By')}</th>
+                                    <th className="text-center text-[#98A1B3]">{t('Action')}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -173,10 +174,10 @@ console.log("IncidentTypes: ", incidentTypes);
             {addData && (
                 <div className="fixed w-screen h-screen flex justify-end items-start top-0 left-0 z-50 bg-[rgba(0,0,0,0.5)]">
                     <form onSubmit={handleSubmit} className="flex flex-col gap-6 p-6 bg-[#252C38] max-w-[568px] w-full max-h-screen overflow-auto h-full">
-                        <h2 className="text-2xl leading-[36px] text-white font-noto">Add Incident</h2>
+                        <h2 className="text-2xl leading-[36px] text-white font-noto">{t('Add Incindent')}</h2>
 
                         <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
-                            <label className="text-xs text-[#98A1B3]">Site Name</label>
+                            <label className="text-xs text-[#98A1B3]">{t('Select Site')}</label>
                             <select
                                 className="bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] outline-none"
                                 value={siteName}
@@ -184,7 +185,7 @@ console.log("IncidentTypes: ", incidentTypes);
                                     setSiteName(e.target.value);
                                 }}
                             >
-                                <option value="" disabled>Select a site</option>
+                                <option value="" disabled>{t('Select Site')}</option>
                                 {sites?.length > 0 && sites.map(site => (
                                     <option key={site.id} value={site.name}>{site.name}</option>
                                 ))}
@@ -194,14 +195,14 @@ console.log("IncidentTypes: ", incidentTypes);
 
 
                         <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                            <label className="text-xs leading-[21px] text-[#98A1B3]">What Happened</label>
+                            <label className="text-xs leading-[21px] text-[#98A1B3]">{t('What Happened')}</label>
                             <select
                                 value={whatHappened}
                                 onChange={(e) => setWhatHappened(e.target.value)}
                                 className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
                                 required
                             >
-                                <option value="">Select Incident Type</option>
+                                <option value="">{t('Select Incident')}</option>
                                 {incidentTypes.map((incidentType) => (
                                     <option key={incidentType.id} value={incidentType.name}>{incidentType.name}</option>
                                 ))}
@@ -209,7 +210,7 @@ console.log("IncidentTypes: ", incidentTypes);
                         </div>
 
                         <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                            <label className="text-xs leading-[21px] text-[#98A1B3]">Where Happened</label>
+                            <label className="text-xs leading-[21px] text-[#98A1B3]">{t('Where It Happened')}</label>
                             <input
                                 type="text"
                                 value={whereHappened}
@@ -219,7 +220,7 @@ console.log("IncidentTypes: ", incidentTypes);
                         </div>
 
                         <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                            <label className="text-xs leading-[21px] text-[#98A1B3]">Why It Happened</label>
+                            <label className="text-xs leading-[21px] text-[#98A1B3]">{t('Why It Happened')}</label>
                             <input
                                 type="text"
                                 value={whyItHappened}
@@ -229,7 +230,7 @@ console.log("IncidentTypes: ", incidentTypes);
                         </div>
 
                         <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                            <label className="text-xs leading-[21px] text-[#98A1B3]">Persons Involved</label>
+                            <label className="text-xs leading-[21px] text-[#98A1B3]">{t('Persons Involved')}</label>
                             <input
                                 type="text"
                                 value={personsInvolved}
@@ -239,7 +240,7 @@ console.log("IncidentTypes: ", incidentTypes);
                         </div>
 
                         <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                            <label className="text-xs leading-[21px] text-[#98A1B3]">Persons Injured</label>
+                            <label className="text-xs leading-[21px] text-[#98A1B3]">{t('Persons Injured')}</label>
                             <input
                                 type="text"
                                 value={personsInjured}
@@ -249,7 +250,7 @@ console.log("IncidentTypes: ", incidentTypes);
                         </div>
 
                         <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                            <label className="text-xs leading-[21px] text-[#98A1B3]">Details of Incident</label>
+                            <label className="text-xs leading-[21px] text-[#98A1B3]">{t('Details of Incident')}</label>
                             <input
                                 type="text"
                                 value={incidentDetails}
@@ -271,7 +272,7 @@ console.log("IncidentTypes: ", incidentTypes);
                                 type="button"
                                 onClick={() => setAddData(false)}
                                 className="font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border-[1px] border-[#868686] rounded-full transition-all hover:bg-[#868686] hover:text-[#252C38]">
-                                Cancel
+                                {t('Cancel')}
                             </button>
                         </div>
                     </form>

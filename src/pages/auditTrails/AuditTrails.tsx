@@ -9,6 +9,7 @@ import { AuditTrail } from '../../types/auditTrials';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
+import { useTranslation } from 'react-i18next';
 
 const AuditTrails = () => {
     const [logs, setLogs] = useState<AuditTrail[]>([]);
@@ -28,7 +29,7 @@ const AuditTrails = () => {
     const [endDate, setEndDate] = useState<string>('');
     const [startTime, setStartTime] = useState<string>('');
     const [endTime, setEndTime] = useState<string>('');
-
+    const {t} = useTranslation();
     const dropdownRef = useRef<HTMLDivElement>(null);
     const user = useSelector((state: RootState) => state.user.user);
 
@@ -237,43 +238,9 @@ const AuditTrails = () => {
     return (
         <MainLayout>
             <div className="flex flex-col gap-6 px-6 pb-20 w-full min-h-[calc(100vh-91px)] h-full">
-                <h2 className="text-2xl leading-9 text-white font-noto">Audit Trails</h2>
+                <h2 className="text-2xl leading-9 text-white font-noto">{t('Audit Trails')}</h2>
 
                 <div className="flex flex-col gap-10 bg-[#252C38] p-6 rounded-lg w-full h-full flex-1 relative">
-                    <div className="w-full flex justify-between items-center gap-4 flex-wrap">
-                        <div className="flex flex-wrap items-end gap-4 w-full">
-                            <select
-                                className="max-w-[250px] w-full h-[44px] px-4 pt-[17.5px] pb-[10.5px] bg-[#222834] rounded-[4px_4px_0px_0px] text-[#F4F7FF] text-base border-b border-b-[#98A1B3] active:outline-none focus-visible:outline-none"
-                                value={selectedUserId}
-                                onChange={(e) => { setSelectedUserId(e.target.value); setCurrentPage(1); }}
-                            >
-                                <option value="">All Users</option>
-                                {users.map((u) => (<option key={u.id} value={u.id}>{u.email}</option>))}
-                            </select>
-
-                            <input
-                                type="datetime-local"
-                                value={startDate}
-                                onChange={(e) => { setStartDate(e.target.value); setCurrentPage(1); }}
-                                className="h-[44px] px-3 bg-[#222834] text-[#F4F7FF] border-b border-b-[#98A1B3] rounded-[4px_4px_0_0] active:outline-none focus-visible:outline-none"
-                            />
-                            <span className="text-[#98A1B3]">to</span>
-                            <input
-                                type="datetime-local"
-                                value={endDate}
-                                onChange={(e) => { setEndDate(e.target.value); setCurrentPage(1); }}
-                                className="h-[44px] px-3 bg-[#222834] text-[#F4F7FF] border-b border-b-[#98A1B3] rounded-[4px_4px_0_0] active:outline-none focus-visible:outline-none"
-                            />
-
-                            <button
-                                onClick={() => { setStartDate(''); setEndDate(''); setCurrentPage(1); }}
-                                className="text-sm text-[#EFBF04] px-3 py-2 border border-[#EFBF04] rounded-full hover:bg-[#EFBF04] hover:text-[#252C38] transition-all"
-                            >
-                                Clear Dates
-                            </button>
-                        </div>
-                    </div>
-
                     <div className="w-full flex justify-between items-center gap-4 flex-wrap">
                         <div className="flex flex-wrap items-end gap-4 w-full">
                             <select
@@ -281,7 +248,7 @@ const AuditTrails = () => {
                                 value={selectedCategory}
                                 onChange={(e) => { setSelectedCategory(e.target.value); setCurrentPage(1); }}
                             >
-                                <option value="">All Categories</option>
+                                <option value="">{t("All Categories")}</option>
                                 {categories.map((cat, idx) => (
                                     <option key={idx} value={cat} className="capitalize">{cat}</option>
                                 ))}
@@ -317,7 +284,7 @@ const AuditTrails = () => {
                                 value={selectedStatus}
                                 onChange={(e) => { setSelectedStatus(e.target.value); setCurrentPage(1); }}
                             >
-                                <option value="">All Statuses</option>
+                                <option value="">{t("All Statuses")}</option>
                                 {statuses.map((s) => (
                                     <option key={s} value={s} className="capitalize">{s}</option>
                                 ))}
@@ -334,7 +301,7 @@ const AuditTrails = () => {
       ${showDropdown ? 'bg-[#EFBF04] text-[#252C38] border-[#EFBF04]' : 'text-[#EFBF04] border-[#EFBF04]'}
     `}
                                 >
-                                    {exporting ? 'Generating…' : 'Download Report'}
+                                    {exporting ? 'Generating…' : t('Download Report')}
                                 </button>
 
                                 <div
@@ -373,13 +340,13 @@ const AuditTrails = () => {
                             <table className="min-w-[700px] w-full">
                                 <thead>
                                     <tr>
-                                        <th className="font-semibold text-[#98A1B3] text-start">S/NO</th>
-                                        <th className="font-semibold text-[#98A1B3] text-start">Name</th>
-                                        <th className="font-semibold text-[#98A1B3] text-start">Email</th>
-                                        <th className="font-semibold text-[#98A1B3] text-start">Activity</th>
-                                        <th className="font-semibold text-[#98A1B3] text-center">Status</th>
-                                        <th className="font-semibold text-[#98A1B3] text-start">Timestamp</th>
-                                        <th className="font-semibold text-[#98A1B3] text-start">Action</th>
+                                        <th className="font-semibold text-[#98A1B3] text-start">{t('S/NO')}</th>
+                                        <th className="font-semibold text-[#98A1B3] text-start">{t('Name')}</th>
+                                        <th className="font-semibold text-[#98A1B3] text-start">{t('Email')}</th>
+                                        <th className="font-semibold text-[#98A1B3] text-start">{t('Activity')}</th>
+                                        <th className="font-semibold text-[#98A1B3] text-center">{t('Status')}</th>
+                                        <th className="font-semibold text-[#98A1B3] text-start">{t('Timestamp')}</th>
+                                        <th className="font-semibold text-[#98A1B3] text-start">{t('Action')}</th>
                                     </tr>
                                 </thead>
                                 {loading ? (
@@ -450,7 +417,7 @@ const AuditTrails = () => {
                         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                             <div className="bg-[#1A1D23] text-white p-6 rounded-lg w-[90%] md:w-[600px] max-h-[80vh] overflow-y-auto">
                                 <div className="flex justify-between items-center mb-4">
-                                    <h2 className="text-xl font-semibold">Audit Log Description</h2>
+                                    <h2 className="text-xl font-semibold">{t('Audit Log Description')}</h2>
                                     <button onClick={closeModal} className="text-gray-400 hover:text-white text-2xl">&times;</button>
                                 </div>
                                 <pre className="whitespace-pre-wrap text-sm text-[#F4F7FF]">{selectedLog.description}</pre>

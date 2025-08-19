@@ -10,7 +10,7 @@ import auditTrialsService from "../../../services/auditTrailsService";
 import permissionService from "../../../services/permissionService";
 import roleService from "../../../services/roleService";
 import { RootState } from "../../../store";
-
+import { useTranslation } from 'react-i18next';
 type Role = {
     id: string;
     name: string;
@@ -28,6 +28,7 @@ type PermissionGroup = {
 };
 
 const RolesPage = () => {
+    const { t, i18n } = useTranslation();
     const [addRole, setAddRole] = useState(false);
     const [editRole, setEditRole] = useState(false);
     const [sidebar, setSidebar] = useState(false);
@@ -214,7 +215,7 @@ const RolesPage = () => {
     return (
         <MainLayout>
             <div className='flex flex-col gap-4 px-6 pb-20 w-full h-full flex-1'>
-                <h2 className='text-2xl leading-9 text-white font-noto'>Settings</h2>
+                <h2 className='text-2xl leading-9 text-white font-noto'>{t('Settings')}</h2>
                 <div className="flex flex-col gap-8 w-full h-full flex-1">
                     <Navbar />
                     <div className="flex flex-col gap-10 bg-[#252C38] p-6 rounded-lg w-full h-full flex-1">
@@ -241,7 +242,7 @@ const RolesPage = () => {
                             </div>
                             {hasPermission('add_role') && (
                                 <div className="w-[200px]">
-                                    <button onClick={() => setAddRole(true)} className="font-medium text-base min-w-[200px] text-[#181d26] px-[46.5px] py-3 border-[1px] border-[#EFBF04] bg-[#EFBF04] rounded-full hover:bg-[#181d26] hover:text-[#EFBF04] transition-all">Add role</button>
+                                    <button onClick={() => setAddRole(true)} className="font-medium text-base min-w-[200px] text-[#181d26] px-[46.5px] py-3 border-[1px] border-[#EFBF04] bg-[#EFBF04] rounded-full hover:bg-[#181d26] hover:text-[#EFBF04] transition-all">{t('Add role')}</button>
                                 </div>
                             )}
                         </div>
@@ -250,9 +251,9 @@ const RolesPage = () => {
                                 <table className="min-w-[700px] w-full">
                                     <thead>
                                         <tr>
-                                            <th className="font-semibold text-[#98A1B3] text-start">S/NO</th>
-                                            <th className="font-semibold text-[#98A1B3] text-start">Role</th>
-                                            <th className="font-semibold text-[#98A1B3] text-center">Actions</th>
+                                            <th className="font-semibold text-[#98A1B3] text-start">{t('S/NO')}</th>
+                                            <th className="font-semibold text-[#98A1B3] text-start">{t('Role')}</th>
+                                            <th className="font-semibold text-[#98A1B3] text-center">{t('Actions')}</th>
                                         </tr>
                                     </thead>
                                     {loading ? (
@@ -286,13 +287,13 @@ const RolesPage = () => {
                                     )}
                                 </table>
                             </div>
-                            <div className="grid grid-cols-3 w-[162px] absolute bottom-0 right-0">
+                            <div className="grid grid-cols-3 w-fit absolute bottom-0 right-0">
                                 <button
                                     className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[8px_0px_0px_8px] bg-[#575F6F] disabled:opacity-50"
                                     onClick={handlePrev}
                                     disabled={currentPage === 1}
                                 >
-                                    Prev
+                                    {t('Prev')}
                                 </button>
                                 <button className="font-medium text-xs leading-[21px] text-[#181D26] py-1 px-3 bg-[#D4AB0B]">{currentPage}</button>
                                 <button
@@ -300,7 +301,7 @@ const RolesPage = () => {
                                     onClick={handleNext}
                                     disabled={currentPage === totalPages}
                                 >
-                                    Next
+                                    {t('Next')}
                                 </button>
                             </div>
                         </div>

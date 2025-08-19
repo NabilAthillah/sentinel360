@@ -6,6 +6,7 @@ import Loader from "../../components/Loader";
 import employeeDocumentPivotService from "../../services/employeDocumenPivot";
 import employeeDocumentService from "../../services/employeeDocumentService";
 import { EmployeeDocument } from "../../types/employeeDocument";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   employeeId: string;
@@ -33,7 +34,7 @@ const EmployeeDocumentPivot = ({ employeeId, token, fetchEmployees, user, onClos
   const [loadingDocs, setLoadingDocs] = useState(true);
   const [saving, setSaving] = useState(false);
   const navigate = useNavigate();
-
+  const { t, i18n } = useTranslation();
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -173,7 +174,7 @@ const EmployeeDocumentPivot = ({ employeeId, token, fetchEmployees, user, onClos
           >
             <div className="flex flex-col gap-6 p-6">
               <div className="flex items-center justify-between">
-                <h2 className="text-2xl leading-[36px] text-white font-noto">Upload employee details</h2>
+                <h2 className="text-2xl leading-[36px] text-white font-noto">{t("Upload Employeee Details")}</h2>
                 <button
                   type="button"
                   onClick={() => setOpen(false)}
@@ -198,12 +199,12 @@ const EmployeeDocumentPivot = ({ employeeId, token, fetchEmployees, user, onClos
                       <p className="text-[#F4F7FF]">{user?.employee?.nric_fin_no || "-"}</p>
                     </div>
                     <div className="flex flex-col">
-                      <p className="text-xs text-[#98A1B3]">Mobile</p>
+                      <p className="text-xs text-[#98A1B3]">{t("Mobile")}</p>
                       <p className="text-[#F4F7FF]">{user?.mobile || "-"}</p>
                     </div>
                   </div>
                   <div className="flex flex-col">
-                    <p className="text-xs text-[#98A1B3]">Email</p>
+                    <p className="text-xs text-[#98A1B3]">{t("Email")}</p>
                     <p className="text-[#F4F7FF]">{user?.email || "-"}</p>
                   </div>
                 </div>
@@ -228,7 +229,7 @@ const EmployeeDocumentPivot = ({ employeeId, token, fetchEmployees, user, onClos
                             rel="noopener noreferrer"
                             className="text-sm text-[#EFBF04] underline hover:text-yellow-300"
                           >
-                            View
+                            {t("View")}
                           </a>
                         )}
                       </div>
@@ -244,7 +245,7 @@ const EmployeeDocumentPivot = ({ employeeId, token, fetchEmployees, user, onClos
                         htmlFor={`upload-${doc.id}`}
                         className="font-medium text-sm text-[#EFBF04] px-5 py-2 border border-[#EFBF04] rounded-full cursor-pointer w-fit transition-all hover:bg-[#EFBF04] hover:text-[#252C38]"
                       >
-                        Choose file
+                        {t("Chosee File")}
                       </label>
                     </div>
                   ))}
@@ -254,7 +255,7 @@ const EmployeeDocumentPivot = ({ employeeId, token, fetchEmployees, user, onClos
                       onClick={() => setOpen(false)}
                       className="font-medium text-base text-[#868686] bg-[#252C38] px-12 py-3 border border-[#868686] rounded-full transition-all hover:bg-[#868686] hover:text-[#252C38]"
                     >
-                      Cancel
+                      {t("Cancel")}
                     </button>
                     <button
                       onClick={handleSave}
