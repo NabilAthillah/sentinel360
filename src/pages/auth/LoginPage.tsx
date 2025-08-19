@@ -9,6 +9,7 @@ import { setUser } from '../../features/user/userSlice';
 import authService from '../../services/authService';
 import clientInfoService from '../../services/clientInfoService';
 import { Client } from '../../types/client';
+import { User } from '../../types/user';
 
 const LoginPage: React.FC = () => {
   const dispatch = useDispatch();
@@ -98,8 +99,12 @@ const LoginPage: React.FC = () => {
           Authorization: `Bearer ${token}`
         }
       })
-        .then((res) => {
-          navigate('/dashboard');
+        .then((res:any) => {
+          if (res.data.user.role.name == 'Administrator') {
+            navigate('/dashboard');
+          } else {
+            navigate('/user');
+          }
         })
         .catch((err) => {
           localStorage.removeItem('token');

@@ -19,7 +19,7 @@ type Settings = {
 const Attendance = () => {
     const user = useSelector((state: RootState) => state.user.user);
     const [siteEmployees, setSiteEmployees] = useState<SiteEmployee[]>([]);
-    const [siteEmployee, setSiteEmployee] = useState<SiteEmployee>();
+    const [siteEmployee, setSiteEmployee] = useState<SiteEmployee | null>();
     const [formData, setFormData] = useState<Settings[]>([]);
     const [nowStr, setNowStr] = useState('');
     const navigate = useNavigate();
@@ -95,67 +95,91 @@ const Attendance = () => {
         };
     };
 
-    const getEffectiveTime = (timeIn?: string | null, timeOut?: string | null) => {
-        if (!timeIn || !timeOut) return '0h 0m';
-
-        const [inH, inM, inS] = timeIn.split(':').map(Number);
-        const [outH, outM, outS] = timeOut.split(':').map(Number);
-
-        const inDate = new Date();
-        inDate.setHours(inH ?? 0, inM ?? 0, inS ?? 0, 0);
-
-        const outDate = new Date();
-        outDate.setHours(outH ?? 0, outM ?? 0, outS ?? 0, 0);
-
-        let diffMs = outDate.getTime() - inDate.getTime();
-        if (diffMs < 0) diffMs += 24 * 60 * 60 * 1000;
-
-        const totalMinutes = Math.floor(diffMs / 60000);
-        const hours = Math.floor(totalMinutes / 60);
-        const minutes = totalMinutes % 60;
-
-        return `${hours}h ${minutes}m`;
-    };
-
-    const nowMinutesSG = () => {
-        const fmt = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Singapore', hour12: false, hour: '2-digit', minute: '2-digit' });
-        const [hh, mm] = fmt.format(new Date()).split(':').map(Number);
-        return hh * 60 + mm;
-    };
-
-    const isBeforeCheckin = () => {
-        if (!siteEmployee) return false;
-        const meta = getShiftMeta(siteEmployee.shift);
-        const startStr = getSettingTime(meta.start);
-        if (!startStr) return false;
-
-        const [h, m] = startStr.split(':').map(Number);
-        const now = new Date();
-        const start = new Date();
-        start.setHours(h ?? 0, m ?? 0, 0, 0);
-
-        return now.getTime() < start.getTime();
-    };
-
-    const isBeforeCheckout = () => {
-        if (!siteEmployee) return false;
-        const meta = getShiftMeta(siteEmployee.shift);
-        const endStr = getSettingTime(meta.end);
-        if (!endStr) return false;
-
-        const [h, m] = endStr.split(':').map(Number);
-        const now = new Date();
-        const end = new Date();
-        end.setHours(h ?? 0, m ?? 0, 0, 0);
-
-        return now.getTime() < end.getTime();
-    };
-
     const startEndOf = (shiftRaw?: string) => {
         const meta = getShiftMeta(shiftRaw);
         const start = formatTime12h(getSettingTime(meta.start));
         const end = formatTime12h(getSettingTime(meta.end));
         return { start, end, meta };
+    };
+
+    const dateFromYMD = (ymd: string) => {
+        const [y, m, d] = ymd.split('-').map(Number);
+        return new Date(y, (m ?? 1) - 1, d ?? 1, 0, 0, 0, 0);
+    };
+
+    const hhmmOn = (baseDate: Date, hhmm: string) => {
+        const [h, m] = hhmm.split(':').map(Number);
+        const d = new Date(baseDate);
+        d.setHours(h ?? 0, m ?? 0, 0, 0);
+        return d;
+    };
+
+    const getShiftRange = (shiftRaw?: string, baseDateStr?: string) => {
+        const meta = getShiftMeta(shiftRaw);
+        const startStr = getSettingTime(meta.start);
+        const endStr = getSettingTime(meta.end);
+        if (!startStr || !endStr || !baseDateStr) return null;
+
+        const base = dateFromYMD(baseDateStr);
+        const start = hhmmOn(base, startStr);
+        let end = hhmmOn(base, endStr);
+        if (start.getTime() > end.getTime()) {
+            end.setDate(end.getDate() + 1);
+        }
+        return { start, end };
+    };
+
+    const getGraceMinutes = () => {
+        const gp = getSettingTime('Grace period (in minutes)');
+        const n = parseInt(gp ?? '0', 10);
+        return Number.isFinite(n) ? Math.max(0, n) : 0;
+    };
+
+    const isBeforeCheckin = () => {
+        if (!siteEmployee) return false;
+        const range = getShiftRange(siteEmployee.shift, siteEmployee.date);
+        if (!range) return false;
+        const { start } = range;
+        const graceMin = getGraceMinutes();
+        const now = new Date();
+        const startMinusGrace = new Date(start.getTime() - graceMin * 60_000);
+        return now < startMinusGrace;
+    };
+
+    const isBeforeCheckout = () => {
+        if (!siteEmployee) return false;
+        const range = getShiftRange(siteEmployee.shift, siteEmployee.date);
+        if (!range) return false;
+        const { end } = range;
+        const graceMin = getGraceMinutes();
+        const now = new Date();
+        const endMinusGrace = new Date(end.getTime() - graceMin * 60_000);
+        return now < endMinusGrace;
+    };
+
+    const isLateForCheckin = () => {
+        if (!siteEmployee) return false;
+        const range = getShiftRange(siteEmployee.shift, siteEmployee.date);
+        if (!range) return false;
+        const { start, end } = range;
+        const graceMin = getGraceMinutes();
+        const now = new Date();
+        const startPlusGrace = new Date(start.getTime() + graceMin * 60_000);
+        return now > startPlusGrace && now < end;
+    };
+
+    const getEffectiveTime = (timeIn?: string | null, timeOut?: string | null) => {
+        if (!timeIn || !timeOut) return '0h 0m';
+        const [inH, inM, inS] = timeIn.split(':').map(Number);
+        const [outH, outM, outS] = timeOut.split(':').map(Number);
+        const inDate = new Date(); inDate.setHours(inH ?? 0, inM ?? 0, inS ?? 0, 0);
+        const outDate = new Date(); outDate.setHours(outH ?? 0, outM ?? 0, outS ?? 0, 0);
+        let diffMs = outDate.getTime() - inDate.getTime();
+        if (diffMs < 0) diffMs += 24 * 60 * 60 * 1000;
+        const totalMinutes = Math.floor(diffMs / 60000);
+        const hours = Math.floor(totalMinutes / 60);
+        const minutes = totalMinutes % 60;
+        return `${hours}h ${minutes}m`;
     };
 
     const fetchSites = async () => {
@@ -179,7 +203,7 @@ const Attendance = () => {
                 const d = response.data;
                 const mapped: Settings[] = [
                     { label: 'Grace period (in minutes)', placeholder: 'Grace period (in minutes)', value: String(d.grace_period) },
-                    { label: 'Geo fencing (in minutes)', placeholder: 'Geo fencing (in minutes)', value: String(d.geo_fencing) },
+                    { label: 'Geo fencing (in meters)', placeholder: 'Geo fencing (in meters)', value: String(d.geo_fencing) },
                     { label: 'Day shift start time', placeholder: '00:00', value: d.day_shift_start_time.slice(0, 5) },
                     { label: 'Day shift end time', placeholder: '00:00', value: d.day_shift_end_time.slice(0, 5) },
                     { label: 'Night shift start time', placeholder: '00:00', value: d.night_shift_start_time.slice(0, 5) },
@@ -196,24 +220,123 @@ const Attendance = () => {
         }
     };
 
-    const { start: headerStartTime, end: headerEndTime } = useMemo(() => {
-        const meta = getShiftMeta(siteEmployee?.shift);
-        return {
-            start: formatTime12h(getSettingTime(meta.start)),
-            end: formatTime12h(getSettingTime(meta.end)),
-        };
-    }, [siteEmployee?.shift, formData]);
+    type Coords = { lat: number; lng: number };
+
+    const [checkingFence, setCheckingFence] = useState(false);
+
+    const haversineMeters = (a: Coords, b: Coords) => {
+        const R = 6371000;
+        const toRad = (deg: number) => (deg * Math.PI) / 180;
+        const dLat = toRad(b.lat - a.lat);
+        const dLng = toRad(b.lng - a.lng);
+        const lat1 = toRad(a.lat);
+        const lat2 = toRad(b.lat);
+        const h = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+        return 2 * R * Math.asin(Math.sqrt(h));
+    };
+
+    const getGeoRadius = () => {
+        const s = getSettingTime('Geo fencing (in meters)');
+        const n = Number(s ?? 0);
+        return Number.isFinite(n) ? Math.max(0, n) : 0;
+    };
+
+    const fetchSitePos = async (): Promise<Coords | null> => {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token || !siteEmployee?.id) return null;
+            const res = await siteEmployeeService.getById(token, siteEmployee.id);
+            const lat = Number(res?.data?.site?.lat ?? res?.data?.lat);
+            const lng = Number(res?.data?.site?.lng ?? res?.data?.lng);
+            if (Number.isFinite(lat) && Number.isFinite(lng)) return { lat, lng };
+        } catch (e) { }
+        return null;
+    };
+
+    const getCurrentCoords = (): Promise<Coords> =>
+        new Promise((resolve, reject) => {
+            if (!('geolocation' in navigator)) return reject(new Error('Geolocation unsupported'));
+            navigator.geolocation.getCurrentPosition(
+                (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+                (err) => reject(err),
+                { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+            );
+        });
+
+    const ensureWithinGeofence = async () => {
+        try {
+            setCheckingFence(true);
+
+            const radius = getGeoRadius();
+            if (!radius || radius <= 0) {
+                await Swal.fire({
+                    title: 'Geofence not configured',
+                    text: 'Site radius is missing. Please contact admin.',
+                    icon: 'error',
+                    background: '#1e1e1e',
+                    confirmButtonColor: '#EFBF04',
+                    color: '#f4f4f4',
+                    customClass: { popup: 'swal2-dark-popup' },
+                });
+                return { ok: false, user: null as Coords | null, site: null as Coords | null, dist: null as number | null, radius };
+            }
+
+            const [site, user] = await Promise.all([fetchSitePos(), getCurrentCoords()]);
+            if (!site || !user) {
+                await Swal.fire({
+                    title: 'Location unavailable',
+                    text: 'Unable to get site or your location.',
+                    icon: 'error',
+                    background: '#1e1e1e',
+                    confirmButtonColor: '#EFBF04',
+                    color: '#f4f4f4',
+                    customClass: { popup: 'swal2-dark-popup' },
+                });
+                return { ok: false, user, site, dist: null, radius };
+            }
+
+            const dist = haversineMeters(user, site);
+            if (dist > radius) {
+                await Swal.fire({
+                    title: 'Outside geofence',
+                    text: `You are ~${Math.round(dist)} m away. Please be within ${Math.round(radius)} m of the site to check out.`,
+                    icon: 'warning',
+                    background: '#1e1e1e',
+                    confirmButtonColor: '#EFBF04',
+                    color: '#f4f4f4',
+                    customClass: { popup: 'swal2-dark-popup' },
+                });
+                return { ok: false, user, site, dist, radius };
+            }
+
+            return { ok: true, user, site, dist, radius };
+        } finally {
+            setCheckingFence(false);
+        }
+    };
 
     const handleSubmit = async (e: React.SyntheticEvent) => {
         e.preventDefault();
 
         if (isBeforeCheckin()) {
-            console.log(isBeforeCheckin())
             toast.error('It is not yet check-in time');
             return;
         }
 
         if (!siteEmployee?.attendance) {
+            if (isLateForCheckin()) {
+                const confirmLate = await Swal.fire({
+                    title: 'Late check-in',
+                    text: 'You are late.',
+                    icon: 'error',
+                    confirmButtonText: 'Okay',
+                    background: '#1e1e1e',
+                    confirmButtonColor: '#EFBF04',
+                    color: '#f4f4f4',
+                    customClass: { popup: 'swal2-dark-popup' },
+                });
+                return;
+            }
             navigate(`/user/attendance/checkin/${siteEmployee?.id}`);
             return;
         }
@@ -221,6 +344,9 @@ const Attendance = () => {
         if (siteEmployee?.attendance?.time_out) {
             return;
         }
+
+        const fence = await ensureWithinGeofence();
+        if (!fence.ok) return;
 
         const confirm = await Swal.fire({
             title: 'Confirm checkout?',
@@ -257,18 +383,23 @@ const Attendance = () => {
                     return undefined;
                 },
             });
-
             if (!isConfirmed) return;
-
-            await handleCheckout(reason.trim());
-
+            await handleCheckout(reason.trim(), fence);
             return;
         }
 
-        handleCheckout('');
-    }
+        handleCheckout('', fence);
+    };
 
-    const handleCheckout = async (reason: string) => {
+    type FenceInfo = {
+        ok: boolean;
+        user: Coords | null;
+        site: Coords | null;
+        dist: number | null;
+        radius: number;
+    };
+
+    const handleCheckout = async (reason: string, fence?: FenceInfo) => {
         try {
             const token = localStorage.getItem('token');
 
@@ -298,6 +429,12 @@ const Attendance = () => {
                 hour12: false,
                 timeZone: 'Asia/Singapore',
             }).format(new Date());
+
+            if (!fence?.ok) {
+                const recheck = await ensureWithinGeofence();
+                if (!recheck.ok) return;
+                fence = recheck;
+            }
 
             const payload = {
                 id_site_employee,
@@ -368,6 +505,14 @@ const Attendance = () => {
         return () => clearInterval(id);
     }, []);
 
+    const { start: headerStartTime, end: headerEndTime } = useMemo(() => {
+        const meta = getShiftMeta(siteEmployee?.shift);
+        return {
+            start: formatTime12h(getSettingTime(meta.start)),
+            end: formatTime12h(getSettingTime(meta.end)),
+        };
+    }, [siteEmployee?.shift, formData]);
+
     return (
         <div className="bg-[#181D26] min-h-screen text-white flex flex-col gap-12">
             <ToastContainer
@@ -400,7 +545,11 @@ const Attendance = () => {
                             </h2>
 
                             <p className="text-sm text-[#98A1B3]">
-                                {headerStartTime} – {headerEndTime}
+                                {siteEmployee ? (
+                                    headerStartTime + ' – ' + headerEndTime
+                                ) : (
+                                    '-'
+                                )}
                             </p>
                         </div>
 
@@ -461,21 +610,28 @@ const Attendance = () => {
 
                 {!siteEmployee?.attendance?.time_out && (
                     <button
+                        disabled={!siteEmployee || isBeforeCheckin()}
                         onClick={handleSubmit}
-                        className="bg-[#EFBF04] rounded-full flex flex-wrap justify-center gap-3 items-center w-full py-[13.5px]"
+                        className={`rounded-full flex flex-wrap justify-center gap-3 items-center w-full py-[13.5px] ${siteEmployee ? 'bg-[#EFBF04]' : 'bg-[#a38304]'}`}
                     >
-                        <span className="flex text-[#181D26] text-base font-bold gap-2 text-center w-fit font-inter">
-                            {isBeforeCheckin()
-                                ? 'It is not yet check-in time'
-                                : siteEmployee?.attendance?.time_in && !siteEmployee?.attendance?.time_out
-                                    ? "Let's checkout"
-                                    : siteEmployee?.attendance?.time_out
-                                        ? 'You have already checked out'
-                                        : "Let's check in"}
-                        </span>
-                        <span className="flex text-[#181D26] text-base font-bold gap-2 text-center w-fit font-inter">
-                            |
-                        </span>
+                        {siteEmployee && (
+                            <span className="flex text-[#181D26] text-base font-bold gap-2 text-center w-fit font-inter">
+                                {isBeforeCheckin()
+                                    ? 'It is not yet check-in time'
+                                    : siteEmployee?.attendance?.time_in && !siteEmployee?.attendance?.time_out
+                                        ? "Let's checkout"
+                                        : siteEmployee?.attendance?.time_out
+                                            ? 'You have already checked out'
+                                            : isLateForCheckin()
+                                                ? 'Late'
+                                                : "Let's check in"}
+                            </span>
+                        )}
+                        {siteEmployee && (
+                            <span className="flex text-[#181D26] text-base font-bold gap-2 text-center w-fit font-inter">
+                                |
+                            </span>
+                        )}
                         <span className="flex text-[#181D26] text-base font-bold gap-2 text-center w-fit font-inter">
                             {nowStr || '00:00:00'}
                         </span>

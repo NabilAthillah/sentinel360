@@ -32,6 +32,19 @@ const siteEmployeeService = {
         }
     },
 
+    getById: async (token,id) => {
+        try {
+            const response = await api.get(`/site-user/${id}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            return response.data;
+        } catch (error) {
+            throw error.response ? error.response.data : { message: 'Network error' };
+        }
+    },
+
     getAllSiteUser: async (token,user) => {
         try {
             const response = await api.get(`/site-user/user/data/${user.employee.id}`, {

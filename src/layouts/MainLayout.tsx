@@ -15,9 +15,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
     const user = useSelector((state: RootState) => state.user.user);
     const dispatch = useDispatch();
 
-    const handleLogout = async (e: React.SyntheticEvent) => {
-        e.preventDefault();
-
+    const handleLogout = async () => {
         dispatch(clearUser());
         localStorage.removeItem('token');
         localStorage.removeItem('user');

@@ -86,3 +86,7 @@
     caret-color: #F4F7FF;
   }
 }
+
+*:focus-visible {
+  outline: none !important;
+}

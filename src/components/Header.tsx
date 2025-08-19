@@ -85,8 +85,7 @@ const Header = ({ openSidebar, user, handleLogout }: { openSidebar: any, user: U
         exit: { opacity: 0, y: -6, transition: { duration: 0.1, ease: "easeIn" } }
     };
 
-    // Map bahasa -> kode bendera (flag-icons)
-    const langToFlag = (lng: string) => (lng === "ms" ? "my" : "gb"); // ms -> Malaysia, en -> UK
+    const langToFlag = (lng: string) => (lng === "ms" ? "my" : "sg");
 
     return (
         <nav className="w-full bg-transparent p-6 flex items-center justify-between z-40 md:justify-end relative sm:gap-4">
@@ -130,7 +129,7 @@ const Header = ({ openSidebar, user, handleLogout }: { openSidebar: any, user: U
                                     onClick={() => handleLanguageChange("en")}
                                     title="English"
                                 >
-                                    <span className="fi fis fi-gb" />
+                                    <span className="fi fis fi-sg" />
                                 </li>
                                 <li
                                     role="option"
@@ -145,9 +144,7 @@ const Header = ({ openSidebar, user, handleLogout }: { openSidebar: any, user: U
                         )}
                     </AnimatePresence>
                 </div>
-                {/* === END language flag === */}
 
-                {/* User button */}
                 <button
                     type="button"
                     aria-haspopup="menu"
@@ -155,7 +152,7 @@ const Header = ({ openSidebar, user, handleLogout }: { openSidebar: any, user: U
                     aria-controls="user-menu"
                     onClick={() => {
                         setDropdownOpen((v) => !v);
-                        setLangDropdownOpen(false); // close language popover if open
+                        setLangDropdownOpen(false);
                     }}
                     className="flex items-center gap-2 cursor-pointer outline-none rounded-md px-1"
                 >
@@ -188,7 +185,6 @@ const Header = ({ openSidebar, user, handleLogout }: { openSidebar: any, user: U
                     </motion.svg>
                 </button>
 
-                {/* User dropdown menu */}
                 <AnimatePresence>
                     {dropdownOpen && (
                         <motion.div
@@ -220,12 +216,10 @@ const Header = ({ openSidebar, user, handleLogout }: { openSidebar: any, user: U
                                 {t("Master Settings")}
                             </Link>
 
-                            {/* Language section REMOVED from this dropdown */}
 
                             <button
                                 role="menuitem"
                                 onClick={() => {
-                                    setDropdownOpen(false);
                                     handleLogout();
                                 }}
                                 className="text-[#F4F7FF] rounded-md px-2 py-2 hover:bg-white/5 transition-colors text-left"
