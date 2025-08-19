@@ -719,7 +719,7 @@ const Attendance = () => {
                                             className={`text-xs font-medium ${completed ? 'text-[#3BB678]' : 'text-[#FF7E6A]'
                                                 }`}
                                         >
-                                            {completed ? 'Completed' : 'Incomplete'}
+                                            {completed ? 'Completed' : 'Missing'}
                                         </p>
                                     </div>
 

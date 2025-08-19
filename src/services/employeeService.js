@@ -128,6 +128,22 @@ const employeeService = {
             throw error.response ? error.response.data : { message: 'Network error' };
         }
     },
+
+    updateProfile: async (token, payload, id) => {
+        try {
+            const response = await api.put(`/employees/profile/${id}`, payload, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.data) {
+                return response.data;
+            }
+        } catch (error) {
+            throw error.response ? error.response.data : { message: 'Network error' };
+        }
+    },
 }
 
 export default employeeService;

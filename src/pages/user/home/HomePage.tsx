@@ -192,7 +192,7 @@ const HomePage = () => {
       </div>
 
       {siteEmployee && (
-        <div
+        <Link to="/user/attendance"
           className="bg-[#EFBF04] text-[#181D26] p-4 rounded-lg relative mt-4 flex justify-between items-center"
         >
           <div className='flex flex-col'>
@@ -226,7 +226,7 @@ const HomePage = () => {
               />
             </svg>
           </div>
-        </div>
+        </Link>
       )}
 
       <div className="grid grid-cols-2 gap-4 mt-6">

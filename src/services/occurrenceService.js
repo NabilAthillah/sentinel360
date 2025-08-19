@@ -33,6 +33,22 @@ const occurrenceService = {
         } catch (error) {
             throw error.response ? error.response.data : { message: 'Network error' };
         }
+    },
+
+    deleteOccurrence: async (token, id) => {
+        try {
+            const response = await api.delete(`/occurrences/${id}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.data) {
+                return response.data;
+            }
+        } catch (error) {
+            throw error.response ? error.response.data : { message: 'Network error' };
+        }
     }
 }
 
