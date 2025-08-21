@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import React, { useEffect, useState } from "react";
+import { useTranslation } from 'react-i18next';
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -10,7 +11,6 @@ import auditTrialsService from "../../../services/auditTrailsService";
 import permissionService from "../../../services/permissionService";
 import roleService from "../../../services/roleService";
 import { RootState } from "../../../store";
-import { useTranslation } from 'react-i18next';
 type Role = {
     id: string;
     name: string;
@@ -176,6 +176,14 @@ const RolesPage = () => {
             console.error(error);
         }
     }
+
+    const formatPermissionName = (name: string) =>
+        name
+            .replace(/_/g, " ")
+            .replace(/\s+/g, " ")
+            .trim()
+            .toLowerCase()
+            .replace(/(^|\s)\S/g, (m) => m.toUpperCase());
 
     useEffect(() => {
         audit();
@@ -361,7 +369,7 @@ const RolesPage = () => {
                                                         className={`font-medium text-sm leading-[20px] w-fit px-4 py-2 rounded-full transition-all ${isSelected ? 'bg-[#446FC7] text-white' : 'bg-[#303847] text-[#F4F7FF] hover:bg-[#446FC7] hover:text-white'
                                                             }`}
                                                     >
-                                                        {permission.name}
+                                                        {formatPermissionName(permission.name)}
                                                     </button>
                                                 );
                                             })}
@@ -442,7 +450,7 @@ const RolesPage = () => {
                                                         className={`px-4 py-2 rounded-full text-sm transition ${isSelected ? 'bg-blue-600 text-white' : 'bg-gray-700 text-white hover:bg-blue-600'
                                                             }`}
                                                     >
-                                                        {permission.name}
+                                                        {formatPermissionName(permission.name)}
                                                     </button>
                                                 );
                                             })}

@@ -291,7 +291,7 @@ const IncidentPageMaster = () => {
                                                             {incident.name}
                                                         </td>
                                                         <td className="text-[#F4F7FF] pt-6 pb-3">
-                                                            {hasPermission('add_incident_type') ? (
+                                                            {hasPermission('edit_incident_type') ? (
                                                                 <div className="flex items-center gap-4 w-40">
                                                                     <Switch
                                                                         id={`custom-switch-component-${incident.id}`}

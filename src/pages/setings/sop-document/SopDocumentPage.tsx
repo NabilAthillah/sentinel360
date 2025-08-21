@@ -259,8 +259,8 @@ const SopDocumentPage = () => {
                                 </div>
                             </div>
                             {hasPermission('add_sop_document')} {
-                                <div className="w-[200px]">
-                                    <button onClick={() => setAddDoc(true)} className="font-medium text-base min-w-[200px] text-[#181d26] px-[46.5px] py-3 border-[1px] border-[#EFBF04] bg-[#EFBF04] rounded-full hover:bg-[#181d26] hover:text-[#EFBF04] transition-all">{t('Add Document')}</button>
+                                <div className="w-[250px]">
+                                    <button onClick={() => setAddDoc(true)} className="font-medium text-base min-w-[250px] text-[#181d26] px-[46.5px] py-3 border-[1px] border-[#EFBF04] bg-[#EFBF04] rounded-full hover:bg-[#181d26] hover:text-[#EFBF04] transition-all">{t('Add Document')}</button>
                                 </div>
                             }
                         </div>

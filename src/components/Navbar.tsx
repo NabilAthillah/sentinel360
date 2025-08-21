@@ -1,8 +1,8 @@
+import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 import { Link, useLocation } from 'react-router-dom';
 import { RootState } from '../store';
-import { useTranslation } from 'react-i18next';
-import { useEffect, useState } from 'react';
 
 const Navbar = () => {
     const location = useLocation();
@@ -49,9 +49,11 @@ const Navbar = () => {
                 </Link>
             )}
 
-            <Link to="/dashboard/settings/incident" className={`font-medium text-sm text-[#F4F7FF] px-6 ${pathname === '/dashboard/settings/incident' ? 'pt-[14px] pb-3 border-b-2 border-b-[#F3C511]' : 'py-[14px] border-b-0'}`}>
-                {t('Incident')}
-            </Link>
+            {hasPermission('list_incident_types') && (
+                <Link to="/dashboard/settings/incident" className={`font-medium text-sm text-[#F4F7FF] px-6 ${pathname === '/dashboard/settings/incident' ? 'pt-[14px] pb-3 border-b-2 border-b-[#F3C511]' : 'py-[14px] border-b-0'}`}>
+                    {t('Incident')}
+                </Link>
+            )}
 
             {hasPermission('list_occurrence_categories') && (
                 <Link to="/dashboard/settings/occurrence-catg" className={`font-medium text-sm text-[#F4F7FF] px-6 ${pathname === '/dashboard/settings/occurrence-catg' ? 'pt-[14px] pb-3 border-b-2 border-b-[#F3C511]' : 'py-[14px] border-b-0'}`}>
