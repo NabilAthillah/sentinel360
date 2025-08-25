@@ -1,95 +1,39 @@
-import 'flag-icons/css/flag-icons.min.css';
-import { AnimatePresence, motion } from "framer-motion";
-import { AlignLeft } from "lucide-react";
+import "flag-icons/css/flag-icons.min.css";
+import { AnimatePresence, motion, Variants } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router-dom";
-import languageService from "../services/languageService";
+import { Link, useNavigate } from "react-router-dom";
 import { User } from "../types/user";
+import Loader from "./Loader";
 
-const Header = ({
+const HeaderLayout = ({
     openSidebar,
-    user,
     handleLogout,
+    title,
+    user
 }: {
     openSidebar: any;
-    user: User | null;
     handleLogout: any;
+    title: string;
+    user: User
 }) => {
-    const { t, i18n } = useTranslation();
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const [langDropdownOpen, setLangDropdownOpen] = useState(false);
-    const [language, setLanguage] = useState(
-        localStorage.getItem("lang") || user?.language || "en"
-    );
-
+    const [language, setLanguage] = useState<"en" | "ms">("en");
+    const { t, i18n } = useTranslation();
     const rootRef = useRef<HTMLDivElement>(null);
     const firstItemRef = useRef<HTMLAnchorElement>(null);
-    const langButtonRef = useRef<HTMLButtonElement>(null);
+    const langButtonRef = useRef<HTMLButtonElement>(null); 
+    const navigate = useNavigate();
 
-    const apiUrl = process.env.REACT_APP_API_URL || "http://192.168.100.112:8000/api";
-    const baseURL = new URL(apiUrl);
-    baseURL.pathname = baseURL.pathname.replace(/\/api$/, "");
-
-    useEffect(() => {
-        const savedLang = localStorage.getItem("lang");
-
-        if (savedLang) {
-            setLanguage(savedLang);
-            i18n.changeLanguage(savedLang);
-        } else if (user?.language) {
-            setLanguage(user.language);
-            localStorage.setItem("lang", user.language);
-            i18n.changeLanguage(user.language);
-        }
-    }, [user, i18n]);
-
-    const handleLanguageChange = async (lang: string) => {
+    const handleLanguageChange = (lang: "en" | "ms") => {
         setLanguage(lang);
-        localStorage.setItem("lang", lang);
         i18n.changeLanguage(lang);
         setLangDropdownOpen(false);
-
-        try {
-            if (user?.id) {
-                const token = localStorage.getItem("token");
-                await languageService.editLanguage(token, user.id, lang);
-            }
-        } catch (err) {
-            console.error("Failed to update language", err);
-        }
+        i18n.changeLanguage(lang);
     };
 
-    useEffect(() => {
-        const onDown = (e: MouseEvent) => {
-            if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
-                setDropdownOpen(false);
-                setLangDropdownOpen(false);
-            }
-        };
-        document.addEventListener("mousedown", onDown);
-        return () => document.removeEventListener("mousedown", onDown);
-    }, []);
-
-    useEffect(() => {
-        const onKey = (e: KeyboardEvent) => {
-            if (e.key === "Escape") {
-                setDropdownOpen(false);
-                setLangDropdownOpen(false);
-            }
-        };
-        window.addEventListener("keydown", onKey);
-        return () => window.removeEventListener("keydown", onKey);
-    }, []);
-
-    useEffect(() => {
-        if (dropdownOpen) {
-            const t = setTimeout(() => firstItemRef.current?.focus(), 0);
-            return () => clearTimeout(t);
-        }
-    }, [dropdownOpen]);
-
-    const menuVariants = {
+    const menuVariants: Variants = {
         hidden: { opacity: 0, y: -6, scale: 0.98 },
         show: {
             opacity: 1,
@@ -105,7 +49,7 @@ const Header = ({
         },
     };
 
-    const listVariants = {
+    const listVariants: Variants = {
         hidden: { opacity: 0, y: -6 },
         show: {
             opacity: 1,
@@ -119,16 +63,21 @@ const Header = ({
         },
     };
 
-    const langToFlag = (lng: string) => (lng === "ms" ? "my" : "sg");
+    const baseURL = new URL(process.env.REACT_APP_API_URL || "http://localhost:8000/");
+    baseURL.pathname = baseURL.pathname.replace(/\/api$/, "");
+
+    const langToFlag = (lng: "en" | "ms") => (lng === "ms" ? "my" : "sg");
 
     return (
-        <nav className="w-full bg-transparent p-6 flex items-center justify-between z-40 md:justify-end relative sm:gap-4">
-            <AlignLeft
-                onClick={() => openSidebar(true)}
-                color="#ffffff"
-                className="cursor-pointer md:hidden"
-            />
+        <nav className="w-full bg-transparent p-6 flex items-center justify-between z-40 relative sm:gap-4">
+            <button onClick={(e) => {navigate(-1)}} className="flex items-center gap-2">
+                <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg" className="cursor-pointer h-fit">
+                    <path d="M27.333 14.0003C27.333 6.64033 21.3597 0.666992 13.9997 0.666992C6.63968 0.666991 0.666343 6.64032 0.666343 14.0003C0.666343 21.3603 6.63967 27.3337 13.9997 27.3337C21.3597 27.3337 27.333 21.3603 27.333 14.0003ZM11.333 14.0003L16.6663 8.66699L16.6663 19.3337L11.333 14.0003Z" fill="#98A1B3" />
+                </svg>
+                <h2 className="font-caladea text-[32px] text-[#F9F9F9] w-full">{title}</h2>
+            </button>
 
+            {user ? (
             <div
                 ref={rootRef}
                 className="flex items-center justify-end gap-2 relative sm:gap-4"
@@ -136,7 +85,6 @@ const Header = ({
                 {/* Language switcher */}
                 <div className="relative">
                     <button
-                        ref={langButtonRef}
                         type="button"
                         aria-haspopup="listbox"
                         aria-expanded={langDropdownOpen}
@@ -148,7 +96,6 @@ const Header = ({
                         className="h-8 w-8 rounded-full flex items-center justify-center ring-1 ring-white/10 hover:ring-white/20 bg-[#252C38]/80 backdrop-blur-sm"
                         title="Change language"
                     >
-                        {/* ✅ perbaikan className pakai template literal */}
                         <span
                             className={`fi fis fi-${langToFlag(language)}`}
                             aria-hidden="true"
@@ -191,12 +138,11 @@ const Header = ({
                     </AnimatePresence>
                 </div>
 
-                {/* User dropdown */}
+                {/* Profile & dropdown */}
                 <button
                     type="button"
                     aria-haspopup="menu"
                     aria-expanded={dropdownOpen}
-                    aria-controls="user-menu"
                     onClick={() => {
                         setDropdownOpen((v) => !v);
                         setLangDropdownOpen(false);
@@ -207,23 +153,22 @@ const Header = ({
                         <span className="w-[14px] h-[14px] bg-[#22CAAD] border-2 border-[#07080B] rounded-full absolute bottom-[-2px] right-[-2px]" />
                         {user?.profile_image ? (
                             <img
-                                // ✅ perbaikan template string + hapus spasi salah
-                                src={`${baseURL.toString() !== "" ? baseURL.toString() : "http://localhost:8000/"}storage/${user?.profile_image}`}
+                                src={`${baseURL.toString()}storage/${user.profile_image}`}
                                 alt="profile"
                                 className="h-8 w-8 rounded-full object-cover"
                             />
                         ) : (
                             <img
                                 src="/images/profile.png"
-                                alt=""
+                                alt="default profile"
                                 className="h-8 w-8 rounded-full object-cover"
                             />
                         )}
                     </div>
-                    <div className="hidden sm:flex flex-col gap-[2px] text-left">
-                        <p className="text-sm text-white">{user?.name}</p>
+                    <div className="hidden sm:flex flex-col gap-[2px] text-left :">
+                        <p className="text-sm text-white">{user.name}</p>
                         <p className="text-xs leading-[21px] text-[#A3A9B6]">
-                            {user?.role.name}
+                            {user.role.name}
                         </p>
                     </div>
 
@@ -245,7 +190,6 @@ const Header = ({
                 <AnimatePresence>
                     {dropdownOpen && (
                         <motion.div
-                            id="user-menu"
                             role="menu"
                             aria-label="User Menu"
                             variants={menuVariants}
@@ -261,9 +205,8 @@ const Header = ({
                                 className="text-[#F4F7FF] rounded-md px-2 py-2 hover:bg-white/5 transition-colors"
                                 onClick={() => setDropdownOpen(false)}
                             >
-                                {t("profile")}
+                                Profile
                             </Link>
-
                             <Link
                                 to="/dashboard/settings/attendance"
                                 role="menuitem"
@@ -272,22 +215,22 @@ const Header = ({
                             >
                                 {t("Master Settings")}
                             </Link>
-
                             <button
                                 role="menuitem"
-                                onClick={() => {
-                                    handleLogout();
-                                }}
+                                onClick={handleLogout}
                                 className="text-[#F4F7FF] rounded-md px-2 py-2 hover:bg-white/5 transition-colors text-left"
                             >
-                                {t("logout")}
+                                Logout
                             </button>
                         </motion.div>
                     )}
                 </AnimatePresence>
             </div>
+            ) : (
+                <Loader primary/>
+            )}
         </nav>
     );
 };
 
-export default Header;
+export default HeaderLayout;

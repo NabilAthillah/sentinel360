@@ -8,9 +8,13 @@ export type User = {
         address?: string;
         profile_image?: string;
         email: string;
-        status: string;
         last_login?: string;
         role: Role;
-        employee?: Employee;
+        nric_fin_no: string;
+        briefing_date: string;
+        birth? : string;
+        briefing_conducted?: string;
+        date_joined?: string;
+        status?: string;
         language?: string;
 }

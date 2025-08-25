@@ -3,10 +3,10 @@ import api from '../utils/api';
 // Authentication service
 const authService = {
   // Login admin
-  login: async (email, password) => {
+  login: async (account, password) => {
     try {
       const response = await api.post('/auth/login', {
-        email: email,
+        account: account,
         password: password
       });
       if (response.data) {
@@ -72,23 +72,19 @@ const authService = {
     }
   },
 
-  updateProfile: async (id, token, name, address, mobile, email, old_password, new_password, profile) => {
+  updateProfile: async (data, id) => {
     try {
-      const response = await api.post('/auth/update-profile', {
-        id,
-        name,
-        address,
-        mobile,
-        email,
-        old_password,
-        new_password,
-        profile
-      }, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
+      const response = await api.post(`/auth/update-profile/${id}`, data)
 
+      return response.data;
+    } catch (error) {
+      throw error.response ? error.response.data : { message: 'Network error' };
+    }
+  },
+
+  checkToken: async (token) => {
+    try {
+      const response = await api.get('/check-token');
       return response.data;
     } catch (error) {
       throw error.response ? error.response.data : { message: 'Network error' };

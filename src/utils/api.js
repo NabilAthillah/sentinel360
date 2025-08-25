@@ -2,10 +2,11 @@ import axios from 'axios';
 
 // Create axios instance with default config
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:8000/api',
+  baseURL: process.env.REACT_APP_API_URL || "http://192.168.100.112:8000/api",
   headers: {
-    'Content-Type': 'application/json'
-  }
+    "Content-Type": "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  },
 });
 
 // Request interceptor for adding auth token
