@@ -1,7 +1,7 @@
 import api from "../utils/api";
 
 const roleService = {
-    addRole: async (name, token, permissions) => {
+    addRole: async (payload) => {
         try {
             const response = await api.post('master-settings/roles', payload)
             if (response.data) {
@@ -28,7 +28,7 @@ const roleService = {
         }
     },
 
-    updateRole: async (id, name, token, permissions) => {
+    updateRole: async (id, payload) => {
         try {
             const response = await api.put(`master-settings/roles/${id}`, payload);
 
