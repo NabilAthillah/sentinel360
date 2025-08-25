@@ -14,6 +14,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
     const [sidebar, setSidebar] = useState(false);
     const navigate = useNavigate();
     const user = useSelector((state: RootState) => state.user.user);
+    const token = useSelector((state: RootState) => state.token.token);
     const dispatch = useDispatch();
 
     const handleLogout = async () => {
@@ -27,34 +28,34 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
     }
 
     useEffect(() => {
-        const token = localStorage.getItem('token');
-        const userData = localStorage.getItem('user');
+        if (!token || !user) return;
 
-        if (token || userData) {
-            axios.get(`${process.env.REACT_APP_API_URL}/check-token` || 'http://localhost:8000/api/check-token', {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            })
-                .then((res) => {
-                    const parsedUser = res.data.user ? res.data.user : null;
 
-                    if (!parsedUser || !parsedUser.id) {
-                        localStorage.clear();
-                        navigate('/auth/login');
-                        return;
+            if (token || user) {
+                axios.get(`${process.env.REACT_APP_API_URL}/check-token` || 'http://localhost:8000/api/check-token', {
+                    headers: {
+                        Authorization: `Bearer ${token}`
                     }
                 })
-                .catch((err) => {
-                    navigate('/auth/login')
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('user');
-                });
-        } else {
-            navigate('/auth/login')
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-        }
+                    .then((res) => {
+                        const parsedUser = res.data.user ? res.data.user : null;
+
+                        if (!parsedUser || !parsedUser.id) {
+                            localStorage.clear();
+                            navigate('/auth/login');
+                            return;
+                        }
+                    })
+                    .catch((err) => {
+                        navigate('/auth/login')
+                        localStorage.removeItem('token');
+                        localStorage.removeItem('user');
+                    });
+            } else {
+                navigate('/auth/login')
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+            }
     }, [navigate])
 
     return (

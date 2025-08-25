@@ -5,12 +5,13 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Bounce, toast, ToastContainer } from 'react-toastify';
 import authService from "../services/authService";
 import HeaderLayout from '../components/HeaderLayout';
+import { useTranslation } from 'react-i18next';
 
 const SecondLayout = ({ children }: { children: React.ReactNode }) => {
     const [sidebar, setSidebar] = useState(false);
     const [user, setUser] = useState<any | null>(null);
     const navigate = useNavigate();
-
+    const { t } = useTranslation();
     const location = useLocation();
     const { pathname } = location;
 
@@ -77,23 +78,23 @@ const SecondLayout = ({ children }: { children: React.ReactNode }) => {
 
     const titleHeader = () => {
         if (pathname == '/dashboard/employees') {
-            return 'Employees';
+            return t('Employees');
         } else if (pathname == '/dashboard/attendances') {
-            return 'Attendances';
+            return t('Attendances');
         } else if (pathname == '/dashboard/e-occurrences') {
-            return 'E-Occurrences';
+            return t('E-Occurrences');
         } else if (pathname == '/dashboard/incidents') {
-            return 'Incidents';
+            return t('Incidents');
         } else if (pathname == '/dashboard/sites') {
-            return 'Sites';
+            return t('Sites');
         } else if (pathname == '/dashboard/reports') {
-            return 'Reports';
+            return t('Reports');
         } else if (pathname == '/dashboard/guard-tours') {
-            return 'Guard Tours';
+            return t('Guard Tours');
         } else if (pathname == '/dashboard/audit-trails') {
-            return 'Audit Trails';
+            return t('Audit Trails');
         } else if (pathname == '/dashboard/settings/profile') {
-            return 'Profile';
+            return t('Profile');
         } else {
             return '';
         }

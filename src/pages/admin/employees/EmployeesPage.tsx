@@ -19,6 +19,7 @@ import Loader from "../../../components/Loader";
 import DeleteModal from "../../../components/DeleteModal";
 import SecondLayout from "../../../layouts/SecondLayout";
 import SidebarLayout from "../../../components/SidebarLayout";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 
 const EmployeesPage = () => {
     const user = useSelector((state: RootState) => state.user.user);
@@ -101,7 +102,7 @@ const EmployeesPage = () => {
         e.preventDefault();
         setLoading(true);
         try {
-            
+
 
             if (!addData.mobile) {
                 toast.error("Mobile number cannot be null.");
@@ -287,7 +288,7 @@ const EmployeesPage = () => {
         if (!token || !user) return;
         setListLoading(true);
         try {
-            
+
             const response = await employeeService.getAllEmployee(token);
             if (response.success) {
                 setEmployees(response.data);
@@ -317,7 +318,7 @@ const EmployeesPage = () => {
     };
 
     const audit = async () => {
-        if(!token) return;
+        if (!token) return;
         try {
             const title = `Access employees page`;
             const description = `User ${user?.email} access employees page`;
@@ -431,9 +432,8 @@ const EmployeesPage = () => {
 
     return (
         <SecondLayout>
-            <SidebarLayout isOpen={true} closeSidebar={undefined}/>
+            <SidebarLayout isOpen={true} closeSidebar={undefined} />
             <div className='flex flex-col gap-6 px-6 pb-20 w-full min-h-[calc(100vh-91px)] h-full'>
-                <h2 className='text-2xl leading-9 text-white font-noto'>{t('Employees')}</h2>
                 <div className="flex flex-col flex-1 gap-10 bg-[#252C38] p-6 rounded-lg w-full h-full">
                     <div className="w-full flex justify-between items-center gap-4 flex-wrap">
                         <div className="flex items-end gap-4 w-fit flex-wrap md:flex-nowrap">
@@ -564,7 +564,7 @@ const EmployeesPage = () => {
                                             ))
                                         ) : (
                                             <tr>
-                                                <td colSpan={7} className="text-center text-white py-6">No employees found.</td>
+                                                <td colSpan={7} className="text-center text-white py-6">{t('No employees found.')}</td>
                                             </tr>
                                         )}
                                     </tbody>
@@ -573,23 +573,25 @@ const EmployeesPage = () => {
                         </div>
 
                         {searchTerm.trim() === '' && !listLoading && (
-                            <div className="grid grid-cols-3 w-fit absolute bottom-0 right-0">
+                            <div className="flex items-center justify-center gap-3 absolute bottom-0 right-3">
                                 <button
                                     onClick={goToPrevPage}
                                     disabled={currentPage === 1}
-                                    className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[8px_0px_0px_8px] bg-[#575F6F] disabled:opacity-50"
+                                    className="flex items-center gap-1 font-medium text-xs leading-[21px] text-[#B3BACA] disabled:opacity-50"
                                 >
+                                    <ArrowLeft />
                                     {t('Prev')}
                                 </button>
-                                <button className="font-medium text-xs leading-[21px] text-[#181D26] py-1 px-3 bg-[#D4AB0B]">
+                                <button className="font-medium text-xs leading-[21px] text-[#181D26] py-1 px-3 bg-[#D4AB0B] rounded-md">
                                     {currentPage}
                                 </button>
                                 <button
                                     onClick={goToNextPage}
                                     disabled={currentPage === totalPages}
-                                    className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[0px_8px_8px_0px] bg-[#575F6F] disabled:opacity-50"
+                                    className="flex items-center gap-1 font-medium text-xs leading-[21px] text-[#B3BACA] disabled:opacity-50"
                                 >
                                     {t('Next')}
+                                    <ArrowRight/>
                                 </button>
                             </div>
                         )}
@@ -760,10 +762,7 @@ const EmployeesPage = () => {
                                     {data.map((item, index) => (
                                         <div key={index} className="flex flex-col gap-2">
                                             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 py-2">
-                                                {/* Label pertanyaan */}
                                                 <p className="text-[#F4F7FF] text-sm flex-1">{item}</p>
-
-                                                {/* Switch + status */}
                                                 <div className="flex items-center gap-3 min-w-[120px] justify-end">
                                                     <Switch
                                                         id={`custom-switch-${index}`}
@@ -1068,7 +1067,7 @@ const EmployeesPage = () => {
             {uploadEmployee && user?.id && (
                 <EmployeeDocumentPivot
                     employeeId={user.id}
-                    token={localStorage.getItem("token") || ""}
+                    token={token || ""}
                     fetchEmployees={fetchEmployees}
                     user={user}
                     onClose={() => setUploadEmployee(false)}

@@ -29,6 +29,9 @@ const AttendancePage = () => {
     const { t, i18n } = useTranslation();
     const [datas, setDatas] = useState<SiteEmployee[]>([]);
     const navigate = useNavigate();
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
+    
     const handleDelete = () => {
         setDeleteModal(false);
         toast.success('Record deleted successfully');
@@ -160,7 +163,6 @@ const AttendancePage = () => {
         <SecondLayout>
             <SidebarLayout isOpen={true} closeSidebar={undefined} />
             <div className='flex flex-col gap-6 pr-[156px]  pb-20 w-full h-full flex-1'>
-                <h2 className='text-2xl leading-9 text-white font-noto'>{t('Attendances')}</h2>
                 <div className="flex flex-col gap-10 bg-[#252C38] p-6 rounded-lg w-full h-full flex-1">
                     <div className="w-full flex flex-col gap-4">
                         <div className="flex items-end gap-4 w-fit flex-wrap md:flex-nowrap">
@@ -267,21 +269,21 @@ const AttendancePage = () => {
                                 )}
                             </table>
                         </div>
-                        <div className="flex items-center justify-center gap-3 absolute bottom-0 right-0">
+                        <div className="absolute bottom-0 right-0 flex gap-2">
                             <button
+                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                disabled={currentPage === 1}
                                 className="flex items-center gap-1 font-medium text-xs leading-[21px] text-[#B3BACA] disabled:opacity-50"
                             >
                                 <ArrowLeft size={14} />
                                 {t('Previous')}
                             </button>
-                            <button
-                                disabled
-                                className="font-medium text-xs leading-[21px] text-[#181D26] py-1 px-3 bg-[#D4AB0B] rounded-md"
-                            >
-                                1
+                            <button className="font-medium text-xs text-[#181D26] py-1 px-3 bg-[#D4AB0B]">
+                                {currentPage}
                             </button>
-
                             <button
+                                // onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                // disabled={currentPage === totalPages}
                                 className="flex items-center gap-1 font-medium text-xs leading-[21px] text-[#B3BACA] disabled:opacity-50"
                             >
                                 {t('Next')}
