@@ -7,6 +7,9 @@ import SidebarLayout from "../../../../components/SidebarLayout";
 import authService from "../../../../services/authService";
 import { User } from "../../../../types/user";
 import api from "../../../../utils/api";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "../../../../store";
+import { setUser } from "../../../../features/user/userSlice";
 
 const ProfilePage = () => {
     const imageInputRef = useRef<HTMLInputElement>(null);
@@ -15,7 +18,8 @@ const ProfilePage = () => {
     const [loading, setLoading] = useState(false);
     const [sidebar, setSidebar] = useState(true);
     const { t } = useTranslation();
-    const [user, setUser] = useState<User | null>();
+    const dispatch = useDispatch();
+    const user = useSelector((state: RootState) => state.user.user);
 
     const [newData, setNewData] = useState({
         name: "",
@@ -67,14 +71,10 @@ const ProfilePage = () => {
     };
 
     useEffect(() => {
-        const data = localStorage.getItem("user");
-
-        if (!data) {
+        if (!user) {
             handleLogout();
             return;
         } else {
-            const user = JSON.parse(data);
-            setUser(user);
             setNewData({
                 name: user.name || "",
                 address: user.address || "",
@@ -123,6 +123,7 @@ const ProfilePage = () => {
 
             if (response.success) {
                 toast.success("Profile updated successfully");
+                dispatch(setUser((response.data.user)))
                 setNewData(prev => ({ ...prev, old_password: "", new_password: "" }));
                 checkTokenAndRole();
 
@@ -138,6 +139,10 @@ const ProfilePage = () => {
         }
     };
 
+    useEffect(() => {
+        console.log(user)
+    }, [user])
+
     return (
         <MainLayout>
             <SidebarLayout isOpen={sidebar} closeSidebar={setSidebar} />
@@ -150,7 +155,7 @@ const ProfilePage = () => {
                         <div className="flex flex-col w-full gap-6 lg:max-w-80">
                             <div className="flex flex-col gap-4 bg-[#252C38] lg:max-w-80 w-full h-fit p-4 rounded-lg">
                                 <p className="font-semibold text-base leading-[20px] text-[#EFBF04]">
-                                    {user.role.name}
+                                    {user.role?.name}
                                 </p>
                                 <div className="flex flex-col gap-1">
                                     <label className="text-xs text-[#98A1B3]">{t("NRIC")}</label>

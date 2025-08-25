@@ -223,7 +223,7 @@ const Header = ({
                     <div className="hidden sm:flex flex-col gap-[2px] text-left">
                         <p className="text-sm text-white">{user?.name}</p>
                         <p className="text-xs leading-[21px] text-[#A3A9B6]">
-                            {user?.role.name}
+                            {user?.role?.name}
                         </p>
                     </div>
 

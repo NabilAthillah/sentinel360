@@ -21,41 +21,6 @@ interface EmployeeCardProps {
   draggable?: boolean;
 }
 
-const dummyRole: Role = {
-  id: "r-001",
-  name: "Technician",
-  permissions: [
-    {
-      id: "p-001",
-      name: "view_site",
-      category: "Site Management",
-    },
-    {
-      id: "p-002",
-      name: "edit_profile",
-      category: "User Management",
-    },
-  ],
-};
-
-export const dummyUser: User = {
-  id: "u-001",
-  name: "John Doe",
-  mobile: "+6581234567",
-  address: "123 Orchard Road, Singapore",
-  profile_image: "",
-  email: "john.doe@example.com",
-  last_login: new Date().toISOString(),
-  role: dummyRole,
-  nric_fin_no: "S1234567A",
-  briefing_date: new Date().toISOString(),
-  birth: "1990-01-01",
-  briefing_conducted: "2023-05-12",
-  date_joined: "2021-07-01",
-  status: "active",
-  language: "English",
-};
-
 const EmployeeCard = ({ employee, draggable = true }: EmployeeCardProps) => {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: employee.id,
@@ -66,6 +31,9 @@ const EmployeeCard = ({ employee, draggable = true }: EmployeeCardProps) => {
       ? { transform: `translate(${transform.x}px, ${transform.y}px)` }
       : undefined;
 
+  const baseURL = new URL(process.env.REACT_APP_API_URL || "");
+  baseURL.pathname = baseURL.pathname.replace(/\/api$/, "");
+
   return (
     <div
       ref={draggable ? setNodeRef : undefined}
@@ -74,9 +42,9 @@ const EmployeeCard = ({ employee, draggable = true }: EmployeeCardProps) => {
       style={style}
       className="bg-[#1e2229] rounded-md p-3 mb-2 flex items-center gap-2"
     >
-      <div className="!w-5 !h-5">
+      <div className="!w-8 !h-8">
         {employee.profile_image ? (
-          <img src="" className="w-5 h-5 fill-white" />
+          <img src={`${baseURL}storage/${employee.profile_image}`} className="w-8 h-8 fill-white rounded-full" />
         ) : (
           <PersonStanding color="white" width={20} height={20} />
         )}
@@ -110,8 +78,18 @@ const EmployeeDropZone = ({ employees }: { employees: User[] }) => {
   );
 };
 
-const SiteDropZone = ({ site, users }: { site: Site; users: User[] }) => {
-  const { isOver, setNodeRef } = useDroppable({
+const SiteDropZone = ({
+  site,
+  users,
+  isOver,
+  draggingEmployee,
+}: {
+  site: Site;
+  users: User[];
+  isOver: boolean;
+  draggingEmployee: User | null;
+}) => {
+  const { setNodeRef } = useDroppable({
     id: `site-${site.id}`,
   });
 
@@ -136,13 +114,16 @@ const SiteDropZone = ({ site, users }: { site: Site; users: User[] }) => {
       {users.map((emp) => (
         <EmployeeCard key={emp.id} employee={emp} draggable={true} />
       ))}
-      {isOver && (
-        <EmployeeCard
-          key={dummyUser.id}
-          employee={dummyUser}
-          draggable={true}
-        />
-      )}
+
+      {isOver &&
+        draggingEmployee &&
+        !users.find((u) => u.id === draggingEmployee.id) && (
+          <EmployeeCard
+            key={`preview-${draggingEmployee.id}`}
+            employee={draggingEmployee}
+            draggable={false}
+          />
+        )}
     </div>
   );
 };
@@ -163,6 +144,8 @@ const AllocationDnD = ({
   const navigate = useNavigate();
   const [employees, setEmployees] = useState<User[]>([]);
   const [assignments, setAssignments] = useState<SiteEmployee[]>([]);
+  const [draggingEmployee, setDraggingEmployee] = useState<User | null>(null);
+  const [overId, setOverId] = useState<string | null>(null);
 
   const fetchEmployees = async () => {
     try {
@@ -273,11 +256,11 @@ const AllocationDnD = ({
 
         if (response.success) {
           toast.success("Site allocated successfully");
-          loadData();
         }
       } catch (error: any) {
         toast.error("Failed to allocated site");
       } finally {
+        loadData();
         setLoading(false);
       }
     } else if (dropId === "employee-dropzone") {
@@ -324,11 +307,11 @@ const AllocationDnD = ({
 
         if (response.success) {
           toast.success("Site allocated successfully");
-          loadData();
         }
       } catch (error) {
         toast.error("Failed to allocated site");
       } finally {
+        loadData();
         setLoading(false);
       }
     }
@@ -343,12 +326,21 @@ const AllocationDnD = ({
   }, [assignments, employees]);
 
   return (
-    <DndContext onDragEnd={handleDragEnd}>
+    <DndContext
+      onDragStart={(event) => {
+        const emp = employees.find((e) => e.id === event.active.id);
+        if (emp) setDraggingEmployee(emp);
+      }}
+      onDragOver={(event) => {
+        if (event.over) setOverId(event.over.id.toString());
+      }}
+      onDragEnd={handleDragEnd}
+    >
       <div className="flex flex-col gap-6 flex-1 h-full lg:flex-row">
         <div className="w-full lg:w-1/3 flex flex-1 h-full">
           <EmployeeDropZone
             employees={employees.filter(
-              (e) => !assignments.find((a) => a.user.id.trim() === e.id.trim())
+              (e) => !assignments.find((a) => a.user.id === e.id)
             )}
           />
         </div>
@@ -364,6 +356,8 @@ const AllocationDnD = ({
                 users={assignments
                   .filter((a) => a.site.id === site.id)
                   .map((a) => a.user)}
+                isOver={overId === `site-${site.id}`}
+                draggingEmployee={draggingEmployee}
               />
             ))}
           </div>
