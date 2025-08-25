@@ -16,13 +16,8 @@ const DashboardPage = () => {
     const token = useSelector((state: RootState) => state.token.token);
 
     const fetchSites = async () => {
+        if(!token) return;
         try {
-            const token = localStorage.getItem('token');
-
-            if (!token) {
-                localStorage.clear();
-                navigate('/auth/login');
-            }
 
             const response = await siteService.getAllSite(token);
 
@@ -58,8 +53,8 @@ const DashboardPage = () => {
     }
 
     const audit = async () => {
+        if (!token) return;
         try {
-            const token = localStorage.getItem('token');
             const title = `Access dashboard page`;
             const description = `User ${user?.email} access dashboard page`;
             const status = 'success';

@@ -17,9 +17,12 @@ import auditTrialsService from "../../../services/auditTrailsService";
 import MainLayout from "../../../layouts/MainLayout";
 import Loader from "../../../components/Loader";
 import DeleteModal from "../../../components/DeleteModal";
+import SecondLayout from "../../../layouts/SecondLayout";
+import SidebarLayout from "../../../components/SidebarLayout";
 
 const EmployeesPage = () => {
     const user = useSelector((state: RootState) => state.user.user);
+    const token = useSelector((state: RootState) => state.token.token);
     const navigate = useNavigate();
 
     const [addEmployee, setAddEmployee] = useState(false);
@@ -41,7 +44,6 @@ const EmployeesPage = () => {
     const { t, i18n } = useTranslation();
     const imageInputRef = useRef<HTMLInputElement | null>(null);
     const [imageName, setImageName] = useState<string | null>(null);
-
     const [showPassword, setShowPassword] = useState(false);
     const [name, setName] = useState('');
     const [no, setNo] = useState('');
@@ -95,17 +97,11 @@ const EmployeesPage = () => {
     };
 
     const handleSubmit = async (e: React.SyntheticEvent) => {
+        if (!token) return;
         e.preventDefault();
         setLoading(true);
         try {
-            const token = localStorage.getItem('token');
-
-            if (!token) {
-                toast.error("Token not found. Redirecting to login.");
-                localStorage.clear();
-                navigate('/auth/login');
-                return;
-            }
+            
 
             if (!addData.mobile) {
                 toast.error("Mobile number cannot be null.");
@@ -175,16 +171,10 @@ const EmployeesPage = () => {
     };
 
     const handleEdit = async (e: React.SyntheticEvent) => {
+        if (!token) return;
         e.preventDefault();
         setLoading(true);
         try {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                toast.error("Token not found. Redirecting to login.");
-                localStorage.clear();
-                navigate('/auth/login');
-                return;
-            }
 
             if (!editData || !editData.user) {
                 toast.error("Invalid employee or user data.");
@@ -294,14 +284,14 @@ const EmployeesPage = () => {
     };
 
     const fetchEmployees = async () => {
+        if (!token || !user) return;
         setListLoading(true);
         try {
-            const token = localStorage.getItem('token');
-            const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+            
             const response = await employeeService.getAllEmployee(token);
             if (response.success) {
                 setEmployees(response.data);
-                const filtered = response.data.filter((emp: Employee) => emp.user.id !== currentUser.id);
+                const filtered = response.data.filter((emp: Employee) => emp.user.id !== user.id);
                 setReportingEmployees(filtered);
             }
         } catch (error) {
@@ -313,8 +303,8 @@ const EmployeesPage = () => {
     };
 
     const fetchRoles = async () => {
+        if (!token) return;
         try {
-            const token = localStorage.getItem('token');
             const response = await roleService.getAllRoles(token);
             if (response.success) setRoles(response.data);
         } catch (error) {
@@ -327,8 +317,8 @@ const EmployeesPage = () => {
     };
 
     const audit = async () => {
+        if(!token) return;
         try {
-            const token = localStorage.getItem('token');
             const title = `Access employees page`;
             const description = `User ${user?.email} access employees page`;
             const status = 'success';
@@ -440,7 +430,8 @@ const EmployeesPage = () => {
     };
 
     return (
-        <MainLayout>
+        <SecondLayout>
+            <SidebarLayout isOpen={true} closeSidebar={undefined}/>
             <div className='flex flex-col gap-6 px-6 pb-20 w-full min-h-[calc(100vh-91px)] h-full'>
                 <h2 className='text-2xl leading-9 text-white font-noto'>{t('Employees')}</h2>
                 <div className="flex flex-col flex-1 gap-10 bg-[#252C38] p-6 rounded-lg w-full h-full">
@@ -1083,7 +1074,7 @@ const EmployeesPage = () => {
                     onClose={() => setUploadEmployee(false)}
                 />
             )}
-        </MainLayout>
+        </SecondLayout>
     );
 };
 

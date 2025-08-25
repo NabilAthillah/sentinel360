@@ -7,6 +7,8 @@ import { EmployeeDocument } from "../../../types/employeeDocument";
 import employeeDocumentService from "../../../services/employeeDocumentService";
 import employeeDocumentPivotService from "../../../services/employeDocumenPivot";
 import Loader from "../../../components/Loader";
+import { useSelector } from "react-redux";
+import { RootState } from "../../../store";
 
 interface Props {
   employeeId: string;
@@ -27,35 +29,21 @@ interface Props {
 
 const MAX_FILE_BYTES = 5 * 1024 * 1024;
 
-const EmployeeDocumentPivot = ({ employeeId, token, fetchEmployees, user, onClose }: Props) => {
+const EmployeeDocumentPivot = ({ employeeId,  fetchEmployees, user, onClose }: Props) => {
   const [open, setOpen] = useState(true);
   const [documentTypes, setDocumentTypes] = useState<EmployeeDocument[]>([]);
   const [uploadedFiles, setUploadedFiles] = useState<Record<string, { base64?: string; previewUrl: string }>>({});
   const [loadingDocs, setLoadingDocs] = useState(true);
   const [saving, setSaving] = useState(false);
+  const token = useSelector((state: RootState) => state.token.token);
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
-  useEffect(() => {
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = prev; };
-  }, []);
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
 
   useEffect(() => {
     const fetchDocuments = async () => {
       setLoadingDocs(true);
+      if (!token) return;
       try {
-        if (!token) {
-          localStorage.clear();
-          navigate("/auth/login");
-          return;
-        }
 
         const docTypeResponse = await employeeDocumentService.getEmployeeDocuments(token);
         if (docTypeResponse.success) {
@@ -150,6 +138,17 @@ const EmployeeDocumentPivot = ({ employeeId, token, fetchEmployees, user, onClos
   };
 
   const profileSrc = user?.profile_image ? `/storage/${user.profile_image}` : "/images/Avatar2.png";
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, []);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   return (
     <AnimatePresence onExitComplete={onClose}>

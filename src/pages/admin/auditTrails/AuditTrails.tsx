@@ -10,6 +10,9 @@ import { RootState } from '../../../store';
 import auditTrialsService from '../../../services/auditTrailsService';
 import MainLayout from '../../../layouts/MainLayout';
 import Loader from '../../../components/Loader';
+import SecondLayout from '../../../layouts/SecondLayout';
+import SidebarLayout from '../../../components/SidebarLayout';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 
 const AuditTrails = () => {
     const [logs, setLogs] = useState<AuditTrail[]>([]);
@@ -21,7 +24,7 @@ const AuditTrails = () => {
 
     const [showModal, setShowModal] = useState(false);
     const [showDropdown, setShowDropdown] = useState(false);
-
+    const token = useSelector((state: RootState) => state.token.token);
     const [selectedCategory, setSelectedCategory] = useState('');
     const [selectedUserId, setSelectedUserId] = useState('');
     const [selectedStatus, setSelectedStatus] = useState('');
@@ -34,9 +37,9 @@ const AuditTrails = () => {
     const user = useSelector((state: RootState) => state.user.user);
 
     const fetchAuditTrails = async () => {
+        if (!token) return;
+        setLoading(true);
         try {
-            setLoading(true);
-            const token = localStorage.getItem('token');
             const response = await auditTrialsService.getAuditTrails(token);
             if (response.success) setLogs(response.data);
         } catch (error) {
@@ -59,24 +62,7 @@ const AuditTrails = () => {
         } catch (error) { console.error(error); }
     };
 
-    useEffect(() => { audit(); fetchAuditTrails(); }, []);
 
-    useEffect(() => {
-        const onDown = (e: MouseEvent) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-                setShowDropdown(false);
-            }
-        };
-        const onKey = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') setShowDropdown(false);
-        };
-        document.addEventListener('mousedown', onDown);
-        document.addEventListener('keydown', onKey);
-        return () => {
-            document.removeEventListener('mousedown', onDown);
-            document.removeEventListener('keydown', onKey);
-        };
-    }, []);
 
     const categories = Array.from(new Set(logs.map(l => l.category).filter(Boolean)));
 
@@ -227,6 +213,7 @@ const AuditTrails = () => {
         }
     };
 
+
     const getStatusClasses = (status?: string) => {
         const s = (status || 'info').toLowerCase();
         if (s === 'success') return 'bg-[rgba(25,206,116,0.16)] text-[#19CE74] border border-[#19CE74]';
@@ -235,10 +222,30 @@ const AuditTrails = () => {
         return 'bg-sky-400/15 text-sky-300 border border-sky-400/30';
     };
 
+
+    useEffect(() => { audit(); fetchAuditTrails(); }, []);
+
+    useEffect(() => {
+        const onDown = (e: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+                setShowDropdown(false);
+            }
+        };
+        const onKey = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') setShowDropdown(false);
+        };
+        document.addEventListener('mousedown', onDown);
+        document.addEventListener('keydown', onKey);
+        return () => {
+            document.removeEventListener('mousedown', onDown);
+            document.removeEventListener('keydown', onKey);
+        };
+    }, []);
+
     return (
-        <MainLayout>
-            <div className="flex flex-col gap-6 px-6 pb-20 w-full min-h-[calc(100vh-91px)] h-full">
-                <h2 className="text-2xl leading-9 text-white font-noto">{t('Audit Trails')}</h2>
+        <SecondLayout>
+            <SidebarLayout isOpen={true} closeSidebar={undefined} />
+            <div className="flex flex-col gap-6 pr-[156px] pb-20 w-full min-h-[calc(100vh-91px)] h-full">
 
                 <div className="flex flex-col gap-10 bg-[#252C38] p-6 rounded-lg w-full h-full flex-1 relative">
                     <div className="w-full flex justify-between items-center gap-4 flex-wrap">
@@ -260,7 +267,7 @@ const AuditTrails = () => {
                                 onChange={(e) => { setStartTime(e.target.value); setCurrentPage(1); }}
                                 className="h-[44px] px-3 bg-[#222834] text-[#F4F7FF] border-b border-b-[#98A1B3] rounded-[4px_4px_0_0] active:outline-none focus-visible:outline-none"
                             />
-                            <span className="text-[#98A1B3]">to</span>
+                            <span className="text-[#98A1B3]">{t('to')}</span>
                             <input
                                 type="time"
                                 value={endTime}
@@ -272,7 +279,7 @@ const AuditTrails = () => {
                                 onClick={() => { setStartTime(''); setEndTime(''); setCurrentPage(1); }}
                                 className="text-sm text-[#EFBF04] px-3 py-2 border border-[#EFBF04] rounded-full hover:bg-[#EFBF04] hover:text-[#252C38] transition-all"
                             >
-                                Clear Time
+                                {t(' Clear Time')}
                             </button>
                         </div>
                     </div>
@@ -362,7 +369,7 @@ const AuditTrails = () => {
                                 ) : (
                                     <tbody>
                                         {(paginatedLogs.length === 0) && (
-                                            <tr><td colSpan={7} className="text-white text-center py-6">No audit logs found</td></tr>
+                                            <tr><td colSpan={7} className="text-white text-center py-6">{t('No audit logs found')}</td></tr>
                                         )}
                                         {paginatedLogs.map((log, index) => (
                                             <tr key={log.id} className="border-b border-b-[#98A1B3]">
@@ -392,13 +399,14 @@ const AuditTrails = () => {
                             </table>
                         </div>
 
-                        <div className="grid grid-cols-3 w-[162px] absolute bottom-0 right-0">
+                        <div className="absolute bottom-0 right-0 flex gap-2">
                             <button
                                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                                 disabled={currentPage === 1}
-                                className="font-medium text-xs text-[#B3BACA] py-1 px-[14px] rounded-l-lg bg-[#575F6F] disabled:opacity-50"
+                                className="flex items-center gap-1 font-medium text-xs leading-[21px] text-[#B3BACA] disabled:opacity-50"
                             >
-                                Prev
+                                <ArrowLeft size={14} />
+                                {t('Previous')}
                             </button>
                             <button className="font-medium text-xs text-[#181D26] py-1 px-3 bg-[#D4AB0B]">
                                 {currentPage}
@@ -406,9 +414,10 @@ const AuditTrails = () => {
                             <button
                                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                                 disabled={currentPage === totalPages}
-                                className="font-medium text-xs text-[#B3BACA] py-1 px-[14px] rounded-r-lg bg-[#575F6F] disabled:opacity-50"
+                                className="flex items-center gap-1 font-medium text-xs leading-[21px] text-[#B3BACA] disabled:opacity-50"
                             >
-                                Next
+                                {t('Next')}
+                                <ArrowRight size={14} />
                             </button>
                         </div>
                     </div>
@@ -426,7 +435,7 @@ const AuditTrails = () => {
                     )}
                 </div>
             </div >
-        </MainLayout >
+        </SecondLayout >
     );
 };
 

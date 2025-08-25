@@ -50,6 +50,7 @@ import RolesPage from "../pages/admin/setings/roles/RolesPage";
 import SopDocumentPage from "../pages/admin/setings/sop-document/SopDocumentPage";
 import ProfilePage from "../pages/admin/setings/profile/ProfilePage";
 import RequireLocation from "../components/RequireLocation";
+import GuardTour from "../pages/admin/guardTour/GuardTour";
 
 const AppRoutes = () => {
   return (
@@ -59,11 +60,13 @@ const AppRoutes = () => {
           <Route path="/" element={<Navigate to="/auth/login" replace />} />
           <Route path="/auth/login" element={<LoginPage />} />
           <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/dashboard/report" element={<ReportPage />} />
+          <Route path="/dashboard/reports" element={<ReportPage />} />
           <Route path="/dashboard/employees" element={<EmployeesPage />} />
-          <Route path="/dashboard/attendance" element={<AttendancePage />} />
+          <Route path="/dashboard/attendances" element={<AttendancePage />} />
           <Route path="/dashboard/e-occurrence" element={<OccurencePage />} />
           <Route path="/dashboard/e-learning" element={<LearningPage />} />
+          <Route path="/dashboard/guard-tours" element={<GuardTour />} />
+          
           <Route
             path="/dashboard/e-learning/history"
             element={<HistoryPage />}
