@@ -34,8 +34,8 @@ const Profile = () => {
         name: user?.name || "",
         mobile: user?.mobile || "",
         email: user?.email || "",
-        birth: toDateInput(user?.employee?.birth) || "",
-        nric_fin_no: user?.employee?.nric_fin_no || "",
+        birth: toDateInput(user?.birth) || "",
+        nric_fin_no: user?.nric_fin_no || "",
         role_id: user?.role?.id || "",
     });
     const [saving, setSaving] = useState(false);
@@ -96,8 +96,8 @@ const Profile = () => {
             name: user?.name || "",
             mobile: user?.mobile || "",
             email: user?.email || "",
-            birth: toDateInput(user?.employee?.birth) || "",
-            nric_fin_no: user?.employee?.nric_fin_no || "",
+            birth: toDateInput(user?.birth) || "",
+            nric_fin_no: user?.nric_fin_no || "",
             role_id: user?.role?.id || "",
         });
     }, [user?.id]);

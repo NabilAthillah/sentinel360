@@ -4,7 +4,6 @@ import {
     useDraggable,
     useDroppable,
 } from "@dnd-kit/core";
-import { User } from "lucide-react";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -13,59 +12,50 @@ import siteEmployeeService from "../services/siteEmployeeService";
 import { Employee } from "../types/employee";
 import { Site } from "../types/site";
 import { SiteEmployee } from "../types/siteEmployee";
+import { User } from "../types/user";
+import { PersonStanding } from "lucide-react";
+import { Role } from "../types/role";
 
 interface EmployeeCardProps {
-    employee: Employee;
+    employee: User;
     draggable?: boolean;
 }
 
-const dummyEmployee = {
-    id: '1',
-    nric_fin_no: 'S1234567A',
-    briefing_date: new Date().toString(),
-    user: {
-        id: 'u-001',
-        name: 'John Doe',
-        mobile: '+6581234567',
-        address: '123 Orchard Road, Singapore',
-        profile_image: '',
-        email: 'john.doe@example.com',
-        status: 'active',
-        role: {
-            id: 'r-001',
-            name: 'Technician',
-            permissions:
-                [
-                    {
-                        id: 'p-001',
-                        name: 'view_site',
-                        category: 'Site Management',
-                    },
-                ]
-        },
+const dummyRole: Role = {
+  id: "r-001",
+  name: "Technician",
+  permissions: [
+    {
+      id: "p-001",
+      name: "view_site",
+      category: "Site Management",
     },
-    reporting: {
-        id: 'u-001',
-        name: 'John Doe',
-        mobile: '+6581234567',
-        address: '123 Orchard Road, Singapore',
-        profile_image: '',
-        email: 'john.doe@example.com',
-        status: 'active',
-        role: {
-            id: 'r-001',
-            name: 'Technician',
-            permissions:
-                [
-                    {
-                        id: 'p-001',
-                        name: 'view_site',
-                        category: 'Site Management',
-                    },
-                ]
-        },
+    {
+      id: "p-002",
+      name: "edit_profile",
+      category: "User Management",
     },
+  ],
 };
+
+export const dummyUser: User = {
+  id: "u-001",
+  name: "John Doe",
+  mobile: "+6581234567",
+  address: "123 Orchard Road, Singapore",
+  profile_image: "",
+  email: "john.doe@example.com",
+  last_login: new Date().toISOString(),
+  role: dummyRole,
+  nric_fin_no: "S1234567A",
+  briefing_date: new Date().toISOString(),
+  birth: "1990-01-01",
+  briefing_conducted: "2023-05-12",
+  date_joined: "2021-07-01",
+  status: "active",
+  language: "English",
+};
+
 
 const EmployeeCard = ({ employee, draggable = true }: EmployeeCardProps) => {
     const { attributes, listeners, setNodeRef, transform } = useDraggable({
@@ -85,23 +75,23 @@ const EmployeeCard = ({ employee, draggable = true }: EmployeeCardProps) => {
             className="bg-[#1e2229] rounded-md p-3 mb-2 flex items-center gap-2"
         >
             <div className="!w-5 !h-5">
-                {employee.user.profile_image ?
+                {employee.profile_image ?
                     <img
                         src=""
                         className="w-5 h-5 fill-white"
                     />
                     :
-                    <User color="white" width={20} height={20} />
+                    <PersonStanding color="white" width={20} height={20} />
                 }
             </div>
             <span className="text-white break-all">
-                {employee.user.name}
+                {employee.name}
             </span>
         </div>
     );
 };
 
-const EmployeeDropZone = ({ employees }: { employees: Employee[] }) => {
+const EmployeeDropZone = ({ employees }: { employees: User[] }) => {
     const { isOver, setNodeRef } = useDroppable({
         id: "employee-dropzone",
     });
@@ -127,7 +117,7 @@ const SiteDropZone = ({
     employees,
 }: {
     site: Site;
-    employees: Employee[];
+    employees: User[];
 }) => {
     const { isOver, setNodeRef } = useDroppable({
         id: `site-${site.id}`,
@@ -150,7 +140,7 @@ const SiteDropZone = ({
                 <EmployeeCard key={emp.id} employee={emp} draggable={true} />
             ))}
             {isOver && (
-                <EmployeeCard key={dummyEmployee.id} employee={dummyEmployee} draggable={true} />
+                <EmployeeCard key={dummyUser.id} employee={dummyUser} draggable={true} />
             )}
         </div>
     );
@@ -158,7 +148,7 @@ const SiteDropZone = ({
 
 const AllocationDnD = ({ sites, setLoading, allocationType, shiftType, date }: { sites: Site[], setLoading: Dispatch<SetStateAction<boolean>>, allocationType: string, shiftType: string, date: string }) => {
     const navigate = useNavigate();
-    const [employees, setEmployees] = useState<Employee[]>([]);
+    const [employees, setEmployees] = useState<User[]>([]);
     const [assignments, setAssignments] = useState<SiteEmployee[]>([]);
 
     const fetchEmployees = async () => {

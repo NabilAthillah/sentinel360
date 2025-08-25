@@ -163,8 +163,8 @@ const HomePage = () => {
       <div className="mt-2 relative">
         <h1 className="text-xl font-bold">{user?.name}</h1>
         <p className="text-sm text-gray-400">
-          {user?.role.name} | {user?.employee?.nric_fin_no
-            ? '*'.repeat(3) + user.employee.nric_fin_no.slice(3)
+          {user?.role.name} | {user?.nric_fin_no
+            ? '*'.repeat(3) + user.nric_fin_no.slice(3)
             : ''}
         </p>
 
