@@ -3,7 +3,7 @@ import api from "../utils/api";
 const attendanceSettingService = {
     getAttendanceSetting: async (token) => {
         try {
-            const response = await api.get('/master-settings/attendance-settings', {
+            const response = await api.get('master-settings/attendance-settings', {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -16,15 +16,9 @@ const attendanceSettingService = {
         }
     },
 
-    updateAttendanceSetting: async (token, data) => {
+    updateAttendanceSetting: async (data) => {
         try {
-            const response = await api.post('/attendance-settings', {
-                data
-            }, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            })
+            const response = await api.put(`master-settings/attendance-settings/${data.id}`, data)
             if (response.data) {
                 return response.data;
             }

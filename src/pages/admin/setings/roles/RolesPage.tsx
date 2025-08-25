@@ -52,8 +52,10 @@ const RolesPage = () => {
     const totalItems = searchTerm ? filteredRoles.length : roles.length;
     const totalPages = Math.ceil(totalItems / itemsPerPage);
 
-    const user = useSelector((state: RootState) => state.user.user);
     const navigate = useNavigate();
+
+    const user = useSelector((state: RootState) => state.user.user);
+    const token = useSelector((state: RootState) => state.token.token);
 
     const handlePrev = () => {
         if (currentPage > 1) setCurrentPage(currentPage - 1);
@@ -82,14 +84,13 @@ const RolesPage = () => {
     const handleSubmit = async (e: React.SyntheticEvent) => {
         e.preventDefault();
         if (selectedPermissions.length === 0) {
-            toast.error('Pilih minimal 1 permission');
+            toast.error("Pilih minimal 1 permission");
             return;
         }
         setLoading(true);
         try {
-            const token = localStorage.getItem('token');
             const response = await roleService.addRole(name, token, selectedPermissions);
-            if (response.success) toast.success('Role added successfully');
+            if (response.success) toast.success("Role added successfully");
         } catch (error: any) {
             toast.error(error.message);
         } finally {
@@ -103,20 +104,19 @@ const RolesPage = () => {
     const handleEditRole = async (e: React.SyntheticEvent) => {
         e.preventDefault();
         if (!editedRole || editedRole.permissions.length === 0) {
-            toast.error('Pilih minimal 1 permission');
+            toast.error("Pilih minimal 1 permission");
             return;
         }
         setLoading(true);
         try {
-            const token = localStorage.getItem('token');
             const response = await roleService.updateRole(
                 editedRole.id,
                 editedRole.name,
                 token,
-                editedRole.permissions
+                editedRole.permissions.map(p => p.id)
             );
             if (response.success) {
-                toast.success('Role edited successfully');
+                toast.success("Role edited successfully");
                 fetchRoles();
             }
         } catch (error: any) {
@@ -130,17 +130,14 @@ const RolesPage = () => {
     const fetchRoles = async () => {
         setLoading(true);
         try {
-            const response = await roleService.getAllRoles();
-
-            if (response.success) {
-                setRoles(response.data);
-            }
+            const response = await roleService.getAllRoles(token);
+            if (response.success) setRoles(response.data);
         } catch (error: any) {
             toast.error(error.message);
         } finally {
             setLoading(false);
         }
-    }
+    };
 
     const fetchPermissions = async () => {
         try {
@@ -167,15 +164,14 @@ const RolesPage = () => {
 
     const audit = async () => {
         try {
-            const token = localStorage.getItem('token');
             const title = `Access roles page`;
             const description = `User ${user?.email} access roles page`;
-            const status = 'success';
-            await auditTrialsService.storeAuditTrails(token, user?.id, title, description, status, 'access roles');
+            const status = "success";
+            await auditTrialsService.storeAuditTrails(token, user?.id, title, description, status, "access roles");
         } catch (error) {
             console.error(error);
         }
-    }
+    };
 
     const formatPermissionName = (name: string) =>
         name

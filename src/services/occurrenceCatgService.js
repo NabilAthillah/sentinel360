@@ -3,7 +3,7 @@ import api from "../utils/api";
 const occurrenceCatgService = {
     getCategories: async (token) => {
         try {
-            const response = await api.get(`/occurrence-categories`, {
+            const response = await api.get(`master-settings/occurrence-categories`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -19,13 +19,7 @@ const occurrenceCatgService = {
 
     addCategory: async (token, name) => {
         try {
-            const response = await api.post(`/occurrence-categories`, {
-                name,
-            }, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
+            const response = await api.post(`master-settings/occurrence-categories`, {name:name});
 
             if (response.data) {
                 return response.data;
@@ -37,13 +31,7 @@ const occurrenceCatgService = {
 
     editCategory: async (token, id, name) => {
         try {
-            const response = await api.put(`/occurrence-categories/${id}`, {
-                name,
-            }, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
+            const response = await api.put(`master-settings/occurrence-categories/${id}`, {name:name});
 
             if (response.data) {
                 return response.data;
@@ -55,13 +43,7 @@ const occurrenceCatgService = {
 
     editCategoryStatus: async (token, id, status) => {
         try {
-            const response = await api.put(`/occurrence-categories/${id}`, {
-                status,
-            }, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
+            const response = await api.put(`master-settings/occurrence-categories/${id}`, {status});
 
             if (response.data) {
                 return response.data;

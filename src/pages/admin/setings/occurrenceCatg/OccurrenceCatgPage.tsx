@@ -13,199 +13,187 @@ import MainLayout from "../../../../layouts/MainLayout";
 import Navbar from "../../../../components/Navbar";
 import Loader from "../../../../components/Loader";
 const OccurrenceCatgPage = () => {
-    const [addCatg, setAddCatg] = useState(false);
-    const [editCatg, setEditCatg] = useState(false);
-    const [editData, setEditData] = useState<OccurrenceCategory | null>();
-    const [loading, setLoading] = useState(false);
-    const { t, i18n } = useTranslation();    const [toggling, setToggling] = useState<Record<string, boolean>>({});
+  const [addCatg, setAddCatg] = useState(false);
+  const [editCatg, setEditCatg] = useState(false);
+  const [editData, setEditData] = useState<OccurrenceCategory | null>();
+  const [loading, setLoading] = useState(false);
+  const { t } = useTranslation();
+  const [toggling, setToggling] = useState<Record<string, boolean>>({});
+  const [categories, setCategories] = useState<OccurrenceCategory[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
-    const [categories, setCategories] = useState<OccurrenceCategory[]>([]);
-    const [searchTerm, setSearchTerm] = useState("");
-    const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 5;
+  const navigate = useNavigate();
+  const user = useSelector((state: RootState) => state.user.user);
+  const token = useSelector((state: RootState) => state.token.token);
 
-    const navigate = useNavigate();
-    const user = useSelector((state: RootState) => state.user.user);
+  const [name, setName] = useState("");
 
-    const filteredData = categories.filter((c) =>
-        c.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    const totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
-    const paginatedData = filteredData.slice(
-        (currentPage - 1) * itemsPerPage,
-        currentPage * itemsPerPage
-    );
+  const filteredData = categories.filter((c) =>
+    c.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
+  const paginatedData = filteredData.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
-    const [name, setName] = useState("");
+  const hasPermission = (permissionName: string) =>
+    user?.role?.permissions?.some((p) => p.name === permissionName);
 
-    const hasPermission = (permissionName: string) =>
-        user?.role?.permissions?.some((p) => p.name === permissionName);
+  const fetchCategories = async () => {
+    if (!token) {
+      navigate("/auth/login");
+      return;
+    }
+    setLoading(true);
+    try {
+      const response = await occurrenceCatgService.getCategories(token);
+      if (response.success) {
+        setCategories(response.data.categories || []);
+      }
+    } catch (error: any) {
+      console.error(error?.message || error);
+      toast.error("Failed to fetch categories");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const fetchCategories = async () => {
-        setLoading(true);
-        try {
-            const token = localStorage.getItem("token");
-            if (!token) {
-                localStorage.clear();
-                navigate("/auth/login");
-                return;
-            }
-            const response = await occurrenceCatgService.getCategories(token);
-            if (response.success) {
-                setCategories(response.data.categories || []);
-            }
-        } catch (error: any) {
-            console.error(error?.message || error);
-            toast.error("Failed to fetch categories");
-        } finally {
-            setLoading(false);
-        }
-    };
+  const [switchStates, setSwitchStates] = useState<Record<string, boolean>>({});
 
-    const [switchStates, setSwitchStates] = useState<Record<string, boolean>>(
-        categories?.reduce((acc, catg) => {
-            acc[catg.id] = catg.status === "active";
-            return acc;
-        }, {} as Record<string, boolean>) ?? {}
-    );
+  const handleToggle = async (id: string) => {
+    const prevStatus = switchStates[id];
+    const newStatus = !prevStatus;
 
-    const handleToggle = async (id: string) => {
-        const prevStatus = switchStates[id];
-        const newStatus = !prevStatus;
+    setSwitchStates((prev) => ({ ...prev, [id]: newStatus }));
+    setToggling((prev) => ({ ...prev, [id]: true }));
 
-        setSwitchStates((prev) => ({ ...prev, [id]: newStatus }));
-        setToggling((prev) => ({ ...prev, [id]: true }));
+    if (!token) {
+      navigate("/auth/login");
+      return;
+    }
 
-        const token = localStorage.getItem("token");
-        if (!token) {
-            localStorage.clear();
-            navigate("/auth/login");
-            return;
-        }
+    try {
+      const response = await occurrenceCatgService.editCategoryStatus(
+        token,
+        id,
+        newStatus ? "active" : "inactive"
+      );
 
-        try {
-            const response = await occurrenceCatgService.editCategoryStatus(
-                token,
-                id,
-                newStatus ? "active" : "inactive"
-            );
+      if (response.success) {
+        toast.success("Category status updated successfully");
+        fetchCategories();
+      } else {
+        throw new Error("Update failed");
+      }
+    } catch (error) {
+      setSwitchStates((prev) => ({ ...prev, [id]: prevStatus }));
+      toast.error("Failed to update category status");
+    } finally {
+      setToggling((prev) => ({ ...prev, [id]: false }));
+    }
+  };
 
-            if (response.success) {
-                toast.success("Category status updated successfully");
-                fetchCategories();
-            } else {
-                throw new Error("Update failed");
-            }
-        } catch (error) {
-            setSwitchStates((prev) => ({ ...prev, [id]: prevStatus }));
-            toast.error("Failed to update category status");
-        } finally {
-            setToggling((prev) => ({ ...prev, [id]: false }));
-        }
-    };
+  const handleSubmit = async (e: React.SyntheticEvent) => {
+    e.preventDefault();
+    if (!token) {
+      navigate("/auth/login");
+      return;
+    }
+    setLoading(true);
+    try {
+      const response = await occurrenceCatgService.addCategory(token, name);
+      if (response.success) {
+        toast.success("Category created successfully");
+        setAddCatg(false);
+        setName("");
+        await fetchCategories();
+      }
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to create category");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const handleSubmit = async (e: React.SyntheticEvent) => {
-        e.preventDefault();
-        setLoading(true);
-        try {
-            const token = localStorage.getItem("token");
-            if (!token) {
-                localStorage.clear();
-                navigate("/auth/login");
-                return;
-            }
-            const response = await occurrenceCatgService.addCategory(token, name);
-            if (response.success) {
-                toast.success("Category created successfully");
-                setAddCatg(false);
-                setName("");
-                await fetchCategories();
-            }
-        } catch (error: any) {
-            toast.error(error?.message || "Failed to create category");
-        } finally {
-            setLoading(false);
-        }
-    };
+  const handleEdit = async (e: React.SyntheticEvent) => {
+    e.preventDefault();
+    if (!token) {
+      navigate("/auth/login");
+      return;
+    }
+    setLoading(true);
+    try {
+      const response = await occurrenceCatgService.editCategory(
+        token,
+        editData?.id,
+        name
+      );
+      if (response.success) {
+        toast.success("Category updated successfully");
+        setEditData(null);
+        setName("");
+        setEditCatg(false);
+        await fetchCategories();
+      }
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to update category");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const handleEdit = async (e: React.SyntheticEvent) => {
-        e.preventDefault();
-        setLoading(true);
-        try {
-            const token = localStorage.getItem("token");
-            if (!token) {
-                localStorage.clear();
-                navigate("/auth/login");
-                return;
-            }
-            const response = await occurrenceCatgService.editCategory(
-                token,
-                editData?.id,
-                name
-            );
-            if (response.success) {
-                toast.success("Category updated successfully");
-                setEditData(null);
-                setName("");
-                setEditCatg(false);
-                await fetchCategories();
-            }
-        } catch (error: any) {
-            toast.error(error?.message || "Failed to update category");
-        } finally {
-            setLoading(false);
-        }
-    };
+  const audit = async () => {
+    if (!token) return;
+    try {
+      const title = `Access occurrence categories page`;
+      const description = `User ${user?.email} access occurrence categories page`;
+      const status = "success";
+      await auditTrialsService.storeAuditTrails(
+        token,
+        user?.id,
+        title,
+        description,
+        status,
+        "access occurrence categories"
+      );
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
-    const audit = async () => {
-        try {
-            const token = localStorage.getItem("token");
-            const title = `Access occurrence categories page`;
-            const description = `User ${user?.email} access occurrence categories page`;
-            const status = "success";
-            await auditTrialsService.storeAuditTrails(
-                token,
-                user?.id,
-                title,
-                description,
-                status,
-                "access occurrence categories"
-            );
-        } catch (error) {
-            console.error(error);
-        }
-    };
+  useEffect(() => {
+    audit();
+    if (hasPermission("list_occurrence_categories")) {
+      fetchCategories();
+    } else {
+      navigate("/dashboard");
+    }
+  }, []);
 
-    useEffect(() => {
-        audit();
-        if (hasPermission("list_occurrence_categories")) {
-            fetchCategories();
-        } else {
-            navigate("/dashboard");
-        }
-    }, []);
+  useEffect(() => {
+    if (categories?.length) {
+      const next = categories.reduce((acc, catg) => {
+        acc[catg.id] = catg.status === "active";
+        return acc;
+      }, {} as Record<string, boolean>);
+      setSwitchStates(next);
+    }
+  }, [categories]);
 
-    useEffect(() => {
-        if (categories?.length) {
-            const next = categories.reduce((acc, catg) => {
-                acc[catg.id] = catg.status === "active";
-                return acc;
-            }, {} as Record<string, boolean>);
-            setSwitchStates(next);
-        }
-    }, [categories]);
+  useEffect(() => {
+    if (editData && editCatg) setName(editData.name);
+  }, [editCatg, editData]);
 
-    useEffect(() => {
-        if (editData && editCatg) setName(editData.name);
-    }, [editCatg, editData]);
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
 
-    useEffect(() => {
-        setCurrentPage(1);
-    }, [searchTerm]);
-
-    const goPrev = () => currentPage > 1 && setCurrentPage((p) => p - 1);
-    const goNext = () =>
-        currentPage < totalPages && setCurrentPage((p) => p + 1);
+  const goPrev = () => currentPage > 1 && setCurrentPage((p) => p - 1);
+  const goNext = () =>
+    currentPage < totalPages && setCurrentPage((p) => p + 1);
 
     return (
         <MainLayout>

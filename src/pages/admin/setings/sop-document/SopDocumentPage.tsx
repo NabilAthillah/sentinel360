@@ -18,7 +18,6 @@ const SopDocumentPage = () => {
     const [viewDoc, setViewDoc] = useState(false);
     const [editDoc, setEditDoc] = useState(false);
     const [addDoc, setAddDoc] = useState(false);
-    const user = useSelector((state: RootState) => state.user.user);
     const [sidebar, setSidebar] = useState(false);
     const [datas, setDatas] = useState<SopDocument[]>([]);
     const [addSop, setAddSop] = useState(false);
@@ -37,6 +36,10 @@ const SopDocumentPage = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const { t, i18n } = useTranslation();
+
+    const user = useSelector((state: RootState) => state.user.user);
+    const token = useSelector((state: RootState) => state.token.token);
+
     const itemsPerPage = 5;
     const goToNextPage = () => {
         if (currentPage < totalPages) {
@@ -67,24 +70,18 @@ const SopDocumentPage = () => {
     const fetchSopDocument = async () => {
         setLoading(true);
         try {
-            const token = localStorage.getItem('token');
-
             if (!token) {
-                localStorage.clear();
                 navigate('/auth/login');
+                return;
             }
-
             const response = await sopDocumentService.getSop(token);
-
-            if (response.success) {
-                setDatas(response.data)
-            }
+            if (response.success) setDatas(response.data);
         } catch (error: any) {
-            console.error(error.message)
+            console.error(error.message);
         } finally {
-            setLoading(false)
+            setLoading(false);
         }
-    }
+    };
 
     const handleSubmit = async (e: React.SyntheticEvent) => {
         e.preventDefault();
@@ -100,73 +97,66 @@ const SopDocumentPage = () => {
                 });
 
             const imageBase64 = imageFile ? await toBase64(imageFile) : null;
-            const token = localStorage.getItem('token');
 
             if (!token) {
-                localStorage.clear();
                 navigate('/auth/login');
+                return;
             }
 
-            const response = await sopDocumentService.addSop(token, name, imageBase64);
+            const payload = {
+                name,
+                document: imageBase64
+            };
 
+            const response = await sopDocumentService.addSop(payload);
             if (response.success) {
-                toast.success('SOP Document created successfully');
-
+                toast.success("SOP Document created successfully");
                 fetchSopDocument();
-                setLoading(false);
                 setAddDoc(false);
-                setDocument('');
                 setName('');
+                setDocument('');
+                setImageFile(null);
             }
         } catch (error: any) {
             toast.error(error.message);
+        } finally {
+            setLoading(false);
         }
-    }
+    };
 
     const handleDelete = async () => {
         setLoading(true);
         try {
-            const token = localStorage.getItem('token');
             if (!token) {
-                localStorage.clear();
                 navigate('/auth/login');
                 return;
             }
-
-            console.log("Deleting ID:", selectedId);
-
             if (!selectedId) {
                 toast.error("No selected ID");
                 return;
             }
-
-            const response = await sopDocumentService.deleteSop(selectedId, token);
-
+            const response = await sopDocumentService.deleteSop(selectedId);
             if (response.success) {
-                toast.success('Document deleted successfully');
+                toast.success("Document deleted successfully");
                 fetchSopDocument();
                 setDeleteModal(false);
                 setSelectedId(null);
             } else {
-                toast.error('Failed to delete document');
+                toast.error("Failed to delete document");
             }
         } catch (error: any) {
-            toast.error(error.message || 'Error deleting document');
+            toast.error(error.message || "Error deleting document");
         } finally {
-            setLoading(false)
+            setLoading(false);
         }
     };
-
 
     const handleEdit = async (e: React.SyntheticEvent) => {
         e.preventDefault();
         setLoading(true);
 
         try {
-            const token = localStorage.getItem('token');
-
             if (!token) {
-                localStorage.clear();
                 navigate('/auth/login');
                 return;
             }
@@ -181,21 +171,25 @@ const SopDocumentPage = () => {
 
             const imageBase64 = imageFile ? await toBase64(imageFile) : document;
 
-            const response = await sopDocumentService.editSop(token, editData?.id, name, imageBase64);
+            const payload = {
+                name,
+                document: imageBase64
+            };
 
+            const response = await sopDocumentService.editSop(editData?.id, payload);
             if (response.success) {
-                toast.success('SOP Document updated successfully');
-
+                toast.success("SOP Document updated successfully");
                 fetchSopDocument();
-                setLoading(false);
+                setEditDoc(false);
                 setEditData(null);
                 setName('');
                 setDocument('');
                 setImageFile(null);
-                setEditDoc(false);
             }
         } catch (error: any) {
-            toast.error(error.message || 'Error editing document');
+            toast.error(error.message || "Error editing document");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -205,7 +199,7 @@ const SopDocumentPage = () => {
 
     const audit = async () => {
         try {
-            const token = localStorage.getItem('token');
+
             const title = `Access sop document settings page`;
             const description = `User ${user?.email} access sop document settings page`;
             const status = 'success';
@@ -228,7 +222,6 @@ const SopDocumentPage = () => {
     useEffect(() => {
         setDocument(sop.document);
     }, [sop]);
-
 
     return (
         <MainLayout>

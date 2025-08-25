@@ -8,76 +8,50 @@ import attendanceSettingService from "../../../../services/attendanceSettingServ
 import MainLayout from "../../../../layouts/MainLayout";
 import Navbar from "../../../../components/Navbar";
 import Loader from "../../../../components/Loader";
-import auditTrialsService from "../../../../services/auditTrailsService";
+import auditTrailsService from "../../../../services/auditTrailsService";
+
+interface FormField {
+    label: string;
+    placeholder: string;
+    value: string;
+}
+
 const SettingsAttendancePage = () => {
     const [sidebar, setSidebar] = useState(false);
     const user = useSelector((state: RootState) => state.user.user);
+    const token = useSelector((state: RootState) => state.token.token);
     const navigate = useNavigate();
-    const { t, i18n } = useTranslation();
+    const { t } = useTranslation();
     const [loading, setLoading] = useState(false);
-    const [formData, setFormData] = useState([
-        {
-            label: 'Grace period (in minutes)',
-            placeholder: 'Grace period (in minutes)',
-            value: '15'
-        },
-        {
-            label: 'Geo fencing (in minutes)',
-            placeholder: 'Geo fencing (in minutes)',
-            value: '200'
-        },
-        {
-            label: 'Day shift start time',
-            placeholder: '00:00',
-            value: '08:00'
-        },
-        {
-            label: 'Day shift end time',
-            placeholder: '00:00',
-            value: '20:00'
-        },
-        {
-            label: 'Night shift start time',
-            placeholder: '00:00',
-            value: '20:00'
-        },
-        {
-            label: 'Night shift end time',
-            placeholder: '00:00',
-            value: '08:00'
-        },
-        {
-            label: 'RELIEF Day shift start time',
-            placeholder: '00:00',
-            value: '08:00'
-        },
-        {
-            label: 'RELIEF Day shift end time',
-            placeholder: '00:00',
-            value: '20:00'
-        },
-        {
-            label: 'RELIEF night shift start time',
-            placeholder: '00:00',
-            value: '20:00'
-        },
-        {
-            label: 'RELIEF night shift end time',
-            placeholder: '00:00',
-            value: '08:00'
-        },
+
+    // simpan id setting
+    const [settingId, setSettingId] = useState<string | null>(null);
+
+    const [formData, setFormData] = useState<FormField[]>([
+        { label: 'Grace period (in minutes)', placeholder: 'Grace period (in minutes)', value: '15' },
+        { label: 'Geo fencing (in minutes)', placeholder: 'Geo fencing (in minutes)', value: '200' },
+        { label: 'Day shift start time', placeholder: '00:00', value: '08:00' },
+        { label: 'Day shift end time', placeholder: '00:00', value: '20:00' },
+        { label: 'Night shift start time', placeholder: '00:00', value: '20:00' },
+        { label: 'Night shift end time', placeholder: '00:00', value: '08:00' },
+        { label: 'RELIEF Day shift start time', placeholder: '00:00', value: '08:00' },
+        { label: 'RELIEF Day shift end time', placeholder: '00:00', value: '20:00' },
+        { label: 'RELIEF night shift start time', placeholder: '00:00', value: '20:00' },
+        { label: 'RELIEF night shift end time', placeholder: '00:00', value: '08:00' },
     ]);
 
     const fetchSettings = async () => {
+        if (!token) return;
+
         try {
-            const token = localStorage.getItem('token');
-
             const response = await attendanceSettingService.getAttendanceSetting(token);
-
             if (response.success) {
                 const data = response.data;
 
-                const mappedData = [
+                // simpan id dari API
+                setSettingId(data.id);
+
+                const mappedData: FormField[] = [
                     { label: 'Grace period (in minutes)', placeholder: 'Grace period (in minutes)', value: data.grace_period.toString() },
                     { label: 'Geo fencing (in meters)', placeholder: 'Geo fencing (in meters)', value: data.geo_fencing.toString() },
                     { label: 'Day shift start time', placeholder: '00:00', value: data.day_shift_start_time.slice(0, 5) },
@@ -89,7 +63,6 @@ const SettingsAttendancePage = () => {
                     { label: 'RELIEF night shift start time', placeholder: '00:00', value: data.relief_night_shift_start_time.slice(0, 5) },
                     { label: 'RELIEF night shift end time', placeholder: '00:00', value: data.relief_night_shift_end_time.slice(0, 5) },
                 ];
-
                 setFormData(mappedData);
             }
         } catch (error: any) {
@@ -108,8 +81,10 @@ const SettingsAttendancePage = () => {
     const handleSubmit = async (e: React.SyntheticEvent) => {
         e.preventDefault();
         setLoading(true);
+        if (!token) return;
 
         const dataToSend = {
+            id: settingId, // tambahkan id di payload
             grace_period: parseInt(formData[0].value) || 0,
             geo_fencing: parseInt(formData[1].value) || 0,
             day_shift_start_time: formData[2].value + ':00',
@@ -123,13 +98,12 @@ const SettingsAttendancePage = () => {
         };
 
         try {
-            const token = localStorage.getItem('token');
-            const res = await attendanceSettingService.updateAttendanceSetting(token, dataToSend);
+            const res = await attendanceSettingService.updateAttendanceSetting(dataToSend);
             if (res.success) toast.success("Settings updated");
         } catch (error: any) {
             toast.error(error.message);
         } finally {
-            fetchSettings();
+            await fetchSettings();
             setLoading(false);
         }
     };
@@ -139,25 +113,27 @@ const SettingsAttendancePage = () => {
     };
 
     const audit = async () => {
+        if (!token || !user) return;
         try {
-            const token = localStorage.getItem('token');
             const title = `Access attendance settings page`;
-            const description = `User ${user?.email} access attendance settings page`;
+            const description = `User ${user.email} access attendance settings page`;
             const status = 'success';
-            await auditTrialsService.storeAuditTrails(token, user?.id, title, description, status, 'access attendance settings');
+            await auditTrailsService.storeAuditTrails(token, user.id, title, description, status, 'access attendance settings');
         } catch (error) {
             console.error(error);
         }
-    }
+    };
 
     useEffect(() => {
-        audit();
-        if (hasPermission('show_attendance_settings')) {
-            fetchSettings();
-        } else {
-            navigate('/dashboard');
-        }
-    }, [])
+        (async () => {
+            if (!hasPermission('show_attendance_settings')) {
+                navigate('/dashboard');
+                return;
+            }
+            await audit();
+            await fetchSettings();
+        })();
+    }, [token, user]);
 
     return (
         <MainLayout>
@@ -167,7 +143,7 @@ const SettingsAttendancePage = () => {
                     <Navbar />
                     <div className="bg-[#252C38] p-6 rounded-lg w-full h-full">
                         <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-x-12 gap-y-6 sm:grid-cols-2">
-                            {formData && formData.map((item, index) => (
+                            {formData.map((item, index) => (
                                 <div key={index} className="flex flex-col w-full px-4 pt-2 py-2 rounded bg-[#222834] border-b border-b-[#98A1B3]">
                                     <label className="text-xs leading-[21px] text-[#98A1B3]">{item.label}</label>
                                     <input
@@ -181,8 +157,9 @@ const SettingsAttendancePage = () => {
                             ))}
                             {hasPermission('edit_attendance_settings') && (
                                 <div className="flex gap-4 flex-wrap">
-                                    <button type="submit" className="font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">{loading ? <Loader primary={true} /> : 'Save'}</button>
-                                    {/* <button className="font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border-[1px] border-[#868686] rounded-full transition-all hover:bg-[#868686] hover:text-[#252C38]">Cancel</button> */}
+                                    <button type="submit" className="font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">
+                                        {loading ? <Loader primary={true} /> : 'Save'}
+                                    </button>
                                 </div>
                             )}
                         </form>
@@ -190,7 +167,7 @@ const SettingsAttendancePage = () => {
                 </div>
             </div>
         </MainLayout>
-    )
-}
+    );
+};
 
 export default SettingsAttendancePage;

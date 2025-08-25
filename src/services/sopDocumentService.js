@@ -4,7 +4,7 @@ const sopDocumentService = {
 
 getSop: async (token) => {
         try {
-            const response = await api.get(`/sop-documents`, {
+            const response = await api.get(`master-settings/sop-documents`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -18,16 +18,9 @@ getSop: async (token) => {
         }
     },
 
-    addSop: async (token, name , document) => {
+    addSop: async (payload) => {
         try {
-            const response = await api.post(`/sop-documents`, {
-                name,
-                document,
-            }, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
+            const response = await api.post(`master-settings/sop-documents`, payload);
 
             if (response.data) {
                 return response.data;
@@ -37,16 +30,9 @@ getSop: async (token) => {
         }
     },
 
-    editSop: async (token, id, name, document) => {
+    editSop: async (id, payload) => {
         try {
-            const response = await api.put(`/sop-documents/${id}`, {
-                name,
-                document,
-            }, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
+            const response = await api.put(`master-settings/sop-documents/${id}`, payload);
 
             if (response.data) {
                 return response.data;
@@ -56,14 +42,9 @@ getSop: async (token) => {
         }
     },
 
-    deleteSop: async (id, token) => {
+    deleteSop: async (id) => {
         try {
-            const response = await api.post(`/sop-documents/${id}`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            })
-
+            const response = await api.delete(`master-settings/sop-documents/${id}`)
             return response.data;
         } catch (error) {
             throw error.response ? error.response.data : { message: 'Network error' };

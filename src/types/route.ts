@@ -3,4 +3,6 @@ export type Route = {
     name: string;
     status: string;
     id_site: string;
+    route: string;
+    remarks?: string;
 }

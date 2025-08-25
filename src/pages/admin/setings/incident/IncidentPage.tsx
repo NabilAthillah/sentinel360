@@ -14,22 +14,27 @@ import Navbar from "../../../../components/Navbar";
 import Loader from "../../../../components/Loader";
 
 const IncidentPageMaster = () => {
-    const [sidebar, setSidebar] = useState(false);
-    const [data1, setData1] = useState(true);
-    const [data2, setData2] = useState(false);
+    const navigate = useNavigate();
+    const { t } = useTranslation();
+
+    // ambil langsung dari redux (NO localStorage lagi)
+    const user = useSelector((state: RootState) => state.user.user);
+    const token = useSelector((state: RootState) => state.token.token);
+
+    const [datas, setDatas] = useState<IncidentType[]>([]);
+    const [switchStates, setSwitchStates] = useState<Record<string, boolean>>({});
+    const [loading, setLoading] = useState(false);
+
     const [addIncident, setAddIncident] = useState(false);
     const [editIncident, setEditIncident] = useState(false);
-    const [editData, setEditData] = useState<IncidentType | null>();
-    const navigate = useNavigate();
-    const [loading, setLoading] = useState(false);
-    const [datas, setDatas] = useState<IncidentType[]>([]);
+    const [editData, setEditData] = useState<IncidentType | null>(null);
     const [name, setName] = useState('');
+
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 5;
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-    const user = useSelector((state: RootState) => state.user.user);
-    const { t, i18n } = useTranslation();
+    const itemsPerPage = 5;
+
     const filteredData = datas.filter(doc =>
         doc.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -39,163 +44,118 @@ const IncidentPageMaster = () => {
         (currentPage - 1) * itemsPerPage,
         currentPage * itemsPerPage
     );
-    const goToNextPage = () => {
-        if (currentPage < totalPages) {
-            setCurrentPage(currentPage + 1);
-        }
-    };
 
-    const goToPrevPage = () => {
-        if (currentPage > 1) {
-            setCurrentPage(currentPage - 1);
-        }
-    };
+    const goToNextPage = () => currentPage < totalPages && setCurrentPage(p => p + 1);
+    const goToPrevPage = () => currentPage > 1 && setCurrentPage(p => p - 1);
+
+    const hasPermission = (permissionName: string) =>
+        user?.role?.permissions?.some(p => p.name === permissionName);
 
     const handleSortByStatus = () => {
-        const sortedData = [...datas].sort((a, b) => {
-            if (sortOrder === 'asc') {
-                return a.status.localeCompare(b.status);
-            } else {
-                return b.status.localeCompare(a.status);
-            }
-        });
-
+        const sortedData = [...datas].sort((a, b) =>
+            sortOrder === 'asc'
+                ? a.status.localeCompare(b.status)
+                : b.status.localeCompare(a.status)
+        );
         setDatas(sortedData);
-        setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+        setSortOrder(prev => (prev === 'asc' ? 'desc' : 'asc'));
     };
 
     const fetchIncidentTypes = async () => {
+        if (!token) {
+            navigate('/auth/login');
+            return;
+        }
         setLoading(true);
         try {
-            const token = localStorage.getItem('token');
-
-            if (!token) {
-                localStorage.clear();
-                navigate('/auth/login');
-            }
-
             const response = await IncidentTypesService.getIncidentTypes(token);
-
             if (response.success) {
-                setDatas(response.data)
+                setDatas(response.data);
             }
         } catch (error: any) {
-            console.error(error.message)
+            console.error(error.message);
         } finally {
             setLoading(false);
         }
-    }
-    const [switchStates, setSwitchStates] = useState<Record<string, boolean>>(
-        datas?.reduce((acc, catg) => {
-            acc[catg.id] = catg.status === 'active';
-            return acc;
-        }, {} as Record<string, boolean>) ?? {}
-    );
+    };
 
     const handleToggle = async (id: string) => {
         const prevStatus = switchStates[id];
         const newStatus = !prevStatus;
-
-        setSwitchStates((prev) => ({
-            ...prev,
-            [id]: newStatus,
-        }));
-
-        const token = localStorage.getItem('token');
-
-        if (!token) {
-            localStorage.clear();
-            navigate('/auth/login');
-        }
+        setSwitchStates(prev => ({ ...prev, [id]: newStatus }));
 
         try {
-            const response = await IncidentTypesService.editIncidentTypesStatus(token, id, newStatus ? 'active' : 'deactive');
-
+            const response = await IncidentTypesService.editIncidentTypesStatus(
+                token,
+                id,
+                newStatus ? 'active' : 'deactive'
+            );
             if (response.success) {
                 toast.success('Incident status updated successfully');
                 fetchIncidentTypes();
             }
-        } catch (error) {
-            console.error();
-            setSwitchStates((prev) => ({
-                ...prev,
-                [id]: prevStatus,
-            }));
-
-            toast.error('Failed to update Incident status');
+        } catch {
+            setSwitchStates(prev => ({ ...prev, [id]: prevStatus }));
+            toast.error('Failed to update incident status');
         }
     };
 
     const handleSubmit = async (e: React.SyntheticEvent) => {
         e.preventDefault();
         setLoading(true);
-
         try {
-            const token = localStorage.getItem('token');
-
-            if (!token) {
-                localStorage.clear();
-                navigate('/auth/login');
-            }
-
             const response = await IncidentTypesService.addIncidentTypes(token, name);
-
             if (response.success) {
                 toast.success('Incident created successfully');
-
                 fetchIncidentTypes();
-                setLoading(false);
                 setAddIncident(false);
                 setName('');
             }
         } catch (error: any) {
             toast.error(error.message);
+        } finally {
+            setLoading(false);
         }
-    }
+    };
 
     const handleEdit = async (e: React.SyntheticEvent) => {
         e.preventDefault();
+        if (!editData) return;
+
         setLoading(true);
-
         try {
-            const token = localStorage.getItem('token');
-
-            if (!token) {
-                localStorage.clear();
-                navigate('/auth/login');
-            }
-
-            const response = await IncidentTypesService.editIncidentTypes(token, editData?.id, name);
-
+            const response = await IncidentTypesService.editIncidentTypes(token, editData.id, name);
             if (response.success) {
                 toast.success('Incident updated successfully');
-
                 fetchIncidentTypes();
-                setLoading(false);
+                setEditIncident(false);
                 setEditData(null);
                 setName('');
-                setEditIncident(false);
             }
         } catch (error: any) {
-            toast.error(error.message);
+            toast.error(error.message || t('Failed to update incident'));
+        } finally {
+            setLoading(false);
         }
-    }
-
-    const hasPermission = (permissionName: string) => {
-        return user?.role?.permissions?.some(p => p.name === permissionName);
     };
+
 
     const audit = async () => {
         try {
-            const token = localStorage.getItem('token');
             const title = `Access incident settings page`;
-            const description = `User ${user?.email} access incident settings page`;
-            const status = 'success';
-            await auditTrialsService.storeAuditTrails(token, user?.id, title, description, status, 'access incident');
+            const description = `User ${user?.email} accessed incident settings page`;
+            await auditTrialsService.storeAuditTrails(
+                token,
+                user?.id,
+                title,
+                description,
+                'success',
+                'access incident'
+            );
         } catch (error) {
             console.error(error);
         }
-    }
+    };
 
     useEffect(() => {
         audit();
@@ -208,18 +168,17 @@ const IncidentPageMaster = () => {
 
     useEffect(() => {
         if (datas) {
-            const newSwitchStates = datas.reduce((acc, catg) => {
+            const newStates = datas.reduce((acc, catg) => {
                 acc[catg.id] = catg.status === 'active';
                 return acc;
             }, {} as Record<string, boolean>);
-
-            setSwitchStates(newSwitchStates);
+            setSwitchStates(newStates);
         }
     }, [datas]);
 
     useEffect(() => {
         if (editData && editIncident) {
-            setName(editData.name)
+            setName(editData.name);
         }
     }, [editIncident]);
 
@@ -306,12 +265,12 @@ const IncidentPageMaster = () => {
                                                                             className: "before:hidden left-0.5 border-none",
                                                                         }} onResize={undefined} onResizeCapture={undefined} onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} crossOrigin={undefined} />
                                                                     <p className={`font-medium text-sm capitalize ${switchStates[incident.id] ? 'text-[#19CE74]' : 'text-[#FF7E6A]'}`}>
-                                                                        {switchStates[incident.id] ? 'active' : 'inactive'}
+                                                                        {switchStates[incident.id] ? 'active' : 'deactive'}
                                                                     </p>
                                                                 </div>
                                                             ) : (
                                                                 <p className={`font-medium text-sm capitalize ${switchStates[incident.id] ? 'text-[#19CE74]' : 'text-[#FF7E6A]'}`}>
-                                                                    {switchStates[incident.id] ? 'active' : 'inactive'}
+                                                                    {switchStates[incident.id] ? 'active' : 'deactive'}
                                                                 </p>
                                                             )}
                                                         </td>

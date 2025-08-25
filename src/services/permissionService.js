@@ -3,7 +3,7 @@ import api from "../utils/api";
 const permissionService = {
     getAllPermissions: async (token) => {
         try {
-            const response = await api.get('/permissions', {
+            const response = await api.get('master-settings/permissions', {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }

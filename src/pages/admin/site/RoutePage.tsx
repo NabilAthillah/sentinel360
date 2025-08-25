@@ -14,15 +14,20 @@ import MainLayout from '../../../layouts/MainLayout';
 import Loader from '../../../components/Loader';
 import DeleteModal from '../../../components/DeleteModal';
 import { AnimatePresence, motion } from 'framer-motion';
-import { DndContext, closestCenter } from "@dnd-kit/core";
 import {
-    arrayMove,
+    DndContext,
+    useDraggable,
+    useDroppable,
+    closestCenter,
+} from "@dnd-kit/core";
+import {
     SortableContext,
     useSortable,
-    verticalListSortingStrategy,
     horizontalListSortingStrategy,
+    arrayMove,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+
 function useBodyScrollLock(locked: boolean) {
     useEffect(() => {
         const prev = document.body.style.overflow;
@@ -127,9 +132,21 @@ const RoutePage = () => {
     const [site, setSite] = useState<Site>();
     const { t, i18n } = useTranslation();
     const [name, setName] = useState('');
+    const [pointers, setPointers] = useState([1, 2, 3, 4, 5]);
+    const [confirmRoute, setConfirmRoute] = useState([2, 4, 5]);
+
 
     const user = useSelector((state: RootState) => state.user.user)
     const navigate = useNavigate();
+
+    const handleDragEnd = (event: any, setList: Function, list: number[]) => {
+        const { active, over } = event;
+        if (over && active.id !== over.id) {
+            const oldIndex = list.indexOf(active.id);
+            const newIndex = list.indexOf(over.id);
+            setList(arrayMove(list, oldIndex, newIndex));
+        }
+    };
 
     const [switchStates, setSwitchStates] = useState<Record<string, boolean>>(
         site?.routes?.reduce((acc, route) => {
@@ -405,29 +422,92 @@ const RoutePage = () => {
                     </div>
                 </div>
             </div>
-            {
-                addData && (
-                    <form onSubmit={handleSubmit} className="fixed w-screen h-screen flex justify-end items-start top-0 left-0 z-50 bg-[rgba(0,0,0,0.5)]">
-                        <div className="flex flex-col gap-6 p-6 bg-[#252C38] max-w-[568px] w-full max-h-screen overflow-auto h-full">
-                            <h2 className='text-2xl leading-[36px] text-white font-noto'>{t('Add ROute')}</h2>
-                            <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">{t('Route Name')}</label>
-                                <input
-                                    type={"text"}
-                                    className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
-                                    placeholder='Route name'
-                                    onChange={(e) => setName(e.target.value)}
-                                    required
-                                />
-                            </div>
-                            <div className="flex gap-4 flex-wrap">
-                                <button type='submit' className="flex justify-center items-center font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">{loading ? <Loader primary={true} /> : 'Save'}</button>
-                                <p onClick={() => setAddData(false)} className="cursor-pointer font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border-[1px] border-[#868686] rounded-full transition-all hover:bg-[#868686] hover:text-[#252C38]">{t('Cancel')}</p>
+            <SlideOver isOpen={addData} onClose={() => setAddData(false)} ariaTitle="Add Route" width={568}>
+                <form className="flex flex-col gap-6 p-6 h-full">
+                    <h2 className="text-2xl text-white">Add Route</h2>
+                    <div className="flex flex-col w-full px-4 pt-2 pb-1 bg-[#222834] border-b border-b-[#98A1B3]">
+                        <input
+                            type="text"
+                            className="w-full bg-[#222834] text-[#F4F7FF] text-base focus:outline-none"
+                            placeholder="Route name"
+                        />
+                    </div>
+                    <div className="flex flex-col gap-3">
+                        <label className="text-sm text-[#98A1B3]">Drag pointers route below</label>
+                        <div className="flex gap-4 p-4 bg-[#222834] rounded-md">
+                            <DndContext
+                                collisionDetection={closestCenter}
+                                onDragEnd={(e) => handleDragEnd(e, setPointers, pointers)}
+                            >
+                                <SortableContext items={pointers} strategy={horizontalListSortingStrategy}>
+                                    {pointers.map((id) => (
+                                        <SortableItem key={id} id={id} />
+                                    ))}
+                                </SortableContext>
+                            </DndContext>
+                        </div>
+                        <div className="grid grid-cols-2 gap-y-1 text-sm text-[#98A1B3] px-1">
+                            <span>1. Section 2 Door</span>
+                            <span>4. Section 3 Garden</span>
+                            <span>2. Electric box</span>
+                            <span>5. Fountain</span>
+                            <span>3. Circuit area</span>
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col gap-3">
+                        <label className="text-sm text-[#98A1B3]">Confirm pointers route</label>
+                        <div className="flex gap-4 p-4 bg-[#222834] rounded-md">
+                            <DndContext
+                                collisionDetection={closestCenter}
+                                onDragEnd={(e) => handleDragEnd(e, setConfirmRoute, confirmRoute)}
+                            >
+                                <SortableContext items={confirmRoute} strategy={horizontalListSortingStrategy}>
+                                    {confirmRoute.map((id) => (
+                                        <div key={id} className="relative">
+                                            <SortableItem id={id} />
+                                            <button
+                                                type="button"
+                                                onClick={() => setConfirmRoute(confirmRoute.filter((i) => i !== id))}
+                                                className="absolute -top-2 -right-2 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center"
+                                            >
+                                                ×
+                                            </button>
+                                        </div>
+                                    ))}
+                                </SortableContext>
+                            </DndContext>
+                            <div className="w-10 h-10 rounded-full border border-dashed border-yellow-500 flex items-center justify-center text-yellow-500">
+                                +
                             </div>
                         </div>
-                    </form>
-                )
-            }
+                    </div>
+
+                    <div className="flex flex-col w-full px-4 pt-2 pb-1 bg-[#222834] border-b border-b-[#98A1B3]">
+                        <input
+                            type="text"
+                            className="w-full bg-[#222834] text-[#F4F7FF] text-base focus:outline-none"
+                            placeholder="Remarks (Optional)"
+                        />
+                    </div>
+
+                    <div className="flex gap-4 flex-wrap pt-12 mt-auto  bottom ">
+                        <button
+                            type="submit"
+                            className="flex justify-center items-center font-medium text-base text-[#181D26] bg-[#EFBF04] px-12 py-3 border border-[#EFBF04] rounded-full hover:bg-[#181D26] hover:text-[#EFBF04]"
+                        >
+                            Confirm
+                        </button>
+                        <button
+                            onClick={() => setAddData(false)}
+                            type="button"
+                            className="font-medium text-base text-[#868686] bg-[#252C38] px-12 py-3 border border-[#868686] rounded-full hover:bg-[#868686] hover:text-[#252C38]"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </SlideOver>
             {
                 editRoute && editData && (
                     <form onSubmit={handleEdit} className="fixed w-screen h-screen flex justify-end items-start top-0 left-0 z-50 bg-[rgba(0,0,0,0.5)]">

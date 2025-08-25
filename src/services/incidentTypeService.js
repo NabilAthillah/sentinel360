@@ -3,7 +3,7 @@ import api from "../utils/api";
 const IncidentTypesService = {
     getIncidentTypes: async (token) => {
         try {
-            const response = await api.get(`/incident-types`, {
+            const response = await api.get(`master-settings/incident-types`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -19,13 +19,7 @@ const IncidentTypesService = {
 
     addIncidentTypes: async (token, name) => {
         try {
-            const response = await api.post(`/incident-types`, {
-                name,
-            }, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
+            const response = await api.post(`master-settings/incident-types`, {name: name});
 
             if (response.data) {
                 return response.data;
@@ -37,13 +31,7 @@ const IncidentTypesService = {
 
     editIncidentTypes: async (token, id, name) => {
         try {
-            const response = await api.put(`/incident-types/${id}`, {
-                name,
-            }, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
+            const response = await api.put(`master-settings/incident-types/${id}`, {name});
 
             if (response.data) {
                 return response.data;
@@ -55,13 +43,7 @@ const IncidentTypesService = {
 
     editIncidentTypesStatus: async (token, id, status) => {
         try {
-            const response = await api.put(`/incident-types/${id}`, {
-                status,
-            }, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
+            const response = await api.put(`master-settings/incident-types/${id}`, {status});
 
             if (response.data) {
                 return response.data;
