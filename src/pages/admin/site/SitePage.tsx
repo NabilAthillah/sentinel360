@@ -12,6 +12,8 @@ import auditTrialsService from '../../../services/auditTrailsService';
 import MainLayout from '../../../layouts/MainLayout';
 import Loader from '../../../components/Loader';
 import DeleteModal from '../../../components/DeleteModal';
+import SecondLayout from '../../../layouts/SecondLayout';
+import SidebarLayout from '../../../components/SidebarLayout';
 /* ================= Helpers: Animations & Scroll Lock ================= */
 function useBodyScrollLock(locked: boolean) {
     useEffect(() => {
@@ -382,7 +384,8 @@ const SitePage = () => {
     }, [editData]);
 
     return (
-        <MainLayout>
+        <SecondLayout>
+            <SidebarLayout isOpen={true} closeSidebar={undefined} />
             <div className="flex flex-col gap-6 px-6 pb-20 w-full h-full flex-1">
                 <h2 className="text-2xl leading-9 text-white font-noto">{t('Sites')}</h2>
                 <nav className="flex flex-wrap">
@@ -1082,7 +1085,7 @@ const SitePage = () => {
                     <DeleteModal loading={loading} setModal={setDeleteModal} handleDelete={handleDelete} />
                 </div>
             </CenterModal>
-        </MainLayout>
+        </SecondLayout>
     );
 };
 

@@ -6,7 +6,8 @@ import { SwitchCustomStyleToggleable } from "../../../components/SwitchCustomSty
 import SecondLayout from "../../../layouts/SecondLayout";
 import SidebarLayout from "../../../components/SidebarLayout";
 import Loader from "../../../components/Loader";
-
+import { ArrowLeft, ArrowRight } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 const IncidentTypePage = () => {
     const [sidebar, setSidebar] = useState(false);
     const [view, setView] = useState(false);
@@ -25,7 +26,7 @@ const IncidentTypePage = () => {
     return (
         <SecondLayout>
             <SidebarLayout isOpen={true} closeSidebar={undefined} />
-            <div className='flex flex-col gap-6 px-6 pb-20 w-full h-full flex-1'>
+            <div className='flex flex-col gap-6 pr-[156px] pl-4 pb-20 w-full h-full flex-1'>
                 <div className="flex flex-col gap-10 bg-[#252C38] p-6 rounded-lg w-full h-full flex-1">
                     <div className="w-full flex flex-col gap-4 flex-wrap">
                         <div className="flex items-end gap-4 w-fit flex-wrap md:flex-nowrap">
@@ -106,156 +107,195 @@ const IncidentTypePage = () => {
                                                 </div>
                                             </td>
                                         </tr>
-                                        ) : (
+                                        {/* (
                                         <tr>
                                             <td colSpan={8} className="text-center text-[#F4F7FF] py-6">
-                                                {t(" No records found")}
+                                                {t("No records found")}
                                             </td>
                                         </tr>
-                                        
+                                        ) */}
                                     </tbody>
                                 )}
                             </table>
 
                         </div>
-                        <div className="grid grid-cols-3 w-fit absolute bottom-0 right-0">
-                            <button className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[8px_0px_0px_8px] bg-[#575F6F]">{t('Prev')}</button>
-                            <button className="font-medium text-xs leading-[21px] text-[#181D26] py-1 px-3 bg-[#D4AB0B]">1</button>
-                            <button className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[0px_8px_8px_0px] bg-[#575F6F]">{t('Next')}</button>
+                        <div className="flex items-center justify-center gap-3 absolute bottom-0 right-3">
+                            <button
+                                // onClick={goToPrevPage}
+                                // disabled={currentPage === 1}
+                                className="flex items-center gap-1 font-medium text-xs leading-[21px] text-[#B3BACA] disabled:opacity-50"
+                            >
+                                <ArrowLeft />
+                                {t('Prev')}
+                            </button>
+                            <button className="font-medium text-xs leading-[21px] text-[#181D26] py-1 px-3 bg-[#D4AB0B] rounded-md">
+                                {/* {currentPage} */}1
+                            </button>
+                            <button
+                                // onClick={goToNextPage}
+                                // disabled={currentPage === totalPages}
+                                className="flex items-center gap-1 font-medium text-xs leading-[21px] text-[#B3BACA] disabled:opacity-50"
+                            >
+                                {t('Next')}
+                                <ArrowRight />
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
-            {
-                edit && (
-                    <div className="fixed w-screen h-screen flex justify-end items-start top-0 left-0 z-50 bg-[rgba(0,0,0,0.5)]">
-                        <div className="flex flex-col gap-6 p-6 bg-[#252C38] max-w-[568px] w-full max-h-screen overflow-auto h-full">
-                            <h2 className='text-2xl leading-[36px] text-white font-noto'>{t('Edit Incident Details')}</h2>
-                            <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">{t('Site Name')}</label>
-                                <input
-                                    type={"text"}
-                                    className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
-                                    placeholder='Site name'
-                                    value='Michael Yeow'
-                                />
-                            </div>
-                            <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">{t('What happened')}</label>
-                                <input
-                                    type={"text"}
-                                    className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
-                                    placeholder='What happened'
-                                    value='Basement'
-                                />
-                            </div>
-                            <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">{t('Why it happened')}</label>
-                                <input
-                                    type={"text"}
-                                    className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
-                                    placeholder='Why it happened'
-                                    value='Unknown'
-                                />
-                            </div>
-                            <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">{t('How it happened')}</label>
-                                <input
-                                    type={"text"}
-                                    className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
-                                    placeholder='How it happened'
-                                    value='Power trip'
-                                />
-                            </div>
-                            <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">{t('When it happened')}</label>
-                                <input
-                                    type={"text"}
-                                    className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
-                                    placeholder='When it happened'
-                                    value='19/08/2024 23:09:24'
-                                />
-                            </div>
-                            <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">{t('Details of incident')}t</label>
-                                <input
-                                    type={"text"}
-                                    className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
-                                    placeholder='Details of incident'
-                                    value='24/05/2025'
-                                />
-                            </div>
-                            <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">{t('Person injuried')}</label>
-                                <input
-                                    type={"text"}
-                                    className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
-                                    placeholder='Person injuried'
-                                    value='None'
-                                />
-                            </div>
-                            <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">{t('Person involved')}</label>
-                                <input
-                                    type={"text"}
-                                    className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
-                                    placeholder='Person involved'
-                                    value='None'
-                                />
-                            </div>
-                            <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">{t('Ops executive in-charge')}</label>
-                                <input
-                                    type={"text"}
-                                    className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
-                                    placeholder='Ops executive in-charge'
-                                    value='None'
-                                />
-                            </div>
-                            <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#D65656]">
-                                <label htmlFor="" className="text-xs leading-[21px] text-[#D65656]">{t('Report by')}y</label>
-                                <input
-                                    type={"text"}
-                                    className="w-full bg-[#222834] text-[#D65656] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
-                                    placeholder='Report by'
-                                    value=' '
-                                />
-                            </div>
-                            <div className="pt-3 flex flex-col gap-6">
-                                {data.map((item) => (
-                                    <div className="flex items-center justify-between">
-                                        <p className="leading-[21px] text-[#F4F7FF]">{item}</p>
-                                        <SwitchCustomStyleToggleable />
+            <AnimatePresence>
+                {
+                    edit && (
+                        <motion.div
+                            key="add-employee-overlay"
+                            className="fixed inset-0 z-50 bg-black/50"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                        // onClick={() => setAddEmployee(false)}
+                        >
+                            <motion.aside
+                                role="dialog"
+                                aria-modal="true"
+                                className="absolute right-0 top-0 h-full w-full max-w-[568px] bg-[#252C38] shadow-xl overflow-auto"
+                                initial={{ x: '100%' }}
+                                animate={{ x: 0 }}
+                                exit={{ x: '100%' }}
+                                transition={{ type: 'spring', stiffness: 320, damping: 32 }}
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <div className="flex flex-col gap-6 p-6">
+                                    <h2 className='text-2xl leading-[36px] text-white font-noto'>{t('Edit Incident Details')}</h2>
+                                    <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
+                                        <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">{t('Site Name')}</label>
+                                        <input
+                                            type={"text"}
+                                            className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
+                                            placeholder='Site name'
+                                            value='Michael Yeow'
+                                        />
                                     </div>
-                                ))}
-                            </div>
-                            <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-                                <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">{t('Remarks')}</label>
-                                <input
-                                    type={"text"}
-                                    className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
-                                    placeholder='Remarks'
-                                    value='Uploaded to the system'
-                                />
-                            </div>
-                            <div className="flex gap-4 flex-wrap">
-                                <button onClick={() => { setEdit(false); toast.success('Employee edited successfully') }} className="font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">Save</button>
-                                <button onClick={() => setEdit(false)} className="font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border-[1px] border-[#868686] rounded-full transition-all hover:bg-[#868686] hover:text-[#252C38]">{t('Cancel')}</button>
-                            </div>
+                                    <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
+                                        <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">{t('What happened')}</label>
+                                        <input
+                                            type={"text"}
+                                            className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
+                                            placeholder='What happened'
+                                            value='Basement'
+                                        />
+                                    </div>
+                                    <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
+                                        <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">{t('Why it happened')}</label>
+                                        <input
+                                            type={"text"}
+                                            className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
+                                            placeholder='Why it happened'
+                                            value='Unknown'
+                                        />
+                                    </div>
+                                    <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
+                                        <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">{t('How it happened')}</label>
+                                        <input
+                                            type={"text"}
+                                            className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
+                                            placeholder='How it happened'
+                                            value='Power trip'
+                                        />
+                                    </div>
+                                    <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
+                                        <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">{t('When it happened')}</label>
+                                        <input
+                                            type={"text"}
+                                            className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
+                                            placeholder='When it happened'
+                                            value='19/08/2024 23:09:24'
+                                        />
+                                    </div>
+                                    <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
+                                        <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">{t('Details of incident')}t</label>
+                                        <input
+                                            type={"text"}
+                                            className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
+                                            placeholder='Details of incident'
+                                            value='24/05/2025'
+                                        />
+                                    </div>
+                                    <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
+                                        <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">{t('Person injuried')}</label>
+                                        <input
+                                            type={"text"}
+                                            className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
+                                            placeholder='Person injuried'
+                                            value='None'
+                                        />
+                                    </div>
+                                    <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
+                                        <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">{t('Person involved')}</label>
+                                        <input
+                                            type={"text"}
+                                            className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
+                                            placeholder='Person involved'
+                                            value='None'
+                                        />
+                                    </div>
+                                    <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
+                                        <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">{t('Ops executive in-charge')}</label>
+                                        <input
+                                            type={"text"}
+                                            className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
+                                            placeholder='Ops executive in-charge'
+                                            value='None'
+                                        />
+                                    </div>
+                                    <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#D65656]">
+                                        <label htmlFor="" className="text-xs leading-[21px] text-[#D65656]">{t('Report by')}y</label>
+                                        <input
+                                            type={"text"}
+                                            className="w-full bg-[#222834] text-[#D65656] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
+                                            placeholder='Report by'
+                                            value=' '
+                                        />
+                                    </div>
+                                    <div className="pt-3 flex flex-col gap-6">
+                                        {data.map((item) => (
+                                            <div className="flex items-center justify-between">
+                                                <p className="leading-[21px] text-[#F4F7FF]">{item}</p>
+                                                <SwitchCustomStyleToggleable />
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
+                                        <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">{t('Remarks')}</label>
+                                        <input
+                                            type={"text"}
+                                            className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
+                                            placeholder='Remarks'
+                                            value='Uploaded to the system'
+                                        />
+                                    </div>
+                                    <div className="flex gap-4 flex-wrap">
+                                        <button onClick={() => { setEdit(false); toast.success('Employee edited successfully') }} className="font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">Save</button>
+                                        <button onClick={() => setEdit(false)} className="font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border-[1px] border-[#868686] rounded-full transition-all hover:bg-[#868686] hover:text-[#252C38]">{t('Cancel')}</button>
+                                    </div>
+                                </div>
+
+                            </motion.aside>
+                        </motion.div>
+                    )
+                }
+            </AnimatePresence>
+            {
+                view && (
+                    <div className="fixed w-screen h-screen flex justify-center items-center top-0 left-0 z-50 bg-[rgba(0,0,0,0.5)]">
+                        <div className="flex flex-col gap-6 pr-[150px] pl-6 py-6 bg-[#252C38]">
+                            <h2 className='text-2xl leading-[36px] text-white font-noto'>{t('View Image')}</h2>
+                            <div className="w-[394px] h-[289px] rounded-lg bg-[#868686]"></div>
+                            <button className="w-fit font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border-[1px] border-[#868686] rounded-full transition-all hover:bg-[#868686] hover:text-[#252C38]" onClick={() => setView(false)}>{t('Vlose')}</button>
                         </div>
                     </div>
                 )
             }
-            {view && (
-                <div className="fixed w-screen h-screen flex justify-center items-center top-0 left-0 z-50 bg-[rgba(0,0,0,0.5)]">
-                    <div className="flex flex-col gap-6 pr-[150px] pl-6 py-6 bg-[#252C38]">
-                        <h2 className='text-2xl leading-[36px] text-white font-noto'>{t('View Image')}</h2>
-                        <div className="w-[394px] h-[289px] rounded-lg bg-[#868686]"></div>
-                        <button className="w-fit font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border-[1px] border-[#868686] rounded-full transition-all hover:bg-[#868686] hover:text-[#252C38]" onClick={() => setView(false)}>{t('Vlose')}</button>
-                    </div>
-                </div>
-            )}
-        </SecondLayout>
+        </SecondLayout >
     )
 }
 

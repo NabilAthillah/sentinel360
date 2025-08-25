@@ -13,6 +13,107 @@ import auditTrialsService from '../../../services/auditTrailsService';
 import MainLayout from '../../../layouts/MainLayout';
 import Loader from '../../../components/Loader';
 import DeleteModal from '../../../components/DeleteModal';
+import { AnimatePresence, motion } from 'framer-motion';
+import { DndContext, closestCenter } from "@dnd-kit/core";
+import {
+    arrayMove,
+    SortableContext,
+    useSortable,
+    verticalListSortingStrategy,
+    horizontalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+function useBodyScrollLock(locked: boolean) {
+    useEffect(() => {
+        const prev = document.body.style.overflow;
+        if (locked) document.body.style.overflow = 'hidden';
+        else document.body.style.overflow = prev || '';
+        return () => {
+            document.body.style.overflow = prev || '';
+        };
+    }, [locked]);
+}
+function SlideOver({
+    isOpen,
+    onClose,
+    children,
+    width = 568,
+    ariaTitle,
+}: {
+    isOpen: boolean;
+    onClose: () => void;
+    children: React.ReactNode;
+    width?: number;
+    ariaTitle?: string;
+}) {
+    const [open, setOpen] = useState(isOpen);
+    useEffect(() => setOpen(isOpen), [isOpen]);
+    useBodyScrollLock(open);
+
+    useEffect(() => {
+        const onKey = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') setOpen(false);
+        };
+        if (open) window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    }, [open]);
+
+    return (
+        <AnimatePresence onExitComplete={onClose}>
+            {open && (
+                <motion.div
+                    className="fixed inset-0 z-50 bg-black/50"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    onClick={() => setOpen(false)}
+                    aria-hidden
+                >
+                    <motion.aside
+                        role="dialog"
+                        aria-modal="true"
+                        aria-label={ariaTitle}
+                        className="absolute right-0 top-0 h-full w-full bg-[#252C38] shadow-xl overflow-auto"
+                        style={{ maxWidth: width }}
+                        initial={{ x: '100%' }}
+                        animate={{ x: 0 }}
+                        exit={{ x: '100%' }}
+                        transition={{ type: 'spring', stiffness: 320, damping: 32 }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {children}
+                    </motion.aside>
+                </motion.div>
+            )}
+        </AnimatePresence>
+    );
+}
+function SortableItem({ id }: { id: number }) {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+    } = useSortable({ id });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+    };
+
+    return (
+        <div
+            ref={setNodeRef}
+            style={style}
+            {...attributes}
+            {...listeners}
+            className="w-10 h-10 rounded-full flex items-center justify-center text-white bg-[#3D4451] cursor-grab"
+        >
+            {id}
+        </div>
+    );
+}
 const RoutePage = () => {
     const params = useParams();
     const location = useLocation();

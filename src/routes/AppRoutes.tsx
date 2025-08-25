@@ -56,6 +56,7 @@ import Selection from "../pages/user/GuardTour/Selection";
 import GuardScan from "../pages/user/GuardTour/GuardScan";
 import GuardChoice from "../pages/user/GuardTour/GuardChoice";
 import GuardSubmit from "../pages/user/GuardTour/GuardSubmit";
+import Pointers from "../pages/admin/site/Pointers";
 
 const AppRoutes = () => {
   return (
@@ -68,7 +69,7 @@ const AppRoutes = () => {
           <Route path="/dashboard/reports" element={<ReportPage />} />
           <Route path="/dashboard/employees" element={<EmployeesPage />} />
           <Route path="/dashboard/attendances" element={<AttendancePage />} />
-          <Route path="/dashboard/e-occurrence" element={<OccurencePage />} />
+          <Route path="/dashboard/e-occurrences" element={<OccurencePage />} />
           <Route path="/dashboard/e-learning" element={<LearningPage />} />
           <Route path="/dashboard/guard-tours" element={<GuardTour />} />
 
@@ -91,6 +92,13 @@ const AppRoutes = () => {
             path="/dashboard/sites/:idSite/routes"
             element={<RoutePage />}
           />
+          <Route
+          path="/dashboard/sites/routes"
+          element={<RoutePage/>}/>
+          <Route
+          path="/dashboard/sites/routes/pointers"
+          element={<Pointers/>}/>
+          
           <Route
             path="/dashboard/settings/attendance"
             element={<SettingsAttendancePage />}
