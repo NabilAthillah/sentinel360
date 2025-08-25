@@ -8,6 +8,7 @@ import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
 import { clearUser } from '../features/user/userSlice';
 import { RootState } from '../store';
+import { clearToken } from '../features/user/tokenSlice';
 
 const MainLayout = ({ children }: { children: React.ReactNode }) => {
     const [sidebar, setSidebar] = useState(false);
@@ -17,6 +18,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
 
     const handleLogout = async () => {
         dispatch(clearUser());
+        dispatch(clearToken());
         localStorage.removeItem('token');
         localStorage.removeItem('user');
 

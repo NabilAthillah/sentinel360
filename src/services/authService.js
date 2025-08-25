@@ -3,12 +3,10 @@ import api from '../utils/api';
 // Authentication service
 const authService = {
   // Login admin
-  login: async (account, password) => {
+  login: async (loginData) => {
     try {
-      const response = await api.post('/auth/login', {
-        account: account,
-        password: password
-      });
+      const response = await api.post('/auth/login', loginData);
+
       if (response.data) {
         return response.data;
       }

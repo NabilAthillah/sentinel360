@@ -13,6 +13,7 @@ const DashboardPage = () => {
     const navigate = useNavigate();
     const [sites, setSites] = useState<Site[]>([]);
     const user = useSelector((state: RootState) => state.user.user);
+    const token = useSelector((state: RootState) => state.token.token);
 
     const fetchSites = async () => {
         try {
