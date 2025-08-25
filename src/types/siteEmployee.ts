@@ -5,7 +5,7 @@ import { User } from "./user";
 
 export type SiteEmployee = {
     id: string;
-    employee: User;
+    user: User;
     site: Site;
     date: string;
     shift: string;

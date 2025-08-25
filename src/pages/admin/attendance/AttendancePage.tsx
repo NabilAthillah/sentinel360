@@ -154,7 +154,7 @@ const AttendancePage = () => {
     useEffect(() => {
         if (editData && editAttendance) {
             setFormData({
-                name: editAttendance.employee?.name || "",
+                name: editAttendance.user?.name || "",
                 shiftType: editAttendance.shift || "",
                 time_in: editAttendance.attendance?.time_in || "",
                 time_out: editAttendance.attendance?.time_out || "",
@@ -220,7 +220,7 @@ const AttendancePage = () => {
                                         datas.map((item, index) => (
                                             <tr key={item.id}>
                                                 <td className="text-[#F4F7FF] pt-6 pb-3">{index + 1}</td>
-                                                <td className="text-[#F4F7FF] pt-6 pb-3">{item.employee?.name}</td>
+                                                <td className="text-[#F4F7FF] pt-6 pb-3">{item.user?.name}</td>
                                                 <td className="text-[#F4F7FF] pt-6 pb-3">{item.shift}</td>
                                                 <td className="text-[#F4F7FF] pt-6 pb-3 ">{item.date}</td>
                                                 <td

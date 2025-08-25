@@ -21,7 +21,7 @@ const siteEmployeeService = {
 
     getNearestSiteUser: async (token, user) => {
         try {
-            const response = await api.get(`/site-user/user/nearest/${user.employee.id}`, {
+            const response = await api.get(`/site-user/user/nearest/${user.id}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }

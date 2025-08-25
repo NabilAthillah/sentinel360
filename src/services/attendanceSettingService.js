@@ -3,7 +3,7 @@ import api from "../utils/api";
 const attendanceSettingService = {
     getAttendanceSetting: async (token) => {
         try {
-            const response = await api.get('/attendance-settings', {
+            const response = await api.get('/master-settings/attendance-settings', {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
