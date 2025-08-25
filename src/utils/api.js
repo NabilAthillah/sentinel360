@@ -1,5 +1,9 @@
 import axios from 'axios';
 
+const token = localStorage.getItem("token")
+  ? localStorage.getItem("token")
+  : "";
+
 // Create axios instance with default config
 const api = axios.create({
   baseURL: process.env.REACT_APP_API_URL || "http://192.168.100.112:8000/api",
