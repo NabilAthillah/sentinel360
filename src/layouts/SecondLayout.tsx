@@ -3,8 +3,8 @@ import '../i8n/i18n';
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Bounce, toast, ToastContainer } from 'react-toastify';
-import HeaderLayout from '../components/HeaderLayout';
 import authService from "../services/authService";
+import HeaderLayout from '../components/HeaderLayout';
 
 const SecondLayout = ({ children }: { children: React.ReactNode }) => {
     const [sidebar, setSidebar] = useState(false);
