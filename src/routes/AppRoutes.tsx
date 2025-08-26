@@ -52,11 +52,11 @@ import ProfilePage from "../pages/admin/setings/profile/ProfilePage";
 import RequireLocation from "../components/RequireLocation";
 import GuardTour from "../pages/admin/guardTour/GuardTour";
 import GuardTourPage from "../pages/user/GuardTour/GuardTourPage";
-import Selection from "../pages/user/GuardTour/Selection";
 import GuardScan from "../pages/user/GuardTour/GuardScan";
 import GuardChoice from "../pages/user/GuardTour/GuardChoice";
 import GuardSubmit from "../pages/user/GuardTour/GuardSubmit";
 import Pointers from "../pages/admin/site/Pointers";
+import Selection from "../pages/user/GuardTour/Selection";
 
 const AppRoutes = () => {
   return (
@@ -159,9 +159,9 @@ const AppRoutes = () => {
           <Route path="/user/leaves/request" element={<RequestLeaves />} />
           <Route path="/user/settings" element={<Settings />} />
           <Route path="/user/settings/profile" element={<Profile />} />
-          <Route path='/user/guard-tour' element={<GuardTourPage />} />
-          <Route path='/user/guard-tour/selection' element={<Selection />} />
-          <Route path='/user/guard-tour/selection/scan' element={<GuardScan />} />
+          <Route path='/user/guard-tours/:idSite/route' element={<GuardTourPage />} />
+          <Route path='/user/guard-tours/:idSite/route/:idRoute/point' element={<Selection />} />
+          <Route path='/user/guard-tours/:idSite/route/:idRoute/point/:idPoint/scan' element={<GuardScan />} />
           <Route path='/user/guard-tour/selection/scan/choice' element={<GuardChoice />} />
           <Route path='/user/guard-tour/selection/scan/choice/submit' element={<GuardSubmit />} />
           <Route

@@ -1,12 +1,119 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../store";
 import { Link } from "react-router-dom";
 import BottomNavBar from "../components/BottomBar";
-
+import { useParams } from "react-router-dom";
+import routeService from "../../../services/routeService";
+import { Site } from "../../../types/site";
+import { SiteEmployee } from "../../../types/siteEmployee";
+import { toast } from "react-toastify";
+import siteService from "../../../services/siteService";
+type Settings = {
+  label: string;
+  placeholder: string;
+  value: string;
+};
 const SecondHomePage = () => {
   const user = useSelector((state: RootState) => state.user.user);
   const token = useSelector((state: RootState) => state.token.token);
+  const { idSite } = useParams<{ idSite: string }>();
+  const [sites, setSites] = useState<Site[]>([]);
+  const [siteEmployee, setSiteEmployee] = useState<SiteEmployee>();
+  const [loading, setLoading] = useState(false);
+  const [settings, setSettings] = useState<Settings[]>([]);
+  const [isSecondHome, setIsSecondHome] = useState(false);
+  const [loadingLocation, setLoadingLocation] = useState(true);
+  const fetchSite = async () => {
+    if (!token) return;
+    try {
+      setLoading(true);
+      const response = await siteService.getSiteById(token);
+      setSites(response.data);
+    } catch (err: any) {
+      console.error("Failed to fetch routes", err.message || err);
+    } finally {
+      setLoading(false);
+    }
+  }; 
+  const getDistance = (
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number
+  ) => {
+    const R = 6371e3;
+    const φ1 = (lat1 * Math.PI) / 180;
+    const φ2 = (lat2 * Math.PI) / 180;
+    const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+    const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+
+    const a =
+      Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+      Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    return R * c;
+  };
+
+  const checkLocation = (currentLat: number, currentLng: number) => {
+    if (!sites || sites.length === 0) return;
+
+    const geoFencingStr = settings.find((d) =>
+      d.label.toLowerCase().includes("geo fencing")
+    )?.value;
+    const geoFencing = geoFencingStr ? Number(geoFencingStr) : 0;
+
+    if (geoFencing === 0) {
+      console.warn("Geo fencing setting tidak ditemukan atau 0");
+      return;
+    }
+
+    const nearestSite = sites.find((site) => {
+      const dist = getDistance(
+        currentLat,
+        currentLng,
+        Number(site.lat),
+        Number(site.long)
+      );
+      return dist <= geoFencing;
+    });
+
+    if (!nearestSite) {
+      setIsSecondHome(true);
+      return;
+    }
+
+    if (!siteEmployee || siteEmployee?.site.id !== nearestSite.id) {
+      setIsSecondHome(true);
+    } else {
+      setIsSecondHome(false);
+    }
+  }
+  useEffect(() => {
+    if (settings.length > 0 && sites && navigator.geolocation) {
+      setLoadingLocation(true);
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const { latitude, longitude } = pos.coords;
+          checkLocation(latitude, longitude);
+
+          setTimeout(() => {
+            setLoadingLocation(false);
+          }, 1000);
+        },
+        (error) => {
+          console.error(error);
+          toast.error("Gagal mendapatkan lokasi");
+
+          setTimeout(() => {
+            setLoadingLocation(false);
+          }, 1000);
+        }
+      );
+    }
+  }, [settings, sites, siteEmployee]);
+
 
   return (
     <div className="bg-[#0F101C] text-white min-h-screen px-4 pt-6 pb-20">
@@ -40,7 +147,7 @@ const SecondHomePage = () => {
           <span className="text-white">Attendance</span>
         </Link>
         <Link
-          to="/user/guard-tour"
+          to={`/user/guard-tours/${idSite}/route`}
           className="bg-[#FFFFFF1A] p-4 rounded-xl flex flex-col justify-center items-center gap-2 w-full py-6 px-3"
         >
           <svg
@@ -59,7 +166,6 @@ const SecondHomePage = () => {
           <span className="text-white">Guard Tour</span>
         </Link>
       </div>
-
       <BottomNavBar />
     </div>
   );

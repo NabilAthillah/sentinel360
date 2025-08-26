@@ -87,6 +87,10 @@ const SecondLayout = ({ children }: { children: React.ReactNode }) => {
             return t('Incidents');
         } else if (pathname == '/dashboard/sites') {
             return t('Sites');
+        } else if (pathname == '/dashboard/sites/map') {
+            return t('Site Map');
+        } else if (pathname == '/dashboard/sites/allocation') {
+            return t('Allocation List');
         } else if (pathname == '/dashboard/reports') {
             return t('Reports');
         } else if (pathname == '/dashboard/guard-tours') {

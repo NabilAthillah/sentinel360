@@ -14,6 +14,7 @@ import Loader from '../../../components/Loader';
 import DeleteModal from '../../../components/DeleteModal';
 import SecondLayout from '../../../layouts/SecondLayout';
 import SidebarLayout from '../../../components/SidebarLayout';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 /* ================= Helpers: Animations & Scroll Lock ================= */
 function useBodyScrollLock(locked: boolean) {
     useEffect(() => {
@@ -172,12 +173,29 @@ const SitePage = () => {
     const [postalCode, setPostalCode] = useState('');
     const [lat, setLat] = useState('');
     const [long, setLong] = useState('');
-
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 5;
+    const totalPages = Math.ceil(sites.length / itemsPerPage);
+    const paginatedSites = sites.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
     const navigate = useNavigate();
 
     const baseURL = new URL(process.env.REACT_APP_API_URL || '');
     baseURL.pathname = baseURL.pathname.replace(/\/api$/, '');
 
+    const handlePrev = () => {
+        if (currentPage > 1) {
+            setCurrentPage((prev) => prev - 1);
+        }
+    };
+
+    const handleNext = () => {
+        if (currentPage < totalPages) {
+            setCurrentPage((prev) => prev + 1);
+        }
+    };
     const toBase64 = (file: File): Promise<string> =>
         new Promise((resolve, reject) => {
             const reader = new FileReader();
@@ -387,7 +405,6 @@ const SitePage = () => {
         <SecondLayout>
             <SidebarLayout isOpen={true} closeSidebar={undefined} />
             <div className="flex flex-col gap-6 px-6 pb-20 w-full h-full flex-1">
-                <h2 className="text-2xl leading-9 text-white font-noto">{t('Sites')}</h2>
                 <nav className="flex flex-wrap">
                     <Link
                         to="/dashboard/sites"
@@ -583,7 +600,7 @@ const SitePage = () => {
                                         {sites.length === 0 && (
                                             <tr>
                                                 <td colSpan={7} className="text-center text-white py-6">
-                                                    No sites found.
+                                                    {t('No sites found.')}
                                                 </td>
                                             </tr>
                                         )}
@@ -592,13 +609,25 @@ const SitePage = () => {
                             </table>
                         </div>
 
-                        <div className="grid grid-cols-3 w-fit absolute bottom-0 right-0">
-                            <button className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[8px_0px_0px_8px] bg-[#575F6F]">
-                                {t("Prev")}
+                        <div className="flex items-center justify-center gap-3 absolute bottom-0 right-3">
+                            <button
+                                onClick={handlePrev}
+                                disabled={currentPage === 1}
+                                className="flex items-center gap-1 font-medium text-xs leading-[21px] text-[#B3BACA] disabled:opacity-50"
+                            >
+                                <ArrowLeft />
+                                {t('Prev')}
                             </button>
-                            <button className="font-medium text-xs leading-[21px] text-[#181D26] py-1 px-3 bg-[#D4AB0B]">1</button>
-                            <button className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[0px_8px_8px_0px] bg-[#575F6F]">
-                                {t("Next")}
+                            <button className="font-medium text-xs leading-[21px] text-[#181D26] py-1 px-3 bg-[#D4AB0B] rounded-md">
+                                {currentPage}
+                            </button>
+                            <button
+                                onClick={handleNext}
+                                disabled={currentPage === totalPages}
+                                className="flex items-center gap-1 font-medium text-xs leading-[21px] text-[#B3BACA] disabled:opacity-50"
+                            >
+                                {t('Next')}
+                                <ArrowRight />
                             </button>
                         </div>
                     </div>
@@ -610,7 +639,7 @@ const SitePage = () => {
                 {editData && editSite && (
                     <form onSubmit={handleUpdate} className="flex flex-col gap-6 p-6 max-h-full">
                         <div className="flex items-center justify-between">
-                            <h2 className="text-2xl leading-[36px] text-white font-noto">Edit site</h2>
+                            <h2 className="text-2xl leading-[36px] text-white font-noto">{t('Edit site')}</h2>
                             <button
                                 type="button"
                                 onClick={() => { setEditData(false); setEditSite(null); }}
@@ -622,7 +651,7 @@ const SitePage = () => {
                         </div>
 
                         <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
-                            <label className="text-xs text-[#98A1B3]">Site</label>
+                            <label className="text-xs text-[#98A1B3]">{t('Site')}</label>
                             <input
                                 type="text"
                                 className="w-full bg-[#222834] text-[#F4F7FF] text-base"
@@ -634,7 +663,7 @@ const SitePage = () => {
                         </div>
 
                         <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
-                            <label className="text-xs text-[#98A1B3]">Address</label>
+                            <label className="text-xs text-[#98A1B3]">{t('Address')}</label>
                             <input
                                 type="text"
                                 className="w-full bg-[#222834] text-[#F4F7FF] text-base"
@@ -646,7 +675,7 @@ const SitePage = () => {
                         </div>
 
                         <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
-                            <label className="text-xs text-[#98A1B3]">Postal Code</label>
+                            <label className="text-xs text-[#98A1B3]">{t('Postal Code')}</label>
                             <input
                                 type="text"
                                 className="w-full bg-[#222834] text-[#F4F7FF] text-base"
@@ -658,7 +687,7 @@ const SitePage = () => {
                         </div>
 
                         <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
-                            <label className="text-xs text-[#98A1B3]">Email</label>
+                            <label className="text-xs text-[#98A1B3]">{t('Email')}</label>
                             <input
                                 type="email"
                                 className="w-full bg-[#222834] text-[#F4F7FF] text-base"
@@ -669,7 +698,7 @@ const SitePage = () => {
                         </div>
 
                         <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
-                            <label className="text-xs text-[#98A1B3]">Mobile</label>
+                            <label className="text-xs text-[#98A1B3]">{t('Mobile')}</label>
                             <PhoneInput
                                 country={'sg'}
                                 value={mobile}
@@ -689,7 +718,7 @@ const SitePage = () => {
                         </div>
 
                         <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
-                            <label className="text-xs text-[#98A1B3]">MCST number</label>
+                            <label className="text-xs text-[#98A1B3]">{t('MSCT number')}</label>
                             <input
                                 type="text"
                                 className="w-full bg-[#222834] text-[#F4F7FF] text-base"
@@ -700,7 +729,7 @@ const SitePage = () => {
                         </div>
 
                         <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
-                            <label className="text-xs text-[#98A1B3]">Managing Agent</label>
+                            <label className="text-xs text-[#98A1B3]">{t('Managing Agent')}</label>
                             <input
                                 type="text"
                                 className="w-full bg-[#222834] text-[#F4F7FF] text-base"
@@ -711,7 +740,7 @@ const SitePage = () => {
                         </div>
 
                         <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
-                            <label className="text-xs text-[#98A1B3]">Person In Charge</label>
+                            <label className="text-xs text-[#98A1B3]">{t('Person In Charge')}</label>
                             <input
                                 type="text"
                                 className="w-full bg-[#222834] text-[#F4F7FF] text-base"
@@ -723,7 +752,7 @@ const SitePage = () => {
 
                         <div className="grid grid-cols-2 gap-8">
                             <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
-                                <label className="text-xs text-[#98A1B3]">Latitude</label>
+                                <label className="text-xs text-[#98A1B3]">{t('Latitude')}</label>
                                 <input
                                     type="text"
                                     className="w-full bg-[#222834] text-[#F4F7FF] text-base"
@@ -734,7 +763,7 @@ const SitePage = () => {
                                 />
                             </div>
                             <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
-                                <label className="text-xs text-[#98A1B3]">Longitude</label>
+                                <label className="text-xs text-[#98A1B3]">{t('Longitude')}</label>
                                 <input
                                     type="text"
                                     className="w-full bg-[#222834] text-[#F4F7FF] text-base"
@@ -748,8 +777,8 @@ const SitePage = () => {
 
                         <div className="flex flex-col gap-3">
                             <label className="text-xs text-[#98A1B3]">
-                                Site image <span className="text-xs">(Maximum image size is 5MB!)</span>{' '}
-                                <span className="text-red-500 text-[10px]">* Do not upload if you don't want to make changes</span>
+                                {t('Site image')} <span className="text-xs">{t('Maximum image size is 5MB'!)}</span>{' '}
+                                <span className="text-red-500 text-[10px]">* {t('Do not upload if you dont want to make changes')}</span>
                             </label>
                             <div className="flex items-center gap-4">
                                 <button
@@ -777,7 +806,7 @@ const SitePage = () => {
                                     if (file) {
                                         const maxSizeInBytes = 5 * 1024 * 1024;
                                         if (file.size > maxSizeInBytes) {
-                                            toast.warning('Maximum file size is 5MB!');
+                                            toast.warning(t<string>('Maximum file size is 5MB!'));
                                             e.target.value = '';
                                             return;
                                         }
@@ -791,8 +820,8 @@ const SitePage = () => {
 
                         <div className="flex flex-col gap-3">
                             <label className="text-xs text-[#98A1B3]">
-                                Organisation chart <span className="text-xs">(Maximum image size is 5MB!)</span>{' '}
-                                <span className="text-red-500 text-[10px]">* Do not upload if you don't want to make changes</span>
+                                {t('Organisation chart')}<span className="text-xs">{t('Maximum image size is 5MB'!)}</span>{' '}
+                                <span className="text-red-500 text-[10px]">* {t('Do not upload if you dont want to make changes')}</span>
                             </label>
                             <div className="flex items-center gap-4">
                                 <button
@@ -800,7 +829,7 @@ const SitePage = () => {
                                     onClick={() => chartInputRef.current?.click()}
                                     className="font-medium text-sm text-[#EFBF04] px-5 py-2 border border-[#EFBF04] rounded-full hover:bg-[#EFBF04] hover:text-[#252C38]"
                                 >
-                                    Upload file
+                                    {t('Upload File')}
                                 </button>
                                 {chartName && <span className="text-sm text-[#98A1B3]">{chartName}</span>}
                             </div>
@@ -820,7 +849,7 @@ const SitePage = () => {
                                     if (file) {
                                         const maxSizeInBytes = 5 * 1024 * 1024;
                                         if (file.size > maxSizeInBytes) {
-                                            toast.warning('Maximum file size is 5MB!');
+                                            toast.warning(t<string>('Maximum file size is 5MB!'));
                                             e.target.value = '';
                                             return;
                                         }
@@ -837,7 +866,7 @@ const SitePage = () => {
                                 type="submit"
                                 className="flex justify-center items-center font-medium text-base text-[#181D26] bg-[#EFBF04] px-12 py-3 border border-[#EFBF04] rounded-full hover:bg-[#181D26] hover:text-[#EFBF04]"
                             >
-                                {loading ? <Loader primary /> : 'Save'}
+                                {loading ? <Loader primary /> : t('Save')}
                             </button>
                             <button
                                 type="button"
@@ -847,7 +876,7 @@ const SitePage = () => {
                                 }}
                                 className="font-medium text-base text-[#868686] bg-[#252C38] px-12 py-3 border border-[#868686] rounded-full hover:bg-[#868686] hover:text-[#252C38]"
                             >
-                                Cancel
+                                {t('Cancel')}
                             </button>
                         </div>
                     </form>
@@ -858,7 +887,7 @@ const SitePage = () => {
             <SlideOver isOpen={addData} onClose={() => setAddData(false)} ariaTitle="Add site" width={568}>
                 <form onSubmit={handleSubmit} className="flex flex-col gap-6 p-6 max-h-full">
                     <div className="flex items-center justify-between">
-                        <h2 className="text-2xl leading-[36px] text-white font-noto">Add site</h2>
+                        <h2 className="text-2xl leading-[36px] text-white font-noto">{t('Add Site')}</h2>
                         <button
                             type="button"
                             onClick={() => setAddData(false)}
@@ -871,7 +900,7 @@ const SitePage = () => {
 
                     {/* --- original add form fields --- */}
                     <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
-                        <label className="text-xs text-[#98A1B3]">Site </label>
+                        <label className="text-xs text-[#98A1B3]">{t('Site')}</label>
                         <input
                             type="text"
                             className="w-full bg-[#222834] text-[#F4F7FF] text-base"
@@ -882,7 +911,7 @@ const SitePage = () => {
                     </div>
 
                     <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
-                        <label className="text-xs text-[#98A1B3]">Address</label>
+                        <label className="text-xs text-[#98A1B3]">{t('Address')}</label>
                         <input
                             type="text"
                             className="w-full bg-[#222834] text-[#F4F7FF] text-base"
@@ -893,7 +922,7 @@ const SitePage = () => {
                     </div>
 
                     <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
-                        <label className="text-xs text-[#98A1B3]">Postal Code</label>
+                        <label className="text-xs text-[#98A1B3]">{t('Postal Code')}</label>
                         <input
                             type="text"
                             className="w-full bg-[#222834] text-[#F4F7FF] text-base"
@@ -904,7 +933,7 @@ const SitePage = () => {
                     </div>
 
                     <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
-                        <label className="text-xs text-[#98A1B3]">Email</label>
+                        <label className="text-xs text-[#98A1B3]">{t('Email')}</label>
                         <input
                             type="email"
                             className="w-full bg-[#222834] text-[#F4F7FF] text-base"
@@ -914,7 +943,7 @@ const SitePage = () => {
                     </div>
 
                     <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
-                        <label className="text-xs text-[#98A1B3]">Mobile</label>
+                        <label className="text-xs text-[#98A1B3]">{t('Mobile')}</label>
                         <PhoneInput
                             country={'sg'}
                             enableLongNumbers={true}
@@ -933,7 +962,7 @@ const SitePage = () => {
                     </div>
 
                     <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
-                        <label className="text-xs text-[#98A1B3]">MCST number</label>
+                        <label className="text-xs text-[#98A1B3]">{t('MSCT Number')}r</label>
                         <input
                             type="text"
                             className="w-full bg-[#222834] text-[#F4F7FF] text-base"
@@ -943,7 +972,7 @@ const SitePage = () => {
                     </div>
 
                     <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
-                        <label className="text-xs text-[#98A1B3]">Managing Agent</label>
+                        <label className="text-xs text-[#98A1B3]">{t('Managing Agent')}</label>
                         <input
                             type="text"
                             className="w-full bg-[#222834] text-[#F4F7FF] text-base"
@@ -953,7 +982,7 @@ const SitePage = () => {
                     </div>
 
                     <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
-                        <label className="text-xs text-[#98A1B3]">Person In Charge</label>
+                        <label className="text-xs text-[#98A1B3]">{t('Person In Charge')}</label>
                         <input
                             type="text"
                             className="w-full bg-[#222834] text-[#F4F7FF] text-base"
@@ -964,7 +993,7 @@ const SitePage = () => {
 
                     <div className="grid grid-cols-2 gap-8">
                         <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
-                            <label className="text-xs text-[#98A1B3]">Latitude</label>
+                            <label className="text-xs text-[#98A1B3]">{t('Latitude')}</label>
                             <input
                                 type="text"
                                 className="w-full bg-[#222834] text-[#F4F7FF] text-base"
@@ -974,7 +1003,7 @@ const SitePage = () => {
                             />
                         </div>
                         <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
-                            <label className="text-xs text-[#98A1B3]">Longitude</label>
+                            <label className="text-xs text-[#98A1B3]">{t('Longitude')}</label>
                             <input
                                 type="text"
                                 className="w-full bg-[#222834] text-[#F4F7FF] text-base"
@@ -987,7 +1016,7 @@ const SitePage = () => {
 
                     <div className="flex flex-col gap-3">
                         <label className="text-xs text-[#98A1B3]">
-                            Site image <span className="text-xs">(Maximum image size is 5MB!)</span>
+                            {t('Site Image')} <span className="text-xs">{t('Maximum image size is 5MB'!)}</span>
                         </label>
                         <div className="flex items-center gap-4">
                             <button
@@ -995,7 +1024,7 @@ const SitePage = () => {
                                 onClick={() => imageInputRef.current?.click()}
                                 className="font-medium text-sm text-[#EFBF04] px-5 py-2 border border-[#EFBF04] rounded-full hover:bg-[#EFBF04] hover:text-[#252C38]"
                             >
-                                Upload file
+                                {t('Upload file')}
                             </button>
                             {imageName && <span className="text-sm text-[#98A1B3]">{imageName}</span>}
                         </div>
@@ -1008,7 +1037,7 @@ const SitePage = () => {
                                 if (file) {
                                     const maxSizeInBytes = 5 * 1024 * 1024;
                                     if (file.size > maxSizeInBytes) {
-                                        toast.warning('Maximum file size is 5MB!');
+                                        toast.warning(t<string>('Maximum file size is 5MB!'));
                                         e.target.value = '';
                                         return;
                                     }
@@ -1022,7 +1051,7 @@ const SitePage = () => {
 
                     <div className="flex flex-col gap-3">
                         <label className="text-xs text-[#98A1B3]">
-                            Organisation chart <span className="text-xs">(Maximum image size is 5MB!)</span>
+                            {t('Organisation chart')} <span className="text-xs">{t('Maximum image size is 5MB'!)}</span>
                         </label>
                         <div className="flex items-center gap-4">
                             <button
@@ -1030,7 +1059,7 @@ const SitePage = () => {
                                 onClick={() => chartInputRef.current?.click()}
                                 className="font-medium text-sm text-[#EFBF04] px-5 py-2 border border-[#EFBF04] rounded-full hover:bg-[#EFBF04] hover:text-[#252C38]"
                             >
-                                Upload file
+                                {t('Upload file')}
                             </button>
                             {chartName && <span className="text-sm text-[#98A1B3]">{chartName}</span>}
                         </div>
@@ -1042,7 +1071,7 @@ const SitePage = () => {
                                 if (file) {
                                     const maxSizeInBytes = 5 * 1024 * 1024;
                                     if (file.size > maxSizeInBytes) {
-                                        toast.warning('Maximum file size is 5MB!');
+                                        toast.warning(t<string>('Maximum file size is 5MB!'));
                                         e.target.value = '';
                                         return;
                                     }
@@ -1059,14 +1088,14 @@ const SitePage = () => {
                             type="submit"
                             className="flex justify-center items-center font-medium text-base text-[#181D26] bg-[#EFBF04] px-12 py-3 border border-[#EFBF04] rounded-full hover:bg-[#181D26] hover:text-[#EFBF04]"
                         >
-                            {loading ? <Loader primary /> : 'Save'}
+                            {loading ? <Loader primary /> : t('Save')}
                         </button>
                         <button
                             type="button"
                             onClick={() => setAddData(false)}
                             className="font-medium text-base text-[#868686] bg-[#252C38] px-12 py-3 border border-[#868686] rounded-full hover:bg-[#868686] hover:text-[#252C38]"
                         >
-                            Cancel
+                            {t('Cancel')}
                         </button>
                     </div>
                 </form>
