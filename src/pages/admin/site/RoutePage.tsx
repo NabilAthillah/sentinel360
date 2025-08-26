@@ -195,9 +195,8 @@ function DroppableRow({
     <div
       ref={setNodeRef}
       className={`flex gap-4 p-4 bg-[#222834] rounded-md min-h-[56px] items-center
-                  overflow-x-auto flex-nowrap ${
-                    isOver ? "outline outline-2 outline-[#EFBF04]" : ""
-                  }`}
+                  overflow-x-auto flex-nowrap ${isOver ? "outline outline-2 outline-[#EFBF04]" : ""
+        }`}
     >
       {isEmpty ? (
         <span className="text-[#98A1B3] text-sm">Drop pointers here…</span>
@@ -244,6 +243,7 @@ const RoutePage = () => {
   const [editData, setEditData] = useState(false);
   const [editRoute, setEditRoute] = useState<Route | null>();
   const [deleteRoute, setDeleteRoute] = useState<Route | null>();
+  const [remarks, setRemarks] = useState("");
   const [deleteModal, setDeleteModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [site, setSite] = useState<Site>();
@@ -263,6 +263,7 @@ const RoutePage = () => {
   );
 
   const user = useSelector((state: RootState) => state.user.user);
+  const token = useSelector((state: RootState) => state.token.token);
   const navigate = useNavigate();
 
   const [switchStates, setSwitchStates] = useState<Record<string, boolean>>(
@@ -292,10 +293,7 @@ const RoutePage = () => {
       [id]: newStatus,
     }));
 
-    const token = localStorage.getItem("token");
-
     if (!token) {
-      localStorage.clear();
       navigate("/auth/login");
       return;
     }
@@ -323,15 +321,13 @@ const RoutePage = () => {
 
   const fetchSite = async () => {
     try {
-      const token = localStorage.getItem("token");
-
       if (!token) {
-        localStorage.clear();
         navigate("/auth/login");
         return;
       }
 
       const response = await siteService.getSiteById(params.idSite, token);
+      console.log(response);
 
       if (response.success) {
         setSite(response.data.site);
@@ -346,18 +342,12 @@ const RoutePage = () => {
     setLoading(true);
 
     try {
-      const token = localStorage.getItem("token");
-
       if (!token) {
-        localStorage.clear();
         navigate("/auth/login");
         return;
       }
 
-      // TODO: kirim confirmRoute ke API saat endpoint siap (mis: routeService.addRoute(token, params.idSite, name, confirmRoute))
-      console.log("Create Route payload:", { name, confirmRoute });
-
-      const response = await routeService.addRoute(token, params.idSite, name);
+      const response = await routeService.addRoute(token, params.idSite, name, remarks, confirmRoute.join(","));
 
       if (response.success) {
         toast.success("Route created successfully");
@@ -366,6 +356,7 @@ const RoutePage = () => {
         setAddData(false);
         setName("");
         setConfirmRoute([]);
+        setRemarks("");
       }
     } catch (error: any) {
       setLoading(false);
@@ -378,23 +369,21 @@ const RoutePage = () => {
     setLoading(true);
 
     try {
-      const token = localStorage.getItem("token");
-
       if (!token) {
-        localStorage.clear();
         navigate("/auth/login");
         return;
       }
 
-      const response = await routeService.editRoute(token, editRoute?.id, name);
+      const response = await routeService.editRoute(token, editRoute?.id, name, remarks, confirmRoute.join(","));
 
       if (response.success) {
         toast.success("Route updated successfully");
-
         fetchSite();
         setLoading(false);
         setEditData(false);
         setName("");
+        setRemarks("");
+        setConfirmRoute([]);
         setEditRoute(null);
       }
     } catch (error: any) {
@@ -405,10 +394,7 @@ const RoutePage = () => {
 
   const handleDelete = async () => {
     try {
-      const token = localStorage.getItem("token");
-
       if (!token) {
-        localStorage.clear();
         navigate("/auth/login");
         return;
       }
@@ -481,9 +467,17 @@ const RoutePage = () => {
   useEffect(() => {
     if (editData && editRoute) {
       setName(editRoute.name);
+      setRemarks(editRoute.remarks || "");
+      const parsedRoute = editRoute.route
+        ? editRoute.route
+          .split(",")
+          .map((x) => Number(x.trim()))
+          .filter((n) => !isNaN(n))
+        : [];
+      setConfirmRoute(parsedRoute);
     }
   }, [editData, editRoute]);
-  
+
   /* ------------------------------ DnD logic ------------------------------ */
   const onDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -645,22 +639,20 @@ const RoutePage = () => {
                                 crossOrigin={undefined}
                               />
                               <p
-                                className={`font-medium text-sm capitalize ${
-                                  switchStates[route.id]
-                                    ? "text-[#19CE74]"
-                                    : "text-[#FF7E6A]"
-                                }`}
+                                className={`font-medium text-sm capitalize ${switchStates[route.id]
+                                  ? "text-[#19CE74]"
+                                  : "text-[#FF7E6A]"
+                                  }`}
                               >
                                 {switchStates[route.id] ? "active" : "deactive"}
                               </p>
                             </div>
                           ) : (
                             <p
-                              className={`font-medium text-sm capitalize ${
-                                switchStates[route.id]
-                                  ? "text-[#19CE74]"
-                                  : "text-[#FF7E6A]"
-                              }`}
+                              className={`font-medium text-sm capitalize ${switchStates[route.id]
+                                ? "text-[#19CE74]"
+                                : "text-[#FF7E6A]"
+                                }`}
                             >
                               {switchStates[route.id] ? "active" : "deactive"}
                             </p>
@@ -688,7 +680,7 @@ const RoutePage = () => {
                                 />
                               </svg>
                             )}
-                            {hasPermission("delete_site_route") && (
+                            {/* {hasPermission("delete_site_route") && ( */}
                               <svg
                                 onClick={() => {
                                   setDeleteModal(true);
@@ -707,7 +699,7 @@ const RoutePage = () => {
                                   fill="#F4F7FF"
                                 />
                               </svg>
-                            )}
+                            {/* )} */}
                           </div>
                         </td>
                       </tr>
@@ -748,7 +740,6 @@ const RoutePage = () => {
               type="text"
               className="w-full bg-[#222834] text-[#F4F7FF] text-base focus:outline-none"
               placeholder="Route name"
-              value={name}
               onChange={(e) => setName(e.target.value)}
               required
             />
@@ -825,6 +816,8 @@ const RoutePage = () => {
               type="text"
               className="w-full bg-[#222834] text-[#F4F7FF] text-base focus:outline-none"
               placeholder="Remarks (Optional)"
+              value={remarks}
+              onChange={(e) => setRemarks(e.target.value)}
             />
           </div>
 
@@ -851,48 +844,124 @@ const RoutePage = () => {
       </SlideOver>
 
       {/* ------------------------------ EDIT / DELETE ------------------------------ */}
-      {editRoute && editData && (
+      <SlideOver
+        isOpen={editData}
+        onClose={() => {
+          setEditData(false);
+          setEditRoute(null);
+        }}
+        ariaTitle="Edit Route"
+        width={568}
+      >
         <form
+          className="flex flex-col gap-6 p-6 h-full"
           onSubmit={handleEdit}
-          className="fixed w-screen h-screen flex justify-end items-start top-0 left-0 z-50 bg-[rgba(0,0,0,0.5)]"
         >
-          <div className="flex flex-col gap-6 p-6 bg-[#252C38] max-w-[568px] w-full max-h-screen overflow-auto h-full">
-            <h2 className="text-2xl leading-[36px] text-white font-noto">
-              {t("Edit Route")}
-            </h2>
-            <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b-[1px] border-b-[#98A1B3]">
-              <label className="text-xs leading-[21px] text-[#98A1B3]">
-                {t("Route Name")}
+          <h2 className="text-2xl text-white">Edit Route</h2>
+
+          {/* ROUTE NAME */}
+          <div className="flex flex-col w-full px-4 pt-2 pb-1 bg-[#222834] border-b border-b-[#98A1B3]">
+            <input
+              type="text"
+              className="w-full bg-[#222834] text-[#F4F7FF] text-base focus:outline-none"
+              placeholder="Route name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+          </div>
+
+          {/* DND POINTERS */}
+          <DndContext
+            sensors={sensors}
+            onDragEnd={onDragEnd}
+            collisionDetection={closestCenter}
+          >
+            <DndMonitor setDragging={setDragging} setOverId={setOverId} />
+
+            {/* AVAILABLE */}
+            <div className="flex flex-col gap-3">
+              <label className="text-sm text-[#98A1B3]">
+                Drag pointers route below
               </label>
-              <input
-                type={"text"}
-                className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
-                placeholder="Route name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-              />
-            </div>
-            <div className="flex gap-4 flex-wrap">
-              <button
-                type="submit"
-                className="flex justify-center items-center font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]"
+              <DroppableRow
+                id="availableZone"
+                isEmpty={availablePointers.length === 0}
               >
-                {loading ? <Loader primary /> : "Save"}
-              </button>
-              <p
-                onClick={() => {
-                  setEditData(false);
-                  setEditRoute(null);
-                }}
-                className="cursor-pointer font-medium text-base leading-[21px] text-[#868686] bg-[#252C38] px-12 py-3 border-[1px] border-[#868686] rounded-full transition-all hover:bg-[#868686] hover:text-[#252C38]"
-              >
-                {t("Cancel")}
-              </p>
+                {availablePointers.map((n) => (
+                  <AvailableChip
+                    key={`available:${n}`}
+                    id={`available:${n}`}
+                    label={n}
+                  />
+                ))}
+              </DroppableRow>
             </div>
+
+            {/* CONFIRM */}
+            <div className="flex flex-col gap-3 mt-2">
+              <label className="text-sm text-[#98A1B3]">
+                Confirm pointers route
+              </label>
+              <DroppableRow
+                id="confirmZone"
+                isEmpty={confirmRoute.length === 0 && !showConfirmPlaceholder}
+              >
+                <SortableContext
+                  items={confirmRoute.map((n) => `confirm:${n}`)}
+                  strategy={horizontalListSortingStrategy}
+                >
+                  {confirmRoute.map((n) => (
+                    <SortableChip
+                      key={`confirm:${n}`}
+                      id={`confirm:${n}`}
+                      label={n}
+                      onRemove={(num) =>
+                        setConfirmRoute((cr) => cr.filter((x) => x !== num))
+                      }
+                    />
+                  ))}
+                </SortableContext>
+                {showConfirmPlaceholder && <PlaceholderCircle />}
+              </DroppableRow>
+            </div>
+          </DndContext>
+
+          {/* REMARKS */}
+          <div className="flex flex-col w-full px-4 pt-2 pb-1 bg-[#222834] border-b border-b-[#98A1B3]">
+            <input
+              type="text"
+              className="w-full bg-[#222834] text-[#F4F7FF] text-base focus:outline-none"
+              placeholder="Remarks (Optional)"
+              value={remarks}
+              onChange={(e) => setRemarks(e.target.value)}
+            />
+          </div>
+
+          {/* ACTIONS */}
+          <div className="flex gap-4 flex-wrap pt-12 mt-auto">
+            <button
+              type="submit"
+              className="flex justify-center items-center font-medium text-base text-[#181D26] bg-[#EFBF04] px-12 py-3 border border-[#EFBF04] rounded-full hover:bg-[#181D26] hover:text-[#EFBF04]"
+            >
+              {loading ? <Loader primary /> : "Save"}
+            </button>
+            <button
+              onClick={() => {
+                setEditData(false);
+                setEditRoute(null);
+                setConfirmRoute([]);
+                setName("");
+                setRemarks("");
+              }}
+              type="button"
+              className="font-medium text-base text-[#868686] bg-[#252C38] px-12 py-3 border border-[#868686] rounded-full hover:bg-[#868686] hover:text-[#252C38]"
+            >
+              Cancel
+            </button>
           </div>
         </form>
-      )}
+      </SlideOver>
 
       {deleteModal && (
         <div className="fixed w-screen h-screen flex justify-center items-center top-0 left-0 z-50 bg-[rgba(0,0,0,0.5)]">

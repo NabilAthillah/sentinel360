@@ -1,11 +1,13 @@
 import api from "../utils/api";
 
 const routeService = {
-    addRoute: async (token, id_site, name) => {
+    addRoute: async (token, id_site, name, remarks, route) => {
         try {
             const response = await api.post(`/routes`, {
                 name,
-                id_site
+                id_site,
+                remarks,
+                route
             }, {
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -20,10 +22,12 @@ const routeService = {
         }
     },
 
-    editRoute: async (token, id, name) => {
+    editRoute: async (token, id, name, remarks, route) => {
         try {
             const response = await api.put(`/routes/${id}`, {
                 name,
+                remarks,
+                route
             }, {
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -58,7 +62,7 @@ const routeService = {
 
     deleteRoute: async (token, route) => {
         try {
-            const response = await api.post(`/routes/${route.id}`, {
+            const response = await api.delete(`/routes/${route.id}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
