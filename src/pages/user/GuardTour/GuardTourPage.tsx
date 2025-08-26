@@ -1,14 +1,113 @@
-import React from "react";
-import { ChevronRight, ArrowLeft, Wifi } from "lucide-react"; // Wifi buat ikon status, bisa ganti sesuai kebutuhan
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { ChevronRight, ArrowLeft, Wifi } from "lucide-react";
+import { useNavigate, useParams } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { RootState } from "../../../store";
+import routeService from "../../../services/routeService";
+import { Site } from "../../../types/site";
+import { SiteEmployee } from "../../../types/siteEmployee";
+
+type Settings = {
+    label: string;
+    placeholder: string;
+    value: string;
+};
 
 const GuardTourPage = () => {
     const navigate = useNavigate();
+    const token = useSelector((state: RootState) => state.token.token);
+    const [sites, setSites] = useState<Site[]>([]);
+    const [siteEmployee, setSiteEmployee] = useState<SiteEmployee>();
+    const [routes, setRoutes] = useState<any[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [settings, setSettings] = useState<Settings[]>([]);
+    const [isSecondHome, setIsSecondHome] = useState(false);
+    const { idSite } = useParams<{ idSite: string }>();
+    const fetchRoutes = async () => {
+        if (!token) return;
+        try {
+            setLoading(true);
+            const response = await routeService.getAllRoutes(token);
+            setRoutes(response.data); 
+        } catch (err: any) {
+            console.error("Failed to fetch routes", err.message || err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-    const routes = [
-        { name: "Route 1", path: "/user/guard-tour/selection" },
-        { name: "Route 2", path: "/guard-tour/route-2" },
-    ];
+    const fetchRoutesByid = async () => {
+        if (!token) return;
+        try {
+            setLoading(true);
+            const response = await routeService.gethRouteById(token);
+            if (response.success) {
+                setRoutes(response.data);
+            }
+        } catch (err: any) {
+            console.error("Failed to fetch routes", err.message || err);
+        } finally {
+            setLoading(false);
+        }
+    };;
+    const getDistance = (
+        lat1: number,
+        lon1: number,
+        lat2: number,
+        lon2: number
+    ) => {
+        const R = 6371e3;
+        const φ1 = (lat1 * Math.PI) / 180;
+        const φ2 = (lat2 * Math.PI) / 180;
+        const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+        const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+
+        const a =
+            Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+            Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+        return R * c;
+    };
+
+    const checkLocation = (currentLat: number, currentLng: number) => {
+        if (!sites || sites.length === 0) return;
+
+        const geoFencingStr = settings.find((d) =>
+            d.label.toLowerCase().includes("geo fencing")
+        )?.value;
+        const geoFencing = geoFencingStr ? Number(geoFencingStr) : 0;
+
+        if (geoFencing === 0) {
+            console.warn("Geo fencing setting tidak ditemukan atau 0");
+            return;
+        }
+
+        const nearestSite = sites.find((site) => {
+            const dist = getDistance(
+                currentLat,
+                currentLng,
+                Number(site.lat),
+                Number(site.long)
+            );
+            return dist <= geoFencing;
+        });
+
+        if (!nearestSite) {
+            setIsSecondHome(true);
+            return;
+        }
+
+        if (!siteEmployee || siteEmployee?.site.id !== nearestSite.id) {
+            setIsSecondHome(true);
+        } else {
+            setIsSecondHome(false);
+        }
+    }
+    useEffect(() => {
+        fetchRoutes();
+        fetchRoutesByid()
+    }, [token]);
 
     return (
         <div className="min-h-screen bg-[#181D26] text-white">
@@ -30,16 +129,20 @@ const GuardTourPage = () => {
             </div>
 
             <div className="flex flex-col gap-3 p-4">
-                {routes.map((route, index) => (
-                    <button
-                        key={index}
-                        onClick={() => navigate(route.path)}
-                        className="flex items-center justify-between bg-[#222630] hover:bg-[#2a2f3a] px-4 py-3 rounded-md transition text-left"
-                    >
-                        <span className="text-sm">{route.name}</span>
-                        <ChevronRight size={18} className="text-gray-400" />
-                    </button>
-                ))}
+                {loading ? (
+                    <p className="text-gray-400">Loading...</p>
+                ) : (
+                    routes.map((route) => (
+                        <button
+                            key={route.id}
+                            onClick={() => navigate(`/user/guard-tours/${idSite}/route/${route.id}/point`)}
+                            className="flex items-center justify-between bg-[#222630] hover:bg-[#2a2f3a] px-4 py-3 rounded-md transition text-left"
+                        >
+                            <span className="text-sm">{route.name}</span>
+                            <ChevronRight size={18} className="text-gray-400" />
+                        </button>
+                    ))
+                )}
             </div>
         </div>
     );

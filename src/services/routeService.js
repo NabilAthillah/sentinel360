@@ -74,6 +74,37 @@ const routeService = {
         } catch (error) {
             throw error.response ? error.response.data : { message: 'Network error' };
         }
+    },
+
+    getAllRoutes: async (token) => {
+        try {
+            const response = await api.get(`/routes`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            if (response.data) {
+                return response.data;
+            }
+        } catch (error) {
+            throw error.response ? error.response.data : { message: "Network error" };
+        }
+    },
+
+    gethRouteById: async (token, id) => {
+        try {
+            const response = await api.get(`/route/${id}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            if (response.data) {
+                return response.data;
+            }
+        } catch (error) {
+            throw error.response ? error.response.data : { message: 'Network error' }
+        }
+
     }
 }
 

@@ -1,15 +1,46 @@
-import React from "react";
-import { ChevronRight, ArrowLeft, Wifi } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-
+import React, { useEffect, useState } from "react";
+import { ChevronRight, ArrowLeft } from "lucide-react";
+import { useNavigate, useParams } from "react-router-dom";
+import { Route } from "../../../types/route";
+import routeService from "../../../services/routeService";
+const getStepTitle = (step: string) => {
+    const titles: Record<string, string> = {
+        "1": "Section 2 Door",
+        "2": "Electric box",
+        "3": "Circuit area",
+        "4": "Section 3 garden",
+        "5": "Fountain",
+    };
+    return titles[step] || `Point ${step}`;
+};
 const Selection = () => {
     const navigate = useNavigate();
+    const [points, setPoints] = useState<(Route & { path: string })[]>([]);
+    const { idSite } = useParams<{ idSite: string }>();
+    const [loading, setLoading] = useState(true);
 
-    const points = [
-        { name: "Point 1 : Garden", path: "/user/guard-tour/selection/scan" },
-        { name: "Point 2 : Electric Box", path: "/point/2" },
-        { name: "Point 4 : Lepalsk Area", path: "/point/4" },
-    ];
+    const fetchRoute = async () => {
+        try {
+            const res = await routeService.getAllRoutes();
+
+            const routes = res.data?.data || res.data || [];
+
+            const mapped = routes.map((p: Route) => ({
+                ...p,
+                path: `/user/guard-tours/${idSite}/route/${routes.id}/point/${p.id}/scan`,
+            }));
+
+            setPoints(mapped);
+        } catch (err) {
+            console.error("Error fetching points:", err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchRoute();
+    }, []);
 
     return (
         <div className="min-h-screen bg-[#181D26] text-white flex flex-col">
@@ -28,19 +59,41 @@ const Selection = () => {
                     <path d="M15.4078 8V7.55256L17.0882 5.71307C17.2855 5.49763 17.4479 5.31037 17.5755 5.15128C17.7031 4.99053 17.7975 4.83973 17.8588 4.69886C17.9218 4.55634 17.9533 4.4072 17.9533 4.25142C17.9533 4.07244 17.9102 3.9175 17.824 3.78658C17.7395 3.65566 17.6235 3.55457 17.476 3.48331C17.3285 3.41205 17.1628 3.37642 16.9789 3.37642C16.7833 3.37642 16.6126 3.41702 16.4668 3.49822C16.3226 3.57777 16.2108 3.68963 16.1312 3.83381C16.0533 3.97798 16.0144 4.14702 16.0144 4.34091H15.4277C15.4277 4.04261 15.4965 3.78078 15.6341 3.5554C15.7716 3.33002 15.9589 3.15436 16.1958 3.02841C16.4345 2.90246 16.7021 2.83949 16.9988 2.83949C17.2971 2.83949 17.5614 2.90246 17.7917 3.02841C18.0221 3.15436 18.2027 3.32422 18.3336 3.538C18.4645 3.75178 18.53 3.98958 18.53 4.25142C18.53 4.43868 18.496 4.6218 18.4281 4.80078C18.3618 4.9781 18.2458 5.17614 18.0801 5.39489C17.916 5.61198 17.6882 5.87713 17.3965 6.19034L16.253 7.41335V7.45312H18.6195V8H15.4078Z" fill="#181D26" />
                 </svg>
             </div>
-
             <div className="flex flex-col gap-3 p-4 flex-1">
-                {points.map((point, index) => (
-                    <button
-                        key={index}
-                        onClick={() => navigate(point.path)}
-                        className="flex items-center justify-between bg-[#222630] hover:bg-[#2a2f3a] px-4 py-5 rounded-md transition text-left"
-                    >
-                        <span className="text-sm">{point.name}</span>
-                        <ChevronRight size={18} className="text-gray-400" />
-                    </button>
-                ))}
+                {loading ? (
+                    <p className="text-gray-400">Loading...</p>
+                ) : points.length === 0 ? (
+                    <p className="text-gray-400">No routes available</p>
+                ) : (
+                    points.map((point) => {
+                        const stepsStr = (point.route ?? point.name ?? "").toString();
+                        const steps = stepsStr
+                            .split("-")
+                            .map((s) => s.trim())
+                            .filter(Boolean);
+
+                        return (
+                            <div className="flex flex-col gap-3 p-4 flex-1">
+
+                                {steps.map((s, i) => (
+                                    <button
+                                        key={point.id}
+                                        onClick={() => navigate(point.path)}
+                                        className="flex items-center justify-between bg-[#222630] hover:bg-[#2a2f3a] px-4 py-5 rounded-md transition text-left"
+                                    >
+                                        <span className="text-sm text-gray-200">
+                                            {i + 1}.{getStepTitle(s)}
+                                        </span>
+                                        <ChevronRight size={18} className="text-gray-400" />
+
+                                    </button>
+                                ))}
+                            </div>
+                        );
+                    })
+                )}
             </div>
+
             <div className="p-4 flex flex-col items-center">
                 <button
                     onClick={() => alert("Start clicked")}
@@ -49,7 +102,7 @@ const Selection = () => {
                     Start
                 </button>
             </div>
-        </div>
+        </div >
     );
 };
 
