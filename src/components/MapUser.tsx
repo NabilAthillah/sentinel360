@@ -93,10 +93,6 @@ const MapUser = ({ userPos, sitePos, siteRadius, userAccuracy }: Props) => {
   }, [mapsReady]);
 
   return (
-    <LoadScript
-      googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_KEY || "AIzaSyApktDuyS7d_DUd8uIDZZeL5KauAlxlc-M"}
-      language="en"
-    >
       <GoogleMap
         mapContainerStyle={containerStyle}
         center={center}
@@ -163,7 +159,6 @@ const MapUser = ({ userPos, sitePos, siteRadius, userAccuracy }: Props) => {
           />
         )}
       </GoogleMap>
-    </LoadScript>
   );
 };
 

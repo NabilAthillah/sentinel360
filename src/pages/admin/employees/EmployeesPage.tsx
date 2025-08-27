@@ -1,25 +1,24 @@
 import { Switch } from "@material-tailwind/react";
 import { AnimatePresence, motion } from "framer-motion";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import PhoneInput from "react-phone-input-2";
 import 'react-phone-input-2/lib/style.css';
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import EmployeeDocumentPivot from "./EmployeesDocumentPivot";
-import { useTranslation } from "react-i18next";
-import { RootState } from "../../../store";
-import { Role } from "../../../types/role";
-import { Employee } from "../../../types/employee";
+import DeleteModal from "../../../components/DeleteModal";
+import Loader from "../../../components/Loader";
+import SidebarLayout from "../../../components/SidebarLayout";
+import SecondLayout from "../../../layouts/SecondLayout";
+import auditTrialsService from "../../../services/auditTrailsService";
 import employeeService from "../../../services/employeeService";
 import roleService from "../../../services/roleService";
-import auditTrialsService from "../../../services/auditTrailsService";
-import MainLayout from "../../../layouts/MainLayout";
-import Loader from "../../../components/Loader";
-import DeleteModal from "../../../components/DeleteModal";
-import SecondLayout from "../../../layouts/SecondLayout";
-import SidebarLayout from "../../../components/SidebarLayout";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { RootState } from "../../../store";
+import { Role } from "../../../types/role";
+import { User } from "../../../types/user";
+import EmployeeDocumentPivot from "./EmployeesDocumentPivot";
 
 const EmployeesPage = () => {
     const user = useSelector((state: RootState) => state.user.user);
@@ -30,11 +29,11 @@ const EmployeesPage = () => {
     const [editEmployee, setEditEmployee] = useState(false);
     const [deleteEmployee, setDeleteEmployee] = useState(false);
     const [uploadEmployee, setUploadEmployee] = useState(false);
-    const [sidebar, setSidebar] = useState(false);
+    const [sidebar, setSidebar] = useState(true);
 
     const [roles, setRoles] = useState<Role[]>([]);
-    const [employees, setEmployees] = useState<Employee[]>([]);
-    const [reportingEmployees, setReportingEmployees] = useState<Employee[]>([]);
+    const [employees, setEmployees] = useState<User[]>([]);
+    const [reportingEmployees, setReportingEmployees] = useState<User[]>([]);
     const [deleteId, setDeleteId] = useState<string>('');
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
@@ -76,11 +75,11 @@ const EmployeesPage = () => {
         mobile: '',
         address: '',
         id_role: '',
-        briefing_conducted: '',
+        briefing_conducted: 1,
         date_joined: ''
     });
 
-    const [editData, setEditData] = useState<Employee | null>();
+    const [editData, setEditData] = useState<User | null>();
 
     const goToNextPage = () => {
         if (currentPage < totalPages) setCurrentPage((p) => p + 1);
@@ -127,7 +126,7 @@ const EmployeesPage = () => {
             ];
 
             const checklistMapped = data.reduce((acc, _question, index) => {
-                acc[`q${index + 1}`] = switchStates[index] ? '1' : '0';
+                acc[`q${index + 1}`] = switchStates[index] ? true : false;
                 acc[`a${index + 1}`] = switchStates[index] ? '' : (reasons[index] || '');
                 return acc;
             }, {} as Record<string, any>);
@@ -157,7 +156,7 @@ const EmployeesPage = () => {
                     email: '',
                     mobile: '',
                     address: '',
-                    briefing_conducted: '',
+                    briefing_conducted: 1,
                     id_role: '',
                     date_joined: ''
                 });
@@ -177,17 +176,17 @@ const EmployeesPage = () => {
         setLoading(true);
         try {
 
-            if (!editData || !editData.user) {
+            if (!editData) {
                 toast.error("Invalid employee or user data.");
                 return;
             }
 
-            if (!editData.user.mobile) {
+            if (!editData.mobile) {
                 toast.error("Mobile number cannot be null.");
                 return;
             }
 
-            if (!editData.user.role) {
+            if (!editData.role) {
                 toast.error("Role cannot be null.");
                 return;
             }
@@ -207,19 +206,16 @@ const EmployeesPage = () => {
 
             const response = await employeeService.editEmployee(
                 editData.id,
-                editData.user.name,
+                editData.name,
                 editData.nric_fin_no,
-                editData.user.mobile,
-                editData.user.email,
-                editData.user.role.id,
-                editData.reporting || null,
+                editData.mobile,
+                editData.email,
+                editData.role.id,
                 formatDateTime(editData.briefing_date),
-                editData.birth || null,
-                editData.user.address || '',
-                editData.briefing_conducted ?? null,
-                editData.date_joined ?? null,
+                editData.address || '',
+                editData.briefing_conducted ?? 1,
+                formatDateTime(editData.date_joined),
                 profileBase64,
-                token
             );
 
             if (response.success) {
@@ -292,8 +288,6 @@ const EmployeesPage = () => {
             const response = await employeeService.getAllEmployee(token);
             if (response.success) {
                 setEmployees(response.data);
-                const filtered = response.data.filter((emp: Employee) => emp.user.id !== user.id);
-                setReportingEmployees(filtered);
             }
         } catch (error) {
             console.error(error);
@@ -362,8 +356,8 @@ const EmployeesPage = () => {
 
     const filteredEmployees = searchTerm.trim()
         ? employees.filter((emp) =>
-            emp.user?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            emp.user?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            emp.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            emp.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             emp.nric_fin_no?.toLowerCase().includes(searchTerm.toLowerCase())
         )
         : [];
@@ -389,11 +383,11 @@ const EmployeesPage = () => {
         const rows = employees.map((emp, index) => [
             index + 1,
             emp.nric_fin_no || '',
-            emp.user?.name || '',
-            emp.user?.mobile || '',
-            emp.user?.email || '',
-            emp.user?.role?.name || '',
-            emp.user?.status || '',
+            emp.name || '',
+            emp.mobile || '',
+            emp.email || '',
+            emp.role?.name || '',
+            emp.status || '',
         ]);
         const csvContent = [headers, ...rows]
             .map(row => row.map(field => `"${String(field).replace(/"/g, '""')}"`).join(';'))
@@ -432,7 +426,8 @@ const EmployeesPage = () => {
 
     return (
         <SecondLayout>
-            <div className="flex flex-col gap-6 px-6 pb-20 w-full min-h-[calc(100vh-91px)] h-full md:pl-4 md:pr-[156px]">
+            <div className="flex flex-col gap-6 px-6 pb-20 w-full min-h-[calc(100vh-91px)] h-full xl:pr-[156px]">
+                <SidebarLayout isOpen={sidebar} closeSidebar={setSidebar} />
                 <div className="flex flex-col flex-1 gap-10 bg-[#252C38] p-6 rounded-lg w-full h-full">
                     <div className="w-full flex justify-between items-center gap-4 flex-wrap">
                         <div className="flex items-end gap-4 w-fit flex-wrap md:flex-nowrap">
@@ -500,18 +495,30 @@ const EmployeesPage = () => {
                                             (searchTerm.trim() !== '' ? filteredEmployees : currentEmployees).map((data, index) => (
                                                 <tr className="border-b-[1px] border-b-[#98A1B3]" key={data.id}>
                                                     <td className="text-[#F4F7FF] pt-6 pb-3">{(searchTerm.trim() !== '' ? 0 : indexOfFirstEmployee) + index + 1}</td>
-                                                    <td className="text-[#F4F7FF] pt-6 pb-3 ">{data.user.name}</td>
+                                                    <td className="text-[#F4F7FF] pt-6 pb-3 ">{data.name}</td>
                                                     <td className="text-[#F4F7FF] pt-6 pb-3 ">{maskPhone(data.nric_fin_no)}</td>
-                                                    <td className="text-[#F4F7FF] pt-6 pb-3 ">{maskPhone(data.user.mobile)}</td>
-                                                    <td className="text-[#F4F7FF] pt-6 pb-3 ">{data.user.role.name}</td>
+                                                    <td className="text-[#F4F7FF] pt-6 pb-3 ">{maskPhone(data.mobile)}</td>
+                                                    <td className="text-[#F4F7FF] pt-6 pb-3 ">{data.role.name}</td>
                                                     <td className="flex justify-center items-center pt-6 pb-3 ">
-                                                        <div className="font-medium text-sm text-[#19CE74] px-6 py-2 bg-[rgba(25,206,116,0.16)] border-[1px] border-[#19CE74] rounded-full w-fit">
-                                                            {data.user.status}
+                                                        <div
+                                                            className={`
+    font-medium text-sm px-6 py-2 rounded-full w-fit capitalize
+    ${data.status === "active"
+                                                                    ? "text-[#19CE74] bg-[rgba(25,206,116,0.16)] border border-[#19CE74]"
+                                                                    : data.status === "inactive"
+                                                                        ? "text-[#EAB308] bg-[rgba(234,179,8,0.16)] border border-[#EAB308]"
+                                                                        : data.status === "suspended"
+                                                                            ? "text-[#EF4444] bg-[rgba(239,68,68,0.16)] border border-[#EF4444]"
+                                                                            : "text-gray-400 bg-gray-800 border border-gray-500"
+                                                                }
+  `}
+                                                        >
+                                                            {data.status}
                                                         </div>
                                                     </td>
                                                     <td className="pt-6 pb-3">
-                                                        <div className="flex gap-6 items-center justify-center">
-                                                            {data.user.status !== 'active' && user?.role?.permissions?.some(p => p.name === 'add_employee') && (
+                                                        <div className="flex gap-6 items-center justify-center px-2">
+                                                            {data.status == 'inactive' && user?.role?.permissions?.some(p => p.name === 'add_employee') && (
                                                                 <svg
                                                                     height="28px"
                                                                     version="1.1"
@@ -530,7 +537,7 @@ const EmployeesPage = () => {
                                                                     </g>
                                                                 </svg>
                                                             )}
-                                                            {data.user.status !== 'active' && user?.role?.permissions?.some(p => p.name === 'add_employee') && (
+                                                            {data.status == 'inactive' && user?.role?.permissions?.some(p => p.name === 'add_employee') && (
                                                                 <svg
                                                                     height="28"
                                                                     viewBox="0 0 16 16"
@@ -590,7 +597,7 @@ const EmployeesPage = () => {
                                     className="flex items-center gap-1 font-medium text-xs leading-[21px] text-[#B3BACA] disabled:opacity-50"
                                 >
                                     {t('Next')}
-                                    <ArrowRight/>
+                                    <ArrowRight />
                                 </button>
                             </div>
                         )}
@@ -710,35 +717,15 @@ const EmployeesPage = () => {
                                 <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b border-b-[#98A1B3]">
                                     <label className="text-xs leading-[21px] text-[#98A1B3]">{t('Briefing Conducted')}</label>
                                     <select
-                                        onChange={(e) => setAddData((prev) => ({ ...prev, briefing_conducted: e.target.value }))}
+                                        onChange={(e) => setAddData((prev) => ({ ...prev, briefing_conducted: Number(e.target.value) }))}
                                         className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] focus-visible:outline-none"
                                         required
                                     >
-                                        <option value="yes">{t('Yes')}</option>
-                                        <option value="no">{t('No')}</option>
+                                        <option value='1'>{t('Yes')}</option>
+                                        <option value='0'>{t('No')}</option>
                                     </select>
                                 </div>
 
-                                {/* {Object.entries(roles[1]).map(([category, roles]) => (
-                    <div className="flex flex-col gap-2">
-                        <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">{category}</label>
-                        <div className="flex flex-wrap gap-x-3 gap-y-[14px]">
-                            {roles.map((role: any) => {
-                                const isSelected = selectedRoles.includes(role);
-                                return (
-                                    <button
-                                        key={role}
-                                        onClick={() => toggleRole(role)}
-                                        className={`font-medium text-sm leading-[20px] w-fit px-4 py-2 rounded-full bg-[#303847] text-[#F4F7FF]
-                ${isSelected ? 'bg-[#446FC7] text-[#F4F7FF]' : 'bg-[#303847] text-[#F4F7FF] hover:bg-[#446FC7] hover:text-[#F4F7FF]'}`}
-                                    >
-                                        {role}
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    </div>
-                ))} */}
                                 <div className="flex flex-col gap-2">
                                     <label htmlFor="" className="text-xs leading-[21px] text-[#98A1B3]">{t('Role')}</label>
                                     <div className="flex flex-wrap gap-x-3 gap-y-[14px]">
@@ -890,22 +877,10 @@ const EmployeesPage = () => {
                                         type="text"
                                         className="bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3]"
                                         placeholder="Name"
-                                        value={editData.user?.name ?? ''}
+                                        value={editData.name ?? ''}
                                         onChange={(e) =>
-                                            setEditData((prev) => prev ? { ...prev, user: { ...prev.user, name: e.target.value } } : null)
+                                            setEditData((prev) => prev ? { ...prev, name: e.target.value } : null)
                                         }
-                                        required
-                                    />
-                                </div>
-
-                                <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
-                                    <label className="text-xs text-[#98A1B3]">{t('Birth Date')}</label>
-                                    <input
-                                        type="date"
-                                        className="bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3]"
-                                        placeholder="Birth date"
-                                        value={editData?.birth ? editData.birth.substring(0, 10) : ''}
-                                        onChange={(e) => setEditData((prev) => prev ? { ...prev, birth: e.target.value } : null)}
                                         required
                                     />
                                 </div>
@@ -926,11 +901,11 @@ const EmployeesPage = () => {
                                     <label className="text-xs text-[#98A1B3]">{t('Mobile')}</label>
                                     <PhoneInput
                                         country={'sg'}
-                                        value={editData?.user?.mobile ?? ''}
+                                        value={editData?.mobile ?? ''}
                                         onChange={(phone) => {
                                             const onlyNumbers = phone.replace(/\s/g, '');
                                             const withPlus = `+${onlyNumbers}`;
-                                            setEditData((prev) => prev ? { ...prev, user: { ...prev.user, mobile: withPlus } } : null);
+                                            setEditData((prev) => prev ? { ...prev, mobile: withPlus } : null);
                                         }}
                                         enableLongNumbers
                                         inputProps={{ inputMode: 'tel' }}
@@ -948,8 +923,8 @@ const EmployeesPage = () => {
                                         type="text"
                                         className="bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3]"
                                         placeholder="Email"
-                                        value={editData?.user?.email ?? ''}
-                                        onChange={(e) => setEditData((prev) => prev ? { ...prev, user: { ...prev.user, email: e.target.value } } : null)}
+                                        value={editData?.email ?? ''}
+                                        onChange={(e) => setEditData((prev) => prev ? { ...prev, email: e.target.value } : null)}
                                         required
                                     />
                                 </div>
@@ -960,8 +935,8 @@ const EmployeesPage = () => {
                                         type="text"
                                         className="bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3]"
                                         placeholder="Address"
-                                        value={editData?.user?.address ?? ''}
-                                        onChange={(e) => setEditData((prev) => prev ? { ...prev, user: { ...prev.user, address: e.target.value } } : null)}
+                                        value={editData?.address ?? ''}
+                                        onChange={(e) => setEditData((prev) => prev ? { ...prev, address: e.target.value } : null)}
                                         required
                                     />
                                 </div>
@@ -970,16 +945,16 @@ const EmployeesPage = () => {
                                     <label className="text-xs text-[#98A1B3]">{t('Role')}</label>
                                     <select
                                         className="bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] outline-none"
-                                        value={editData?.user?.role?.id || ''}
+                                        value={editData?.role?.id || ''}
                                         onChange={(e) => {
                                             setEditData((prev) => {
-                                                if (!prev || !prev.user) return prev;
+                                                if (!prev) return prev;
                                                 const selectedRole = roles.find((r) => r.id === e.target.value);
                                                 if (!selectedRole) return prev;
                                                 return {
                                                     ...prev,
-                                                    user: { ...prev.user, role: { id: selectedRole.id, name: selectedRole.name } },
-                                                } as Employee;
+                                                    role: { id: selectedRole.id, name: selectedRole.name },
+                                                } as User;
                                             });
                                         }}
                                     >
@@ -1017,12 +992,12 @@ const EmployeesPage = () => {
                                 <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
                                     <label className="text-xs text-[#98A1B3]">{t('Briefing Conducted')}</label>
                                     <select
-                                        onChange={(e) => setAddData((prev) => ({ ...prev, briefing_conducted: e.target.value }))}
+                                        onChange={(e) => setAddData((prev) => ({ ...prev, briefing_conducted: Number(e.target.value) }))}
                                         className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] focus-visible:outline-none"
                                         required
                                     >
-                                        <option value="yes" selected={editData?.briefing_conducted === "yes"}>{t('Yes')}</option>
-                                        <option value="no" selected={editData?.briefing_conducted === "no"}>{t('No')}</option>
+                                        <option value='1' selected={editData?.briefing_conducted === 1}>{t('Yes')}</option>
+                                        <option value='0' selected={editData?.briefing_conducted === 0}>{t('No')}</option>
                                     </select>
                                 </div>
 

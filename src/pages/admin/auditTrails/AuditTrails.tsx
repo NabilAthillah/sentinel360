@@ -1,18 +1,18 @@
+import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import * as XLSX from 'xlsx';
-import { useTranslation } from 'react-i18next';
-import { AuditTrail } from '../../../types/auditTrials';
-import { RootState } from '../../../store';
-import auditTrialsService from '../../../services/auditTrailsService';
-import MainLayout from '../../../layouts/MainLayout';
-import Loader from '../../../components/Loader';
-import SecondLayout from '../../../layouts/SecondLayout';
-import SidebarLayout from '../../../components/SidebarLayout';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import * as XLSX from 'xlsx';
+import Loader from '../../../components/Loader';
+import SidebarLayout from '../../../components/SidebarLayout';
+import SecondLayout from '../../../layouts/SecondLayout';
+import auditTrialsService from '../../../services/auditTrailsService';
+import { RootState } from '../../../store';
+import { AuditTrail } from '../../../types/auditTrials';
 
 const AuditTrails = () => {
     const [logs, setLogs] = useState<AuditTrail[]>([]);
@@ -34,6 +34,7 @@ const AuditTrails = () => {
     const { t } = useTranslation();
     const dropdownRef = useRef<HTMLDivElement>(null);
     const user = useSelector((state: RootState) => state.user.user);
+    const [sidebar, setSidebar] = useState(true)
 
     const fetchAuditTrails = async () => {
         if (!token) return;
@@ -243,8 +244,8 @@ const AuditTrails = () => {
 
     return (
         <SecondLayout>
-            <div className="flex flex-col gap-6 px-6 pb-20 w-full min-h-[calc(100vh-91px)] h-full md:pl-4 md:pr-[156px]">
-
+            <div className="flex flex-col gap-6 px-6 pb-20 w-full min-h-[calc(100vh-91px)] h-full xl:pr-[156px]">
+                <SidebarLayout isOpen={sidebar} closeSidebar={setSidebar} />
                 <div className="flex flex-col gap-10 bg-[#252C38] p-6 rounded-lg w-full h-full flex-1 relative">
                     <div className="w-full flex justify-between items-center gap-4 flex-wrap">
                         <div className="flex flex-wrap items-end gap-4 w-full">
@@ -421,7 +422,11 @@ const AuditTrails = () => {
                     </div>
 
                     {showModal && selectedLog && (
-                        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                        <motion.div key="add-overlay"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed w-screen h-screen flex justify-center items-center top-0 left-0 z-50 bg-[rgba(0,0,0,0.5)]">
                             <div className="bg-[#1A1D23] text-white p-6 rounded-lg w-[90%] md:w-[600px] max-h-[80vh] overflow-y-auto">
                                 <div className="flex justify-between items-center mb-4">
                                     <h2 className="text-xl font-semibold">{t('Audit Log Description')}</h2>
@@ -429,7 +434,7 @@ const AuditTrails = () => {
                                 </div>
                                 <pre className="whitespace-pre-wrap text-sm text-[#F4F7FF]">{selectedLog.description}</pre>
                             </div>
-                        </div>
+                        </motion.div>
                     )}
                 </div>
             </div >

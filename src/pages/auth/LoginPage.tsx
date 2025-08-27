@@ -1,13 +1,13 @@
 import { Eye, EyeOff } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import { Bounce, ToastContainer, toast } from "react-toastify";
-import { useNavigate } from "react-router-dom";
-import "react-toastify/dist/ReactToastify.css";
-import authService from "../../services/authService";
 import { useDispatch } from "react-redux";
-import { setUser } from "../../features/user/userSlice";
-import { setToken } from "../../features/user/tokenSlice";
+import { useNavigate } from "react-router-dom";
+import { Bounce, ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import Loader from "../../components/Loader";
+import { setToken } from "../../features/user/tokenSlice";
+import { setUser } from "../../features/user/userSlice";
+import authService from "../../services/authService";
 
 const LoginPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -71,13 +71,19 @@ const LoginPage: React.FC = () => {
       }
 
       const response = await authService.login(loginData);
-      console.log(response);
       if (response.success) {
-        const user = response.user || response.user;
-        const token = response.token || response.token;
+        const user = response.user;
+        const token = response.token;
 
         if (!user || !token) {
           toast.error("Login failed: invalid response from server.");
+          setLoading(false);
+          return;
+        }
+
+        if (user.role.name != 'SO' && user.role.name != 'SSO' && user.role.name != 'Administrator') {
+          console.log(user.role.name)
+          toast.error("Forbidden.");
           setLoading(false);
           return;
         }
@@ -107,7 +113,7 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-screen w-full h-screen bg-[#181D26] flex flex-col justify-center items-center gap-20 lg:gap-32 px-5 sm:px-0">
+    <div className="max-w-screen w-full h-screen bg-[#181D26] flex flex-col justify-center items-center gap-20 px-5 sm:px-0">
       <ToastContainer
         position="top-right"
         autoClose={5000}
@@ -175,9 +181,8 @@ const LoginPage: React.FC = () => {
         <button
           type="submit"
           disabled={loading}
-          className={`w-full flex justify-center items-center py-4 text-center text-[#181D26] font-medium bg-[#EFBF04] border-[1px] border-[#EFBF04] rounded-full transition-all hover:text-[#EFBF04] hover:bg-[#181D26] ${
-            loading ? "opacity-70 cursor-not-allowed" : ""
-          }`}
+          className={`w-full flex justify-center items-center py-4 text-center text-[#181D26] font-medium bg-[#EFBF04] border-[1px] border-[#EFBF04] rounded-full transition-all hover:text-[#EFBF04] hover:bg-[#181D26] ${loading ? "opacity-70 cursor-not-allowed" : ""
+            }`}
         >
           {loading ? <Loader primary /> : "Login"}
         </button>

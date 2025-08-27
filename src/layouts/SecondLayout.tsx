@@ -1,15 +1,15 @@
 import '../i8n/i18n';
 
 import { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import { Bounce, toast, ToastContainer } from 'react-toastify';
-import authService from "../services/authService";
-import HeaderLayout from '../components/HeaderLayout';
 import { useTranslation } from 'react-i18next';
-import SidebarLayout from '../components/SidebarLayout';
-import { useSelector, useDispatch } from 'react-redux';
-import { RootState } from '../store';
+import { useDispatch, useSelector } from 'react-redux';
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { Bounce, toast, ToastContainer } from 'react-toastify';
+import HeaderLayout from '../components/HeaderLayout';
 import { clearUser, setUser } from '../features/user/userSlice'; // pastikan ada action setUser
+import authService from "../services/authService";
+import siteService from '../services/siteService';
+import { RootState } from '../store';
 
 const SecondLayout = ({ children }: { children: React.ReactNode }) => {
     const [sidebar, setSidebar] = useState(false);
@@ -19,6 +19,22 @@ const SecondLayout = ({ children }: { children: React.ReactNode }) => {
     const { pathname } = location;
     const user = useSelector((state: RootState) => state.user.user);
     const dispatch = useDispatch();
+    const { idSite } = useParams();
+    const [siteName, setSiteName] = useState<string>("");
+
+    const fetchSiteName = async () => {
+        const token = localStorage.getItem("token");
+        if (token && idSite && pathname.includes(`/dashboard/sites/${idSite}/routes`)) {
+            try {
+                const res = await siteService.getSiteById(idSite, token);
+                if (res.success) {
+                    setSiteName(res.data.site.name);
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+    };
 
     const handleLogout = () => {
         authService.logout();
@@ -87,6 +103,12 @@ const SecondLayout = ({ children }: { children: React.ReactNode }) => {
     };
 
     const titleHeader = () => {
+        const parts = pathname.split("/");
+
+        if (parts.length >= 5 && parts[1] === "dashboard" && parts[2] === "sites" && parts[4] === "routes") {
+            return siteName ? `Site: ${siteName}` : "Site";
+        }
+
         switch (pathname) {
             case "/dashboard/employees":
                 return t("Employees");
@@ -98,10 +120,6 @@ const SecondLayout = ({ children }: { children: React.ReactNode }) => {
                 return t("Incidents");
             case "/dashboard/sites":
                 return t("Sites");
-            case "/dashboard/sites/map":
-                return t("Site Map");
-            case "/dashboard/sites/allocation":
-                return t("Allocation List");
             case "/dashboard/reports":
                 return t("Reports");
             case "/dashboard/guard-tours":
@@ -115,10 +133,16 @@ const SecondLayout = ({ children }: { children: React.ReactNode }) => {
         }
     };
 
+
     useEffect(() => {
         checkTokenAndRole();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+
+    useEffect(() => {
+        fetchSiteName();
+    }, [idSite, pathname]);
 
     return (
         <main className='max-w-screen w-full min-h-screen h-full bg-[#181D26]'>
@@ -135,11 +159,7 @@ const SecondLayout = ({ children }: { children: React.ReactNode }) => {
                 theme="dark"
                 transition={Bounce}
             />
-            <SidebarLayout
-                isOpen={sidebar}
-                closeSidebar={setSidebar}
-            />
-            <div className='flex flex-col max-w-screen w-full pl-0 min-h-screen h-full transition-all duration-200 md:pl-[265px]'>
+            <div className='flex flex-col max-w-screen w-full pl-0 min-h-screen h-full transition-all duration-200 xl:pl-[156px]'>
                 <HeaderLayout
                     title={titleHeader()}
                     openSidebar={setSidebar}

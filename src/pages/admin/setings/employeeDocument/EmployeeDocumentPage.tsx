@@ -1,17 +1,17 @@
 import { Switch } from "@material-tailwind/react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import { useTranslation } from 'react-i18next';
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { useTranslation } from 'react-i18next';
-import { EmployeeDocument } from "../../../../types/employeeDocument";
-import { RootState } from "../../../../store";
-import employeeDocumentService from "../../../../services/employeeDocumentService";
-import auditTrailsService from "../../../../services/auditTrailsService";
-import MainLayout from "../../../../layouts/MainLayout";
-import Navbar from "../../../../components/Navbar";
 import Loader from "../../../../components/Loader";
+import Navbar from "../../../../components/Navbar";
+import MainLayout from "../../../../layouts/MainLayout";
+import auditTrailsService from "../../../../services/auditTrailsService";
+import employeeDocumentService from "../../../../services/employeeDocumentService";
+import { RootState } from "../../../../store";
+import { EmployeeDocument } from "../../../../types/employeeDocument";
 
 const EmployeeDocumentPage = () => {
     const { t } = useTranslation();
@@ -222,20 +222,30 @@ const EmployeeDocumentPage = () => {
 
                                                 {/* Status Switch */}
                                                 <td className="text-[#F4F7FF] pt-4 pb-2">
-                                                    <Switch
-                                                        id={`custom-switch-component-${doc.id}`}
-                                                        ripple={false}
-                                                        checked={switchStates[doc.id]}
-                                                        onChange={() => handleToggleStatus(doc.id)}
-                                                        className="h-full w-full checked:bg-[#446FC7]"
-                                                        containerProps={{ className: "w-11 h-6" }}
-                                                        circleProps={{ className: "before:hidden left-0.5 border-none" }}
-                                                        onResize={undefined}
-                                                        onResizeCapture={undefined}
-                                                        onPointerEnterCapture={undefined}
-                                                        onPointerLeaveCapture={undefined}
-                                                        crossOrigin={undefined}
-                                                    />
+                                                    <div className="flex items-center gap-4 w-40">
+                                                        <Switch
+                                                            id={`custom-switch-component-${doc.id}`}
+                                                            ripple={false}
+                                                            checked={switchStates[doc.id]}
+                                                            onChange={() => handleToggleStatus(doc.id)}
+                                                            className="h-full w-full checked:bg-[#446FC7]"
+                                                            containerProps={{ className: "w-11 h-6" }}
+                                                            circleProps={{ className: "before:hidden left-0.5 border-none" }}
+                                                            onResize={undefined}
+                                                            onResizeCapture={undefined}
+                                                            onPointerEnterCapture={undefined}
+                                                            onPointerLeaveCapture={undefined}
+                                                            crossOrigin={undefined}
+                                                        />
+                                                        <span
+                                                            className={`font-medium text-sm capitalize ${doc.status === "active"
+                                                                ? "text-[#19CE74]"
+                                                                : "text-[#FF7E6A]"
+                                                                }`}
+                                                        >
+                                                            {doc.status}
+                                                        </span>
+                                                    </div>
                                                 </td>
 
                                                 {/* Action Edit */}

@@ -1,20 +1,19 @@
 import { AnimatePresence, motion } from 'framer-motion';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import PhoneInput from 'react-phone-input-2';
 import { useSelector } from 'react-redux';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { useTranslation } from 'react-i18next';
-import { Site } from '../../../types/site';
-import { RootState } from '../../../store';
-import siteService from '../../../services/siteService';
-import auditTrialsService from '../../../services/auditTrailsService';
-import MainLayout from '../../../layouts/MainLayout';
-import Loader from '../../../components/Loader';
 import DeleteModal from '../../../components/DeleteModal';
-import SecondLayout from '../../../layouts/SecondLayout';
+import Loader from '../../../components/Loader';
 import SidebarLayout from '../../../components/SidebarLayout';
-import { ArrowLeft, ArrowRight } from 'lucide-react';
+import SecondLayout from '../../../layouts/SecondLayout';
+import auditTrialsService from '../../../services/auditTrailsService';
+import siteService from '../../../services/siteService';
+import { RootState } from '../../../store';
+import { Site } from '../../../types/site';
 /* ================= Helpers: Animations & Scroll Lock ================= */
 function useBodyScrollLock(locked: boolean) {
     useEffect(() => {
@@ -145,6 +144,7 @@ const SitePage = () => {
     const [editSite, setEditSite] = useState<Site | null>(null);
     const [deleteSite, setDeleteSite] = useState('');
     const [deleteModal, setDeleteModal] = useState(false);
+    const [sidebar, setSidebar] = useState(true);
 
     const [loading, setLoading] = useState(false);       // action submit/update/delete
     const [loadingList, setLoadingList] = useState(false); // fetch table
@@ -403,8 +403,8 @@ const SitePage = () => {
 
     return (
         <SecondLayout>
-            <SidebarLayout isOpen={true} closeSidebar={undefined} />
-            <div className="flex flex-col gap-6 px-6 pb-20 w-full h-full flex-1">
+            <div className="flex flex-col gap-6 px-6 pb-20 w-full min-h-[calc(100vh-91px)] h-full xl:pr-[156px]">
+                <SidebarLayout isOpen={sidebar} closeSidebar={setSidebar} />
                 <nav className="flex flex-wrap">
                     <Link
                         to="/dashboard/sites"

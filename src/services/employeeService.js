@@ -21,14 +21,11 @@ const employeeService = {
         mobile,
         email,
         role,
-        reporting_to,
         briefing_date,
-        birth,
         address,
         briefing_conducted,
         date_joined,
-        profile,
-        token
+        profile
     ) => {
         try {
             const payload = {
@@ -37,10 +34,8 @@ const employeeService = {
                 mobile,
                 email,
                 id_role: role,
-                reporting_to,
                 briefing_date,
                 date_joined,
-                birth,
                 address,
                 briefing_conducted,
             };
@@ -49,11 +44,7 @@ const employeeService = {
                 payload.profile = profile;
             }
 
-            const response = await api.put(`/employees/${id}`, payload, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
+            const response = await api.put(`/employees/${id}`, payload);
 
             return response.data;
         } catch (error) {
@@ -95,7 +86,7 @@ const employeeService = {
 
     deleteEmployee: async (id, token) => {
         try {
-            const response = await api.post(`/employees/delete/${id}`, {
+            const response = await api.delete(`/employees/${id}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }

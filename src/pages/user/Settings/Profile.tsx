@@ -34,7 +34,6 @@ const Profile = () => {
         name: user?.name || "",
         mobile: user?.mobile || "",
         email: user?.email || "",
-        birth: toDateInput(user?.birth) || "",
         nric_fin_no: user?.nric_fin_no || "",
         role_id: user?.role?.id || "",
     });
@@ -96,7 +95,6 @@ const Profile = () => {
             name: user?.name || "",
             mobile: user?.mobile || "",
             email: user?.email || "",
-            birth: toDateInput(user?.birth) || "",
             nric_fin_no: user?.nric_fin_no || "",
             role_id: user?.role?.id || "",
         });
@@ -131,7 +129,6 @@ const Profile = () => {
                 name: form.name.trim(),
                 mobile: form.mobile?.trim() || undefined,
                 email: form.email.trim(),
-                birth: form.birth || undefined,
                 nric_fin_no: form.nric_fin_no?.trim() || undefined,
                 role_id: form.role_id || undefined,
             };

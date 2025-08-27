@@ -1,15 +1,14 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import { Site } from '../../../types/site';
-import { RootState } from '../../../store';
-import siteService from '../../../services/siteService';
-import auditTrialsService from '../../../services/auditTrailsService';
-import MainLayout from '../../../layouts/MainLayout';
 import Map from '../../../components/Map';
-import SecondLayout from '../../../layouts/SecondLayout';
 import SidebarLayout from '../../../components/SidebarLayout';
+import SecondLayout from '../../../layouts/SecondLayout';
+import auditTrialsService from '../../../services/auditTrailsService';
+import siteService from '../../../services/siteService';
+import { RootState } from '../../../store';
+import { Site } from '../../../types/site';
 const MapPage = () => {
     const location = useLocation();
     const { pathname } = location;
@@ -17,6 +16,7 @@ const MapPage = () => {
     const { t, i18n } = useTranslation();
     const user = useSelector((state: RootState) => state.user.user);
     const navigate = useNavigate();
+    const [sidebar, setSidebar] = useState(true);
 
     const baseURL = new URL(process.env.REACT_APP_API_URL || '');
     baseURL.pathname = baseURL.pathname.replace(/\/api$/, '');
@@ -67,8 +67,8 @@ const MapPage = () => {
 
     return (
         <SecondLayout>
-            <SidebarLayout isOpen={true} closeSidebar={undefined}/>
-            <div className='flex flex-col gap-6 pr-[156px] pl-4 pb-20 w-full h-full flex-1'>
+            <div className="flex flex-col gap-6 px-6 pb-20 w-full min-h-[calc(100vh-91px)] h-full xl:pr-[156px]">
+                <SidebarLayout isOpen={sidebar} closeSidebar={setSidebar} />
                 <nav className='flex flex-wrap'>
                     {hasPermission('list_sites') && (
                         <Link to="/dashboard/sites" className={`font-medium text-sm text-[#F4F7FF] px-6 ${pathname === '/dashboard/sites' ? 'pt-[14px] pb-3 border-b-2 border-b-[#F3C511]' : 'py-[14px] border-b-0'}`}>
@@ -84,7 +84,7 @@ const MapPage = () => {
                         </Link>
                     )}
                 </nav>
-                <div className="flex flex-col bg-[#252C38] p-4 rounded-lg w-full h-full flex-1">
+                <div className="flex flex-col rounded-lg w-full h-full flex-1">
                     <Map sites={sites} />
                 </div>
             </div>

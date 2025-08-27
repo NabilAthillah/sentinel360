@@ -1,25 +1,25 @@
+import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { AnimatePresence, motion } from "framer-motion";
 
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { RootState } from "../../../store";
-import { Site } from "../../../types/site";
-import { Employee } from "../../../types/employee";
-import { OccurrenceCategory } from "../../../types/occurrenceCategory";
-import { Occurrence } from "../../../types/occurrence";
-import siteService from "../../../services/siteService";
+import Loader from "../../../components/Loader";
+import SidebarLayout from "../../../components/SidebarLayout";
+import SecondLayout from "../../../layouts/SecondLayout";
+import auditTrialsService from "../../../services/auditTrailsService";
 import occurrenceCatgService from "../../../services/occurrenceCatgService";
 import occurrenceService from "../../../services/occurrenceService";
-import auditTrialsService from "../../../services/auditTrailsService";
-import MainLayout from "../../../layouts/MainLayout";
-import Loader from "../../../components/Loader";
-import { select } from "@material-tailwind/react";
-import SecondLayout from "../../../layouts/SecondLayout";
-import SidebarLayout from "../../../components/SidebarLayout";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import siteService from "../../../services/siteService";
+import { RootState } from "../../../store";
+import { Employee } from "../../../types/employee";
+import { Occurrence } from "../../../types/occurrence";
+import { OccurrenceCategory } from "../../../types/occurrenceCategory";
+import { Site } from "../../../types/site";
+import employeeService from "../../../services/employeeService";
+import { User } from "../../../types/user";
 interface OccurrenceInput {
   id_site: string;
   id_category: string;
@@ -152,7 +152,7 @@ function CenterModal({
 /* ===== End Helpers ===== */
 
 const OccurencePage = () => {
-  const [sidebar] = useState(false); // (disimpan untuk kompatibilitas, belum dipakai)
+  const [sidebar, setSidebar] = useState(true); // (disimpan untuk kompatibilitas, belum dipakai)
   const [editData, setEditData] = useState(false);
   const [addData, setAddData] = useState(false);
 
@@ -163,7 +163,7 @@ const OccurencePage = () => {
   const user = useSelector((state: RootState) => state.user.user);
 
   const [sites, setSites] = useState<Site[]>([]);
-  const [employee, setEmployee] = useState<Employee[]>([]); // (opsional: tidak digunakan fetch di sini)
+  const [employee, setEmployee] = useState<User[]>([]); // (opsional: tidak digunakan fetch di sini)
   const [categories, setCategories] = useState<OccurrenceCategory[]>([]);
   const [occurrences, setOccurrences] = useState<Occurrence[]>([]);
   const token = useSelector((state: RootState) => state.token.token)
@@ -173,6 +173,15 @@ const OccurencePage = () => {
   const { t, i18n } = useTranslation();
   const [site, setSite] = useState("");
   const [category, setCategory] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [editForm, setEditForm] = useState<OccurrenceInput>({
+    id_site: "",
+    id_category: "",
+    occurred_at: "",
+    detail: "",
+  });
+  const [editId, setEditId] = useState<string | null>(null);
 
   const filteredItems = useMemo(() => {
     return occurrences.filter((occurrence) => {
@@ -183,9 +192,14 @@ const OccurencePage = () => {
         occurrence.category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         occurrence.reported_by.name.toLowerCase().includes(searchTerm.toLowerCase())
         : true;
-      return matchSite && matchCategory && matchSearchTerm;
+
+      const matchDate =
+        (!dateFrom || new Date(occurrence.date) >= new Date(dateFrom)) &&
+        (!dateTo || new Date(occurrence.date) <= new Date(dateTo));
+
+      return matchSite && matchCategory && matchSearchTerm && matchDate;
     });
-  }, [occurrences, site, category, searchTerm]);
+  }, [occurrences, site, category, searchTerm, dateFrom, dateTo]);
 
   const totalItems = filteredItems.length;
   const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
@@ -205,6 +219,12 @@ const OccurencePage = () => {
     if (!token) return;
     const response = await siteService.getAllSite(token);
     if (response?.data) setSites(response.data);
+  };
+
+  const fetchEmployees = async () => {
+    if (!token) return;
+    const response = await employeeService.getAllEmployee(token);
+    if (response?.data) setEmployee(response.data);
   };
 
   const fetchCategories = async () => {
@@ -228,7 +248,7 @@ const OccurencePage = () => {
   const fetchAll = async () => {
     setLoadingList(true);
     try {
-      await Promise.allSettled([fetchOccurrences(), fetchSites(), fetchCategories()]);
+      await Promise.allSettled([fetchOccurrences(), fetchSites(), fetchCategories(), fetchEmployees()]);
     } finally {
       setLoadingList(false);
     }
@@ -267,8 +287,29 @@ const OccurencePage = () => {
         await fetchAll();
         setAddData(false);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
+      toast.error(error.response?.message || "Oops! Something went wrong");
+    } finally {
+      setLoadingAction(false);
+    }
+  };
+
+  const handleEditSubmit = async (e: React.SyntheticEvent) => {
+    if (!token || !editId) return;
+    e.preventDefault();
+    setLoadingAction(true);
+    try {
+      const response = await occurrenceService.updateOccurrence(token, editId, editForm);
+      if (response.success) {
+        toast.success("Occurrence updated successfully");
+        await fetchAll();
+        setEditData(false);
+        setEditId(null);
+      }
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error.response?.message || "Oops! Something went wrong");
     } finally {
       setLoadingAction(false);
     }
@@ -318,7 +359,7 @@ const OccurencePage = () => {
 
     const csvContent = [headers, ...rows]
       .map(row =>
-        row.map(field => `"${String(field).replace(/"/g, '""')}"`).join(';') 
+        row.map(field => `"${String(field).replace(/"/g, '""')}"`).join(';')
       )
       .join('\n');
 
@@ -334,15 +375,16 @@ const OccurencePage = () => {
   };
   return (
     <SecondLayout>
-      <div className="flex flex-col gap-6 pb-20 w-full h-full flex-1 px-6 md:pl-4 md:pr-[156px]">
+      <div className="flex flex-col gap-6 px-6 pb-20 w-full min-h-[calc(100vh-91px)] h-full xl:pr-[156px]">
+        <SidebarLayout isOpen={sidebar} closeSidebar={setSidebar} />
         <div className="flex flex-col gap-10 bg-[#252C38] p-6 rounded-lg w-full h-full flex-1">
           <div className="w-full flex flex-col gap-4">
             <div className="w-full flex justify-between items-center gap-4 flex-wrap lg:flex-nowrap">
               <div className="flex items-end gap-4 w-full flex-wrap md:flex-nowrap">
-                <div className="max-w-[400px] w-full flex items-center bg-[#222834] border-b-[1px] border-b-[#98A1B3] rounded-[4px_4px_0px_0px]">
+                <div className="max-w-[350px] w-full flex items-center bg-[#222834] border-b-[1px] border-b-[#98A1B3] rounded-[4px_4px_0px_0px]">
                   <input
                     type="text"
-                    className="w-full px-4 pt-[17.5px] pb-[10.5px] bg-[#222834] rounded-[4px_4px_0px_0px] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] border-b-[1px] border-b-[#98A1B3] active:outline-none focus-visible:outline-none"
+                    className="w-full px-4 pt-[17.5px] pb-[10.5px] bg-[#222834] rounded-[4px_4px_0px_0px] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] active:outline-none focus-visible:outline-none"
                     placeholder="Search by employee"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
@@ -353,7 +395,7 @@ const OccurencePage = () => {
                     className="p-2 rounded-[4px_4px_0px_0px]"
                     tabIndex={-1}
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="32" height="32" viewBox="0 0 32 32"><defs><clipPath id="master_svg0_247_12873"><rect x="0" y="0" width="32" height="32" rx="0" /></clipPath></defs><g clip-path="url(#master_svg0_247_12873)"><g><path d="M20.666698807907103,18.666700953674315L19.613298807907107,18.666700953674315L19.239998807907106,18.306700953674316C20.591798807907104,16.738700953674318,21.334798807907106,14.736900953674317,21.333298807907106,12.666670953674316C21.333298807907106,7.880200953674317,17.453098807907104,4.000000953674316,12.666668807907104,4.000000953674316C7.880198807907105,4.000000953674316,4.000000715257104,7.880200953674317,4.000000715257104,12.666670953674316C4.000000715257104,17.453100953674316,7.880198807907105,21.333300953674318,12.666668807907104,21.333300953674318C14.813298807907104,21.333300953674318,16.786698807907104,20.546700953674318,18.306698807907104,19.24000095367432L18.666698807907103,19.61330095367432L18.666698807907103,20.666700953674315L25.333298807907106,27.320000953674317L27.319998807907105,25.333300953674318L20.666698807907103,18.666700953674315ZM12.666668807907104,18.666700953674315C9.346668807907104,18.666700953674315,6.666668807907104,15.986700953674317,6.666668807907104,12.666670953674316C6.666668807907104,9.346670953674316,9.346668807907104,6.666670953674316,12.666668807907104,6.666670953674316C15.986698807907105,6.666670953674316,18.666698807907103,9.346670953674316,18.666698807907103,12.666670953674316C18.666698807907103,15.986700953674317,15.986698807907105,18.666700953674315,12.666668807907104,18.666700953674315Z" fill="#98A1B3" fill-opacity="1" /></g></g></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="32" height="32" viewBox="0 0 32 32"><defs><clipPath id="master_svg0_247_12873"><rect x="0" y="0" width="32" height="32" rx="0" /></clipPath></defs><g clipPath="url(#master_svg0_247_12873)"><g><path d="M20.666698807907103,18.666700953674315L19.613298807907107,18.666700953674315L19.239998807907106,18.306700953674316C20.591798807907104,16.738700953674318,21.334798807907106,14.736900953674317,21.333298807907106,12.666670953674316C21.333298807907106,7.880200953674317,17.453098807907104,4.000000953674316,12.666668807907104,4.000000953674316C7.880198807907105,4.000000953674316,4.000000715257104,7.880200953674317,4.000000715257104,12.666670953674316C4.000000715257104,17.453100953674316,7.880198807907105,21.333300953674318,12.666668807907104,21.333300953674318C14.813298807907104,21.333300953674318,16.786698807907104,20.546700953674318,18.306698807907104,19.24000095367432L18.666698807907103,19.61330095367432L18.666698807907103,20.666700953674315L25.333298807907106,27.320000953674317L27.319998807907105,25.333300953674318L20.666698807907103,18.666700953674315ZM12.666668807907104,18.666700953674315C9.346668807907104,18.666700953674315,6.666668807907104,15.986700953674317,6.666668807907104,12.666670953674316C6.666668807907104,9.346670953674316,9.346668807907104,6.666670953674316,12.666668807907104,6.666670953674316C15.986698807907105,6.666670953674316,18.666698807907103,9.346670953674316,18.666698807907103,12.666670953674316C18.666698807907103,15.986700953674317,15.986698807907105,18.666700953674315,12.666668807907104,18.666700953674315Z" fill="#98A1B3" fillOpacity="1" /></g></g></svg>
                   </button>
                 </div>
                 <button onClick={handleDownload} className="font-medium text-sm min-w-[142px] text-[#EFBF04] px-4 py-[9.5px] border-[1px] border-[#EFBF04] rounded-full hover:bg-[#EFBF04] hover:text-[#252C38] transition-all">{t('Download Report')}</button>
@@ -362,9 +404,9 @@ const OccurencePage = () => {
                 <button onClick={() => setAddData(true)} className="font-medium text-base min-w-[210px] text-[#181d26] px-[46.5px] py-3 border-[1px] border-[#EFBF04] bg-[#EFBF04] rounded-full hover:bg-[#181d26] hover:text-[#EFBF04] transition-all">{t('Add Occurence')}</button>
               </div>
             </div>
-            <div className="flex flex-wrap items-end gap-4 w-full xl:grid xl:grid-cols-4">
+            <div className="flex flex-wrap items-end gap-4 w-full">
               <select
-                className="max-w-[400px] w-full px-4 pt-[17.5px] pb-[10.5px] bg-[#222834] rounded-[4px_4px_0px_0px] text-[#F4F7FF] text-base border-b-[1px] border-b-[#98A1B3] active:outline-none focus-visible:outline-none"
+                className="max-w-[350px] w-full px-4 pt-[17.5px] pb-[10.5px] bg-[#222834] rounded-[4px_4px_0px_0px] text-[#F4F7FF] text-base border-b-[1px] border-b-[#98A1B3] active:outline-none focus-visible:outline-none"
                 value={site}
                 onChange={(e) => setSite(e.target.value)}
               >
@@ -376,19 +418,19 @@ const OccurencePage = () => {
                 ))}
               </select>
               <select
-                className="max-w-[400px] w-full px-4 pt-[17.5px] pb-[10.5px] bg-[#222834] rounded-[4px_4px_0px_0px] text-[#F4F7FF] text-base border-b-[1px] border-b-[#98A1B3] active:outline-none focus-visible:outline-none"
+                className="max-w-[350px] w-full px-4 pt-[17.5px] pb-[10.5px] bg-[#222834] rounded-[4px_4px_0px_0px] text-[#F4F7FF] text-base border-b-[1px] border-b-[#98A1B3] active:outline-none focus-visible:outline-none"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               >
                 <option value="">{t('All employees')}</option>
                 {employee.map((occ) => (
-                  <option key={occ.id} value={occ.user.name}>
-                    {occ.user.name}
+                  <option key={occ.id} value={occ.name}>
+                    {occ.name}
                   </option>
                 ))}
               </select>
               <select
-                className="max-w-[400px] w-full px-4 pt-[17.5px] pb-[10.5px] bg-[#222834] rounded-[4px_4px_0px_0px] text-[#F4F7FF] text-base border-b-[1px] border-b-[#98A1B3] active:outline-none focus-visible:outline-none"
+                className="max-w-[350px] w-full px-4 pt-[17.5px] pb-[10.5px] bg-[#222834] rounded-[4px_4px_0px_0px] text-[#F4F7FF] text-base border-b-[1px] border-b-[#98A1B3] active:outline-none focus-visible:outline-none"
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
               >
@@ -400,11 +442,22 @@ const OccurencePage = () => {
                 ))}
               </select>
 
-              <input
-                type={"text"}
-                className="max-w-[400px] w-full px-4 pt-[17.5px] pb-[10.5px] bg-[#222834] rounded-[4px_4px_0px_0px] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] border-b-[1px] border-b-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
-                placeholder="Date range"
-              />
+              <div className="flex gap-2">
+                <input
+                  type="date"
+                  value={dateFrom}
+                  onChange={(e) => setDateFrom(e.target.value)}
+                  className="max-w-[200px] w-full px-4 py-[10.5px] bg-[#222834] rounded-[4px] text-[#F4F7FF] text-base border-b border-b-[#98A1B3] outline-none"
+                  placeholder="From"
+                />
+                <input
+                  type="date"
+                  value={dateTo}
+                  onChange={(e) => setDateTo(e.target.value)}
+                  className="max-w-[200px] w-full px-4 py-[10.5px] bg-[#222834] rounded-[4px] text-[#F4F7FF] text-base border-b border-b-[#98A1B3] outline-none"
+                  placeholder="To"
+                />
+              </div>
             </div>
           </div>
 
@@ -447,7 +500,16 @@ const OccurencePage = () => {
                         <td className="pt-6 pb-3">
                           <div className="flex gap-6 items-center justify-center">
                             <svg
-                              onClick={() => setEditData(true)}
+                              onClick={() => {
+                                setEditId(occurrence.id);
+                                setEditForm({
+                                  id_site: occurrence.site.id,
+                                  id_category: occurrence.category.id,
+                                  occurred_at: `${occurrence.date}T${occurrence.time}`,
+                                  detail: occurrence.detail || "",
+                                });
+                                setEditData(true);
+                              }}
                               className="cursor-pointer"
                               xmlns="http://www.w3.org/2000/svg"
                               fill="none"
@@ -467,7 +529,7 @@ const OccurencePage = () => {
                     {currentItems.length === 0 && (
                       <tr>
                         <td colSpan={7} className="text-center text-white py-6">
-                         {t('No data found.')}
+                          {t('No data found.')}
                         </td>
                       </tr>
                     )}
@@ -500,10 +562,10 @@ const OccurencePage = () => {
         </div>
       </div>
 
-      <CenterModal isOpen={editData} onClose={() => setEditData(false)} ariaTitle="Edit occurrence details">
-        <div className="flex flex-col gap-6 p-6">
+      <CenterModal isOpen={editData} onClose={() => setEditData(false)} ariaTitle="Edit occurrence">
+        <form onSubmit={handleEditSubmit} className="flex flex-col gap-6 p-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl leading-[36px] text-white font-noto">{t('Edit occurrence details')}</h2>
+            <h2 className="text-2xl leading-[36px] text-white font-noto">{t('Edit occurrence')}</h2>
             <button
               type="button"
               onClick={() => setEditData(false)}
@@ -513,44 +575,79 @@ const OccurencePage = () => {
               ✕
             </button>
           </div>
+
           <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
-            <label className="text-xs text-[#98A1B3]">{t('Site name')}</label>
-            <input type="text" className="w-full bg-[#222834] text-[#F4F7FF] text-base" value="Michael Yeow" readOnly />
+            <label className="text-xs text-[#98A1B3]">{t('Site Name')}</label>
+            <select
+              className="w-full bg-[#222834] text-[#F4F7FF] text-base outline-none"
+              value={editForm.id_site}
+              onChange={(e) => setEditForm({ ...editForm, id_site: e.target.value })}
+              required
+            >
+              <option value="">{t('Select Site')}</option>
+              {sites.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
           </div>
+
           <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
             <label className="text-xs text-[#98A1B3]">{t('Category')}</label>
-            <input type="text" className="w-full bg-[#222834] text-[#F4F7FF] text-base" value="Accident" readOnly />
-          </div>
-          <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
-            <label className="text-xs text-[#98A1B3]">{t('Location')}</label>
-            <input type="text" className="w-full bg-[#222834] text-[#F4F7FF] text-base" value="Basement" readOnly />
-          </div>
-          <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
-            <label className="text-xs text-[#98A1B3]">{t('When it Happened')}</label>
-            <input type="text" className="w-full bg-[#222834] text-[#F4F7FF] text-base" value="19/08/2024 23:09:24" readOnly />
-          </div>
-          <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
-            <label className="text-xs text-[#98A1B3]">{t('Report By')}</label>
-            <input type="text" className="w-full bg-[#222834] text-[#F4F7FF] text-base" value="MSN" readOnly />
-          </div>
-          <div className="flex gap-4 flex-wrap">
-            <button
-              onClick={() => {
-                setEditData(false);
-                toast.success("Attendance edited successfully");
-              }}
-              className="font-medium text-base text-[#181D26] bg-[#EFBF04] px-12 py-3 border border-[#EFBF04] rounded-full hover:bg-[#181D26] hover:text-[#EFBF04]"
+            <select
+              className="w-full bg-[#222834] text-[#F4F7FF] text-base outline-none"
+              value={editForm.id_category}
+              onChange={(e) => setEditForm({ ...editForm, id_category: e.target.value })}
+              required
             >
-              {t('Save')}
+              <option value="">{t('Select Category')}</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
+            <label className="text-xs text-[#98A1B3]">{t('Occurrence at')}</label>
+            <input
+              type="datetime-local"
+              className="w-full bg-[#222834] text-[#F4F7FF] text-base outline-none"
+              value={editForm.occurred_at}
+              onChange={(e) => setEditForm({ ...editForm, occurred_at: e.target.value })}
+              required
+            />
+          </div>
+
+          <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-b-[#98A1B3]">
+            <label className="text-xs text-[#98A1B3]">{t('Details Occurrence')}</label>
+            <textarea
+              className="w-full bg-[#222834] text-[#F4F7FF] text-base outline-none min-h-[96px]"
+              value={editForm.detail}
+              onChange={(e) => setEditForm({ ...editForm, detail: e.target.value })}
+              placeholder="(Optional) add more info…"
+            />
+          </div>
+
+          <div className="flex gap-4 flex-wrap mt-2">
+            <button
+              type="submit"
+              disabled={loadingAction}
+              className="flex justify-center items-center font-medium text-base text-[#181D26] bg-[#EFBF04] px-12 py-3 border border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04] disabled:opacity-60"
+            >
+              {loadingAction ? <Loader primary /> : t("Save")}
             </button>
             <button
+              type="button"
               onClick={() => setEditData(false)}
               className="font-medium text-base text-[#868686] bg-[#252C38] px-12 py-3 border border-[#868686] rounded-full hover:bg-[#868686] hover:text-[#252C38]"
             >
               {t('Cancel')}
             </button>
           </div>
-        </div>
+        </form>
       </CenterModal>
 
       {/* ADD SLIDE-OVER (kanan) */}

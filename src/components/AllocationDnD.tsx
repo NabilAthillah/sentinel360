@@ -348,7 +348,7 @@ const AllocationDnD = ({
           <h3 className="font-semibold mb-3 text-2xl text-white">
             List of Sites
           </h3>
-          <div className="w-full flex gap-2">
+          <div className="w-full flex gap-2 flex-wrap">
             {sites.map((site) => (
               <SiteDropZone
                 key={site.id}

@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from 'react-i18next';
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { useTranslation } from 'react-i18next';
-import { RootState } from "../../../../store";
-import attendanceSettingService from "../../../../services/attendanceSettingService";
-import MainLayout from "../../../../layouts/MainLayout";
-import Navbar from "../../../../components/Navbar";
 import Loader from "../../../../components/Loader";
+import Navbar from "../../../../components/Navbar";
+import MainLayout from "../../../../layouts/MainLayout";
+import attendanceSettingService from "../../../../services/attendanceSettingService";
 import auditTrailsService from "../../../../services/auditTrailsService";
+import { RootState } from "../../../../store";
 
 interface FormField {
     label: string;
@@ -42,8 +42,8 @@ const SettingsAttendancePage = () => {
 
     const fetchSettings = async () => {
         if (!token) return;
-
         try {
+            setLoading(true);
             const response = await attendanceSettingService.getAttendanceSetting(token);
             if (response.success) {
                 const data = response.data;
@@ -67,6 +67,8 @@ const SettingsAttendancePage = () => {
             }
         } catch (error: any) {
             toast.error(error.message);
+        } finally {
+            setLoading(false)
         }
     };
 
@@ -125,15 +127,13 @@ const SettingsAttendancePage = () => {
     };
 
     useEffect(() => {
-        (async () => {
             if (!hasPermission('show_attendance_settings')) {
                 navigate('/dashboard');
                 return;
             }
-            await audit();
-            await fetchSettings();
-        })();
-    }, [token, user]);
+            fetchSettings();
+            audit();
+    }, []);
 
     return (
         <MainLayout>
@@ -142,27 +142,33 @@ const SettingsAttendancePage = () => {
                 <div className="flex flex-col gap-8 w-full h-full">
                     <Navbar />
                     <div className="bg-[#252C38] p-6 rounded-lg w-full h-full">
-                        <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-x-12 gap-y-6 sm:grid-cols-2">
-                            {formData.map((item, index) => (
-                                <div key={index} className="flex flex-col w-full px-4 pt-2 py-2 rounded bg-[#222834] border-b border-b-[#98A1B3]">
-                                    <label className="text-xs leading-[21px] text-[#98A1B3]">{item.label}</label>
-                                    <input
-                                        type={index <= 1 ? 'number' : 'time'}
-                                        className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3]"
-                                        placeholder={item.placeholder}
-                                        value={item.value}
-                                        onChange={(e) => handleInputChange(index, e.target.value)}
-                                    />
-                                </div>
-                            ))}
-                            {hasPermission('edit_attendance_settings') && (
-                                <div className="flex gap-4 flex-wrap">
-                                    <button type="submit" className="font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">
-                                        {loading ? <Loader primary={true} /> : 'Save'}
-                                    </button>
-                                </div>
-                            )}
-                        </form>
+                        {loading ? (
+                            <div className="w-full flex justify-center">
+                                <Loader primary={true} />
+                            </div>
+                        ) : (
+                            <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-x-12 gap-y-6 sm:grid-cols-2">
+                                {formData.map((item, index) => (
+                                    <div key={index} className="flex flex-col w-full px-4 pt-2 py-2 rounded bg-[#222834] border-b border-b-[#98A1B3]">
+                                        <label className="text-xs leading-[21px] text-[#98A1B3]">{item.label}</label>
+                                        <input
+                                            type={index <= 1 ? 'number' : 'time'}
+                                            className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3]"
+                                            placeholder={item.placeholder}
+                                            value={item.value}
+                                            onChange={(e) => handleInputChange(index, e.target.value)}
+                                        />
+                                    </div>
+                                ))}
+                                {hasPermission('edit_attendance_settings') && (
+                                    <div className="flex gap-4 flex-wrap">
+                                        <button type="submit" className="font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04] w-full sm:w-fit">
+                                            {loading ? <Loader primary={true} /> : 'Save'}
+                                        </button>
+                                    </div>
+                                )}
+                            </form>
+                        )}
                     </div>
                 </div>
             </div>

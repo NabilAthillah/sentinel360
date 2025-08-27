@@ -1,13 +1,9 @@
 import api from "../utils/api";
 
 const clientInfoService = {
-    getData: async (token) => {
+    getData: async () => {
         try {
-            const response = await api.get('master-settings/client-info', {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
+            const response = await api.get('master-settings/client-info');
             return response.data;
         } catch (error) {
             throw error.response ? error.response.data : { message: 'Network error' };

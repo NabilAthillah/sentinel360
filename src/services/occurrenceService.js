@@ -49,7 +49,19 @@ const occurrenceService = {
         } catch (error) {
             throw error.response ? error.response.data : { message: 'Network error' };
         }
-    }
+    },
+
+    updateOccurrence: async (token, id, data) => {
+        try {
+            const response = await api.put(`/occurrences/${id}`, data);
+
+            if (response.data) {
+                return response.data;
+            }
+        } catch (error) {
+            throw error.response ? error.response.data : { message: 'Network error' };
+        }
+    },
 }
 
 export default occurrenceService;

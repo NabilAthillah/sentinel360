@@ -1,38 +1,39 @@
 import { Switch } from "@material-tailwind/react";
+import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
-import { useTranslation } from "react-i18next";
-import { Route } from "../../../types/route";
-import { Site } from "../../../types/site";
-import { RootState } from "../../../store";
+import DeleteModal from "../../../components/DeleteModal";
+import Loader from "../../../components/Loader";
+import SecondLayout from "../../../layouts/SecondLayout";
+import auditTrialsService from "../../../services/auditTrailsService";
 import routeService from "../../../services/routeService";
 import siteService from "../../../services/siteService";
-import auditTrialsService from "../../../services/auditTrailsService";
-import MainLayout from "../../../layouts/MainLayout";
-import Loader from "../../../components/Loader";
-import DeleteModal from "../../../components/DeleteModal";
-import { AnimatePresence, motion } from "framer-motion";
+import { RootState } from "../../../store";
+import { Route } from "../../../types/route";
+import { Site } from "../../../types/site";
 
-import { CSS } from "@dnd-kit/utilities";
 import {
+  closestCenter,
   DndContext,
-  useDraggable,
-  useDroppable,
   DragEndEvent,
   PointerSensor,
+  useDndMonitor,
+  useDraggable,
+  useDroppable,
   useSensor,
   useSensors,
-  closestCenter,
-  useDndMonitor,
 } from "@dnd-kit/core";
 import {
-  SortableContext,
-  useSortable,
   arrayMove,
   horizontalListSortingStrategy,
+  SortableContext,
+  useSortable,
 } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import SidebarLayout from "../../../components/SidebarLayout";
 
 /* ------------------------------ UI Helpers ------------------------------ */
 
@@ -249,6 +250,7 @@ const RoutePage = () => {
   const [site, setSite] = useState<Site>();
   const { t } = useTranslation();
   const [name, setName] = useState("");
+  const [sidebar, setSidebar] = useState(true)
 
   /** Demo data pointer (1..5). Ganti sesuai data dari API kalau perlu */
   const [pointers, setPointers] = useState<number[]>([1, 2, 3, 4, 5]);
@@ -321,6 +323,7 @@ const RoutePage = () => {
 
   const fetchSite = async () => {
     try {
+      setLoading(true);
       if (!token) {
         navigate("/auth/login");
         return;
@@ -334,6 +337,8 @@ const RoutePage = () => {
       }
     } catch (error: any) {
       console.error(error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -532,11 +537,9 @@ const RoutePage = () => {
   };
 
   return (
-    <MainLayout>
-      <div className="flex flex-col gap-6 px-6 pb-20 w-full h-full flex-1">
-        <h2 className="text-2xl leading-9 text-white font-noto">
-          {t("Routes")}
-        </h2>
+    <SecondLayout>
+      <div className="flex flex-col gap-6 px-6 pb-20 w-full min-h-[calc(100vh-91px)] h-full xl:pr-[156px]">
+        <SidebarLayout isOpen={sidebar} closeSidebar={setSidebar} />
         <div className="flex flex-col gap-10 bg-[#252C38] p-6 rounded-lg w-full h-full flex-1">
           <div className="w-full flex justify-between items-center gap-4 flex-wrap md:flex-nowrap">
             <div className="flex items-end gap-4 w-full">
@@ -607,37 +610,58 @@ const RoutePage = () => {
                     </th>
                   </tr>
                 </thead>
-                <tbody>
-                  {site?.routes &&
-                    site?.routes?.length > 0 &&
-                    site?.routes?.map((route, index) => (
-                      <tr key={index}>
-                        <td className="text-[#F4F7FF] pt-6 pb-3">
-                          {index + 1}
-                        </td>
-                        <td className="text-[#F4F7FF] pt-6 pb-3 ">
-                          {route.name}
-                        </td>
-                        <td className="text-[#F4F7FF] pt-6 pb-3 ">
-                          {hasPermission("edit_site_route") ? (
-                            <div className="flex items-center gap-4 w-40">
-                              <Switch
-                                id="custom-switch-component"
-                                ripple={false}
-                                checked={switchStates[route.id]}
-                                onChange={() => handleToggle(route.id)}
-                                className="h-full w-full checked:bg-[#446FC7]"
-                                containerProps={{ className: "w-11 h-6" }}
-                                circleProps={{
-                                  className:
-                                    "before:hidden left-0.5 border-none",
-                                }}
-                                onResize={undefined}
-                                onResizeCapture={undefined}
-                                onPointerEnterCapture={undefined}
-                                onPointerLeaveCapture={undefined}
-                                crossOrigin={undefined}
-                              />
+                {loading ? (
+                  <tbody>
+                    <tr>
+                      <td colSpan={7} className="py-10">
+                        <div className="w-full flex justify-center">
+                          <Loader primary />
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                ) : (
+                  <tbody>
+                    {site?.routes &&
+                      site?.routes?.length > 0 &&
+                      site?.routes?.map((route, index) => (
+                        <tr key={index}>
+                          <td className="text-[#F4F7FF] pt-6 pb-3">
+                            {index + 1}
+                          </td>
+                          <td className="text-[#F4F7FF] pt-6 pb-3 ">
+                            {route.name}
+                          </td>
+                          <td className="text-[#F4F7FF] pt-6 pb-3 ">
+                            {hasPermission("edit_site_route") ? (
+                              <div className="flex items-center gap-4 w-40">
+                                <Switch
+                                  id="custom-switch-component"
+                                  ripple={false}
+                                  checked={switchStates[route.id]}
+                                  onChange={() => handleToggle(route.id)}
+                                  className="h-full w-full checked:bg-[#446FC7]"
+                                  containerProps={{ className: "w-11 h-6" }}
+                                  circleProps={{
+                                    className:
+                                      "before:hidden left-0.5 border-none",
+                                  }}
+                                  onResize={undefined}
+                                  onResizeCapture={undefined}
+                                  onPointerEnterCapture={undefined}
+                                  onPointerLeaveCapture={undefined}
+                                  crossOrigin={undefined}
+                                />
+                                <p
+                                  className={`font-medium text-sm capitalize ${switchStates[route.id]
+                                    ? "text-[#19CE74]"
+                                    : "text-[#FF7E6A]"
+                                    }`}
+                                >
+                                  {switchStates[route.id] ? "active" : "deactive"}
+                                </p>
+                              </div>
+                            ) : (
                               <p
                                 className={`font-medium text-sm capitalize ${switchStates[route.id]
                                   ? "text-[#19CE74]"
@@ -646,41 +670,32 @@ const RoutePage = () => {
                               >
                                 {switchStates[route.id] ? "active" : "deactive"}
                               </p>
-                            </div>
-                          ) : (
-                            <p
-                              className={`font-medium text-sm capitalize ${switchStates[route.id]
-                                ? "text-[#19CE74]"
-                                : "text-[#FF7E6A]"
-                                }`}
-                            >
-                              {switchStates[route.id] ? "active" : "deactive"}
-                            </p>
-                          )}
-                        </td>
-                        <td className="pt-6 pb-3">
-                          <div className="flex gap-6 items-center justify-center">
-                            {hasPermission("edit_site_route") && (
-                              <svg
-                                onClick={() => {
-                                  setEditData(true);
-                                  setEditRoute(route);
-                                }}
-                                className="cursor-pointer"
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                version="1.1"
-                                width="28"
-                                height="28"
-                                viewBox="0 0 28 28"
-                              >
-                                <path
-                                  d="M3.5 20.125V24.5H7.875L20.778 11.597 16.403 7.222 3.5 20.125Zm20.662-11.912c.454-.454.454-1.191 0-1.645l-2.73-2.73a1.163 1.163 0 0 0-1.645 0L17.652 5.973 22.027 10.348l2.135-2.135Z"
-                                  fill="#F4F7FF"
-                                />
-                              </svg>
                             )}
-                            {/* {hasPermission("delete_site_route") && ( */}
+                          </td>
+                          <td className="pt-6 pb-3">
+                            <div className="flex gap-6 items-center justify-center">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="cursor-pointer" fill="none" version="1.1" width="28" height="28" viewBox="0 0 28 28"><defs><clipPath id="master_svg0_354_16316"><rect x="0" y="0" width="28" height="28" rx="0" /></clipPath></defs><g clip-path="url(#master_svg0_354_16316)"><g><path d="M6,8L4,8L4,22C4,23.1,4.9,24,6,24L20,24L20,22L6,22L6,8ZM22,4L10,4C8.9,4,8,4.9,8,6L8,18C8,19.1,8.9,20,10,20L22,20C23.1,20,24,19.1,24,18L24,6C24,4.9,23.1,4,22,4ZM22,18L10,18L10,6L22,6L22,18ZM15,16L17,16L17,13L20,13L20,11L17,11L17,8L15,8L15,11L12,11L12,13L15,13L15,16Z" fill="#F4F7FF" fill-opacity="1" /></g></g></svg>
+                              {hasPermission("edit_site_route") && (
+                                <svg
+                                  onClick={() => {
+                                    setEditData(true);
+                                    setEditRoute(route);
+                                  }}
+                                  className="cursor-pointer"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  fill="none"
+                                  version="1.1"
+                                  width="28"
+                                  height="28"
+                                  viewBox="0 0 28 28"
+                                >
+                                  <path
+                                    d="M3.5 20.125V24.5H7.875L20.778 11.597 16.403 7.222 3.5 20.125Zm20.662-11.912c.454-.454.454-1.191 0-1.645l-2.73-2.73a1.163 1.163 0 0 0-1.645 0L17.652 5.973 22.027 10.348l2.135-2.135Z"
+                                    fill="#F4F7FF"
+                                  />
+                                </svg>
+                              )}
+                              {/* {hasPermission("delete_site_route") && ( */}
                               <svg
                                 onClick={() => {
                                   setDeleteModal(true);
@@ -699,12 +714,13 @@ const RoutePage = () => {
                                   fill="#F4F7FF"
                                 />
                               </svg>
-                            {/* )} */}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                </tbody>
+                              {/* )} */}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                )}
               </table>
             </div>
             <div className="grid grid-cols-3 w-fit absolute bottom-0 right-0">
@@ -972,7 +988,7 @@ const RoutePage = () => {
           />
         </div>
       )}
-    </MainLayout>
+    </SecondLayout>
   );
 };
 

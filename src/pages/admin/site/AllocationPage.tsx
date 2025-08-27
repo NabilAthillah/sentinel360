@@ -1,26 +1,25 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import { Site } from '../../../types/site';
-import { RootState } from '../../../store';
-import siteService from '../../../services/siteService';
-import auditTrialsService from '../../../services/auditTrailsService';
-import MainLayout from '../../../layouts/MainLayout';
-import Loader from '../../../components/Loader';
 import AllocationDnD from '../../../components/AllocationDnD';
-import SecondLayout from '../../../layouts/SecondLayout';
 import SidebarLayout from '../../../components/SidebarLayout';
+import SecondLayout from '../../../layouts/SecondLayout';
+import auditTrialsService from '../../../services/auditTrailsService';
+import siteService from '../../../services/siteService';
+import { RootState } from '../../../store';
+import { Site } from '../../../types/site';
 const AllocationPage = () => {
     const location = useLocation();
     const { pathname } = location;
     const [sites, setSites] = useState<Site[]>([]);
+    const [sidebar, setSidebar] = useState(true);
     const [loading, setLoading] = useState(false);
     const { t, i18n } = useTranslation();
     const [allocationType, setAllocationType] = useState('bydate');
     const [shiftType, setShiftType] = useState('day');
     const [date, setDate] = useState('');
-    const token= useSelector ((state:RootState) => state.token.token)
+    const token = useSelector((state: RootState) => state.token.token)
     const user = useSelector((state: RootState) => state.user.user);
     const navigate = useNavigate();
 
@@ -90,15 +89,8 @@ const AllocationPage = () => {
 
     return (
         <SecondLayout>
-            {
-                loading && (
-                    <div className='flex justify-center items-center w-screen h-screen fixed top-0 left-0 bg-black z-50 bg-opacity-40'>
-                        <Loader primary={true} />
-                    </div>
-                )
-            }
-            <SidebarLayout isOpen={true} closeSidebar={undefined}/>
-            <div className='flex flex-col gap-6 pr-[156px] pl-4 pb-20 w-full h-full flex-1'>
+            <div className="flex flex-col gap-6 px-6 pb-20 w-full min-h-[calc(100vh-91px)] h-full xl:pr-[156px]">
+                <SidebarLayout isOpen={sidebar} closeSidebar={setSidebar} />
                 <nav className='flex flex-wrap'>
                     {hasPermission('list_sites') && (
                         <Link to="/dashboard/sites" className={`font-medium text-sm text-[#F4F7FF] px-6 ${pathname === '/dashboard/sites' ? 'pt-[14px] pb-3 border-b-2 border-b-[#F3C511]' : 'py-[14px] border-b-0'}`}>
