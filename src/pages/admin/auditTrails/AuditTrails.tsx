@@ -21,7 +21,6 @@ const AuditTrails = () => {
     const [selectedLog, setSelectedLog] = useState<AuditTrail | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
-
     const [showModal, setShowModal] = useState(false);
     const [showDropdown, setShowDropdown] = useState(false);
     const token = useSelector((state: RootState) => state.token.token);
@@ -244,8 +243,7 @@ const AuditTrails = () => {
 
     return (
         <SecondLayout>
-            <SidebarLayout isOpen={true} closeSidebar={undefined} />
-            <div className="flex flex-col gap-6 pr-[156px] pb-20 w-full min-h-[calc(100vh-91px)] h-full">
+            <div className="flex flex-col gap-6 px-6 pb-20 w-full min-h-[calc(100vh-91px)] h-full md:pl-4 md:pr-[156px]">
 
                 <div className="flex flex-col gap-10 bg-[#252C38] p-6 rounded-lg w-full h-full flex-1 relative">
                     <div className="w-full flex justify-between items-center gap-4 flex-wrap">

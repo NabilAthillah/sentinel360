@@ -161,7 +161,6 @@ const AttendancePage = () => {
 
     return (
         <SecondLayout>
-            <SidebarLayout isOpen={true} closeSidebar={undefined} />
             <div className='flex flex-col gap-6 pr-[156px]  pb-20 w-full h-full flex-1'>
                 <div className="flex flex-col gap-10 bg-[#252C38] p-6 rounded-lg w-full h-full flex-1">
                     <div className="w-full flex flex-col gap-4">

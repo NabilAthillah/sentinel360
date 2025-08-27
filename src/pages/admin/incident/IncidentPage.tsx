@@ -9,7 +9,6 @@ import Loader from "../../../components/Loader";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 const IncidentTypePage = () => {
-    const [sidebar, setSidebar] = useState(false);
     const [view, setView] = useState(false);
     const [edit, setEdit] = useState(false);
     const [deleteModal, setDeleteModal] = useState(false);
@@ -25,8 +24,7 @@ const IncidentTypePage = () => {
 
     return (
         <SecondLayout>
-            <SidebarLayout isOpen={true} closeSidebar={undefined} />
-            <div className='flex flex-col gap-6 pr-[156px] pl-4 pb-20 w-full h-full flex-1'>
+            <div className="flex flex-col gap-6 pb-20 w-full h-full flex-1 px-6 md:pl-4 md:pr-[156px]">
                 <div className="flex flex-col gap-10 bg-[#252C38] p-6 rounded-lg w-full h-full flex-1">
                     <div className="w-full flex flex-col gap-4 flex-wrap">
                         <div className="flex items-end gap-4 w-fit flex-wrap md:flex-nowrap">
@@ -65,8 +63,8 @@ const IncidentTypePage = () => {
                         </div>
                     </div>
                     <div className="w-full h-full relative flex flex-1 pb-10">
-                        <div className="w-full h-fit overflow-auto pb-5">
-                            <table className="min-w-[800px] w-full">
+                        <div className="w-full h-fit overflow-x-auto pb-5">
+                            <table className="w-full min-w-max">
                                 <thead>
                                     <tr>
                                         <th className="font-semibold text-[#98A1B3] text-start">{t('S/NO')}</th>

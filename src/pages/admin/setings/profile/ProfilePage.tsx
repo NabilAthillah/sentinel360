@@ -6,7 +6,6 @@ import { useTranslation } from "react-i18next";
 import SidebarLayout from "../../../../components/SidebarLayout";
 import authService from "../../../../services/authService";
 import { User } from "../../../../types/user";
-import api from "../../../../utils/api";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../../../store";
 import { setUser } from "../../../../features/user/userSlice";

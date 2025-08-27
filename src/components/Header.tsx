@@ -133,7 +133,6 @@ const Header = ({
                 ref={rootRef}
                 className="flex items-center justify-end gap-2 relative sm:gap-4"
             >
-                {/* Language switcher */}
                 <div className="relative">
                     <button
                         ref={langButtonRef}
@@ -148,7 +147,6 @@ const Header = ({
                         className="h-8 w-8 rounded-full flex items-center justify-center ring-1 ring-white/10 hover:ring-white/20 bg-[#252C38]/80 backdrop-blur-sm"
                         title="Change language"
                     >
-                        {/* ✅ perbaikan className pakai template literal */}
                         <span
                             className={`fi fis fi-${langToFlag(language)}`}
                             aria-hidden="true"
@@ -191,7 +189,6 @@ const Header = ({
                     </AnimatePresence>
                 </div>
 
-                {/* User dropdown */}
                 <button
                     type="button"
                     aria-haspopup="menu"
@@ -207,7 +204,6 @@ const Header = ({
                         <span className="w-[14px] h-[14px] bg-[#22CAAD] border-2 border-[#07080B] rounded-full absolute bottom-[-2px] right-[-2px]" />
                         {user?.profile_image ? (
                             <img
-                                // ✅ perbaikan template string + hapus spasi salah
                                 src={`${baseURL.toString() !== "" ? baseURL.toString() : "http://localhost:8000/"}storage/${user?.profile_image}`}
                                 alt="profile"
                                 className="h-8 w-8 rounded-full object-cover"
