@@ -674,7 +674,9 @@ const RoutePage = () => {
                           </td>
                           <td className="pt-6 pb-3">
                             <div className="flex gap-6 items-center justify-center">
-                              <svg xmlns="http://www.w3.org/2000/svg" className="cursor-pointer" fill="none" version="1.1" width="28" height="28" viewBox="0 0 28 28"><defs><clipPath id="master_svg0_354_16316"><rect x="0" y="0" width="28" height="28" rx="0" /></clipPath></defs><g clip-path="url(#master_svg0_354_16316)"><g><path d="M6,8L4,8L4,22C4,23.1,4.9,24,6,24L20,24L20,22L6,22L6,8ZM22,4L10,4C8.9,4,8,4.9,8,6L8,18C8,19.1,8.9,20,10,20L22,20C23.1,20,24,19.1,24,18L24,6C24,4.9,23.1,4,22,4ZM22,18L10,18L10,6L22,6L22,18ZM15,16L17,16L17,13L20,13L20,11L17,11L17,8L15,8L15,11L12,11L12,13L15,13L15,16Z" fill="#F4F7FF" fill-opacity="1" /></g></g></svg>
+                              <svg onClick={() => {
+                                navigate(`/dashboard/sites/${site.id}/routes/${route.id}/pointers`)
+                              }} xmlns="http://www.w3.org/2000/svg" className="cursor-pointer" fill="none" version="1.1" width="28" height="28" viewBox="0 0 28 28"><defs><clipPath id="master_svg0_354_16316"><rect x="0" y="0" width="28" height="28" rx="0" /></clipPath></defs><g clip-path="url(#master_svg0_354_16316)"><g><path d="M6,8L4,8L4,22C4,23.1,4.9,24,6,24L20,24L20,22L6,22L6,8ZM22,4L10,4C8.9,4,8,4.9,8,6L8,18C8,19.1,8.9,20,10,20L22,20C23.1,20,24,19.1,24,18L24,6C24,4.9,23.1,4,22,4ZM22,18L10,18L10,6L22,6L22,18ZM15,16L17,16L17,13L20,13L20,11L17,11L17,8L15,8L15,11L12,11L12,13L15,13L15,16Z" fill="#F4F7FF" fill-opacity="1" /></g></g></svg>
                               {hasPermission("edit_site_route") && (
                                 <svg
                                   onClick={() => {

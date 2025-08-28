@@ -2,8 +2,12 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useParams } from 'react-router-dom';
+import Loader from '../../../components/Loader';
 import SidebarLayout from '../../../components/SidebarLayout';
-import MainLayout from '../../../layouts/MainLayout';
+import SecondLayout from '../../../layouts/SecondLayout';
+import pointerService from '../../../services/pointerService';
+import { Pointer } from '../../../types/pointer';
 
 function useBodyScrollLock(locked: boolean) {
     useEffect(() => {
@@ -75,17 +79,56 @@ const Pointers = () => {
     const { t } = useTranslation();
     const [addData, setAddData] = useState(false);
     const [editData, setEditData] = useState(false);
+    const { idRoute } = useParams();
+    const [pointers, setPointers] = useState<Pointer[]>([]);
+    const [loading, setLoading] = useState(false);
+
+    const [addPayload, setAddPayload] = useState({
+        nfc_tag: '',
+        remarks: '',
+        id_route: ''
+    });
+
+    const [editedPointer, setEditedPointer] = useState<Pointer>();
+    const [editPayload, setEditPayload] = useState({
+        nfc_tag: editedPointer?.nfc_tag ?? '',
+        remarks: editedPointer?.remarks ?? '',
+        id_route: editedPointer?.route.id ?? ''
+    });
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         console.log("Form submitted (static). Data belum terhubung DB 🚀");
         setAddData(false);
     };
 
+    const fetchPointers = async () => {
+        setLoading(true);
+        try {
+            const response = await pointerService.getAllPointers(idRoute);
+
+            if (response.success) {
+                setPointers(response.data)
+            }
+        } catch (error) {
+            console.error(error)
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    useEffect(() => {
+        fetchPointers();
+    }, [])
+
+    useEffect(() => {
+        console.log(pointers)
+    }, [pointers])
+
     return (
-        <MainLayout>
-            <SidebarLayout isOpen={sidebar} closeSidebar={setSidebar} />
-            <div className="flex flex-col gap-6 px-6 pr-28 pb-20 w-full h-full flex-1">
-                <h2 className="text-2xl leading-9 text-white font-noto">{t("Pointers")}</h2>
+        <SecondLayout>
+            <div className="flex flex-col gap-6 px-6 pb-20 w-full min-h-[calc(100vh-91px)] h-full xl:pr-[156px]">
+                <SidebarLayout isOpen={sidebar} closeSidebar={setSidebar} />
                 <div className="flex flex-col gap-6 bg-[#252C38] p-6 rounded-lg w-full h-full flex-1">
                     <div className="flex justify-between items-center flex-wrap gap-4">
                         <div className="w-full md:w-[400px] flex items-center bg-[#222834] border-b border-[#98A1B3] rounded-t-md">
@@ -116,34 +159,56 @@ const Pointers = () => {
                                         <th className="font-semibold text-[#98A1B3] text-center">{t("Actions")}</th>
                                     </tr>
                                 </thead>
-                                <tbody >
-                                    <tr>
-                                        <td className="text-[#F4F7FF] pt-6 pb-3">1</td>
-                                        <td className="text-[#EFBF04] py-3">2-3-4</td>
-                                        <td className="text-[#F4F7FF] pt-6 pb-3">Route One</td>
-                                        <td className="text-[#F4F7FF] pt-6 pb-3">0928732</td>
-                                        <td className="text-[#F4F7FF] pt-6 pb-3">-</td>
-                                        <td className="text-[#F4F7FF] py-3 ">
-                                            <span
-                                                className={`text-xs px-2 py-1 rounded-full bg-[#FF7C6A1A] text-[#FF7C6A]`}
-                                            >
-                                                Incomplete
-                                            </span>
-                                        </td>
-                                        <td className="pt-6 pb-3">
-                                            <div className="flex gap-6 items-center justify-center">
-                                                <svg onClick={() => {
-                                                    setEditData(true);
-                                                }} className="cursor-pointer" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M0 18V13.75L13.2 0.575C13.4 0.391667 13.6208 0.25 13.8625 0.15C14.1042 0.05 14.3583 0 14.625 0C14.8917 0 15.15 0.05 15.4 0.15C15.65 0.25 15.8667 0.4 16.05 0.6L17.425 2C17.625 2.18333 17.7708 2.4 17.8625 2.65C17.9542 2.9 18 3.15 18 3.4C18 3.66667 17.9542 3.92083 17.8625 4.1625C17.7708 4.40417 17.625 4.625 17.425 4.825L4.25 18H0ZM14.6 4.8L16 3.4L14.6 2L13.2 3.4L14.6 4.8Z" fill="#F9F9F9" />
-                                                </svg>
-                                                <svg className="cursor-pointer" width="16" height="18" viewBox="0 0 16 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M3 18C2.45 18 1.97917 17.8042 1.5875 17.4125C1.19583 17.0208 1 16.55 1 16V3H0V1H5V0H11V1H16V3H15V16C15 16.55 14.8042 17.0208 14.4125 17.4125C14.0208 17.8042 13.55 18 13 18H3ZM5 14H7V5H5V14ZM9 14H11V5H9V14Z" fill="#F9F9F9" />
-                                                </svg>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                </tbody>
+                                {loading ? (
+                                    <tbody>
+                                        <tr>
+                                            <td colSpan={7} className="py-10">
+                                                <div className="w-full flex justify-center">
+                                                    <Loader primary />
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                ) : (
+                                    <tbody>
+                                        {pointers.length > 0 ? (
+                                            pointers.map((data, index) => (
+                                                <tr>
+                                                    <td className="text-[#F4F7FF] pt-6 pb-3">1</td>
+                                                    <td className="text-[#EFBF04] py-3">2-3-4</td>
+                                                    <td className="text-[#F4F7FF] pt-6 pb-3">Route One</td>
+                                                    <td className="text-[#F4F7FF] pt-6 pb-3">0928732</td>
+                                                    <td className="text-[#F4F7FF] pt-6 pb-3">-</td>
+                                                    <td className="text-[#F4F7FF] py-3 ">
+                                                        <span
+                                                            className={`text-xs px-2 py-1 rounded-full bg-[#FF7C6A1A] text-[#FF7C6A]`}
+                                                        >
+                                                            Incomplete
+                                                        </span>
+                                                    </td>
+                                                    <td className="pt-6 pb-3">
+                                                        <div className="flex gap-6 items-center justify-center">
+                                                            <svg onClick={() => {
+                                                                setEditData(true);
+                                                            }} className="cursor-pointer" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                                <path d="M0 18V13.75L13.2 0.575C13.4 0.391667 13.6208 0.25 13.8625 0.15C14.1042 0.05 14.3583 0 14.625 0C14.8917 0 15.15 0.05 15.4 0.15C15.65 0.25 15.8667 0.4 16.05 0.6L17.425 2C17.625 2.18333 17.7708 2.4 17.8625 2.65C17.9542 2.9 18 3.15 18 3.4C18 3.66667 17.9542 3.92083 17.8625 4.1625C17.7708 4.40417 17.625 4.625 17.425 4.825L4.25 18H0ZM14.6 4.8L16 3.4L14.6 2L13.2 3.4L14.6 4.8Z" fill="#F9F9F9" />
+                                                            </svg>
+                                                            <svg className="cursor-pointer" width="16" height="18" viewBox="0 0 16 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                                <path d="M3 18C2.45 18 1.97917 17.8042 1.5875 17.4125C1.19583 17.0208 1 16.55 1 16V3H0V1H5V0H11V1H16V3H15V16C15 16.55 14.8042 17.0208 14.4125 17.4125C14.0208 17.8042 13.55 18 13 18H3ZM5 14H7V5H5V14ZM9 14H11V5H9V14Z" fill="#F9F9F9" />
+                                                            </svg>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        ) : (
+                                            <tr>
+                                                <td colSpan={7} className="text-center text-white py-6">
+                                                    {t('No pointers found.')}
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                )}
                             </table>
                         </div>
                         <div className="flex items-center justify-center gap-3 absolute bottom-0 right-0">
@@ -299,7 +364,7 @@ const Pointers = () => {
                     </form>
                 )}
             </SlideOver>
-        </MainLayout>
+        </SecondLayout>
     )
 }
 

@@ -40,7 +40,7 @@ const GuardTourPage = () => {
         if (!token) return;
         try {
             setLoading(true);
-            const response = await routeService.gethRouteById(token);
+            const response = await routeService.getRouteById(token);
             if (response.success) {
                 setRoutes(response.data);
             }

@@ -8,6 +8,7 @@ import { Bounce, toast, ToastContainer } from 'react-toastify';
 import HeaderLayout from '../components/HeaderLayout';
 import { clearUser, setUser } from '../features/user/userSlice'; // pastikan ada action setUser
 import authService from "../services/authService";
+import routeService from '../services/routeService';
 import siteService from '../services/siteService';
 import { RootState } from '../store';
 
@@ -20,7 +21,9 @@ const SecondLayout = ({ children }: { children: React.ReactNode }) => {
     const user = useSelector((state: RootState) => state.user.user);
     const dispatch = useDispatch();
     const { idSite } = useParams();
+    const { idRoute } = useParams();
     const [siteName, setSiteName] = useState<string>("");
+    const [routeName, setRouteName] = useState<string>("");
 
     const fetchSiteName = async () => {
         const token = localStorage.getItem("token");
@@ -35,6 +38,20 @@ const SecondLayout = ({ children }: { children: React.ReactNode }) => {
             }
         }
     };
+
+    const fetchRouteName = async () => {
+        const token = localStorage.getItem("token");
+        if (token && idSite && pathname.includes(`/dashboard/sites/${idSite}/routes/${idRoute}/pointers`)) {
+            try {
+                const res = await routeService.getRouteById(token, idRoute);
+                if (res.success) {
+                    setRouteName(res.data.name);
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+    }
 
     const handleLogout = () => {
         authService.logout();
@@ -105,6 +122,10 @@ const SecondLayout = ({ children }: { children: React.ReactNode }) => {
     const titleHeader = () => {
         const parts = pathname.split("/");
 
+        if (parts.length >= 7 && parts[1] === "dashboard" && parts[2] === "sites" && parts[4] === "routes" && parts[6] === "pointers") {
+            return routeName ? `Route: ${routeName}` : "Route";
+        }
+
         if (parts.length >= 5 && parts[1] === "dashboard" && parts[2] === "sites" && parts[4] === "routes") {
             return siteName ? `Site: ${siteName}` : "Site";
         }
@@ -139,10 +160,13 @@ const SecondLayout = ({ children }: { children: React.ReactNode }) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-
     useEffect(() => {
         fetchSiteName();
     }, [idSite, pathname]);
+
+    useEffect(() => {
+        fetchRouteName();
+    }, [idRoute, pathname]);
 
     return (
         <main className='max-w-screen w-full min-h-screen h-full bg-[#181D26]'>

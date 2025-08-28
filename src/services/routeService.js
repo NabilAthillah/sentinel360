@@ -91,7 +91,7 @@ const routeService = {
         }
     },
 
-    gethRouteById: async (token, id) => {
+    getRouteById: async (token, id) => {
         try {
             const response = await api.get(`/route/${id}`, {
                 headers: {

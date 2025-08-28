@@ -96,7 +96,7 @@ const AppRoutes = () => {
           path="/dashboard/sites/routes"
           element={<RoutePage/>}/>
           <Route
-          path="/dashboard/sites/routes/pointers"
+          path="/dashboard/sites/:idSite/routes/:idRoute/pointers"
           element={<Pointers/>}/>
           
           <Route
