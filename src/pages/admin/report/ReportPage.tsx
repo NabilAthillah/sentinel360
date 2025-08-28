@@ -219,7 +219,7 @@ const ReportPage = () => {
 
     const exportExcel = (title: string, data: any[]) => {
         if (!data || data.length === 0) {
-            alert(`No data for ${title}`);
+            toast.warning(`Tidak ada data untuk ${title}!`);
             return;
         }
         const worksheet = XLSX.utils.json_to_sheet(data);
