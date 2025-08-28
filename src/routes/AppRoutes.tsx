@@ -92,13 +92,12 @@ const AppRoutes = () => {
             path="/dashboard/sites/:idSite/routes"
             element={<RoutePage />}
           />
+          <Route path="/dashboard/sites/routes" element={<RoutePage />} />
           <Route
-          path="/dashboard/sites/routes"
-          element={<RoutePage/>}/>
-          <Route
-          path="/dashboard/sites/:idSite/routes/:idRoute/pointers"
-          element={<Pointers/>}/>
-          
+            path="/dashboard/sites/:idSite/pointers"
+            element={<Pointers />}
+          />
+
           <Route
             path="/dashboard/settings/attendance"
             element={<SettingsAttendancePage />}
@@ -159,11 +158,26 @@ const AppRoutes = () => {
           <Route path="/user/leaves/request" element={<RequestLeaves />} />
           <Route path="/user/settings" element={<Settings />} />
           <Route path="/user/settings/profile" element={<Profile />} />
-          <Route path='/user/guard-tours/:idSite/route' element={<GuardTourPage />} />
-          <Route path='/user/guard-tours/:idSite/route/:idRoute/point' element={<Selection />} />
-          <Route path='/user/guard-tours/:idSite/route/:idRoute/point/:idPoint/scan' element={<GuardScan />} />
-          <Route path='/user/guard-tour/selection/scan/choice' element={<GuardChoice />} />
-          <Route path='/user/guard-tour/selection/scan/choice/submit' element={<GuardSubmit />} />
+          <Route
+            path="/user/guard-tours/:idSite/route"
+            element={<GuardTourPage />}
+          />
+          <Route
+            path="/user/guard-tours/:idSite/route/:idRoute/point"
+            element={<Selection />}
+          />
+          <Route
+            path="/user/guard-tours/:idSite/route/:idRoute/point/:idPoint/scan"
+            element={<GuardScan />}
+          />
+          <Route
+            path="/user/guard-tour/selection/scan/choice"
+            element={<GuardChoice />}
+          />
+          <Route
+            path="/user/guard-tour/selection/scan/choice/submit"
+            element={<GuardSubmit />}
+          />
           <Route
             path="/user/settings/change-password"
             element={<ChangePassword />}

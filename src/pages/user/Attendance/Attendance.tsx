@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Bounce, toast, ToastContainer } from 'react-toastify';
 import Swal from 'sweetalert2';
 import attendanceService from '../../../services/attendanceService';
@@ -23,6 +23,27 @@ const Attendance = () => {
     const [formData, setFormData] = useState<Settings[]>([]);
     const [nowStr, setNowStr] = useState('');
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const siteIdParam = searchParams.get("siteId");
+
+    const pickNearestSite = (
+      sites: { id: string; lat: any; long: any }[],
+      me: Coords
+    ) => {
+      let best: { id: string; lat: number; lng: number } | null = null;
+      let bestD = Infinity;
+      for (const s of sites) {
+        const lat = Number(s.lat);
+        const lng = Number(s.long);
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue;
+        const d = haversineMeters(me, { lat, lng });
+        if (d < bestD) {
+          bestD = d;
+          best = { id: s.id, lat, lng };
+        }
+      }
+      return best;
+    };
 
     const getSettingTime = (label: string) => {
         const item = formData.find(

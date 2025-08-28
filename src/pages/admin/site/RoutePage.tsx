@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import DeleteModal from "../../../components/DeleteModal";
 import Loader from "../../../components/Loader";
@@ -196,8 +196,9 @@ function DroppableRow({
     <div
       ref={setNodeRef}
       className={`flex gap-4 p-4 bg-[#222834] rounded-md min-h-[56px] items-center
-                  overflow-x-auto flex-nowrap ${isOver ? "outline outline-2 outline-[#EFBF04]" : ""
-        }`}
+                  overflow-x-auto flex-nowrap ${
+                    isOver ? "outline outline-2 outline-[#EFBF04]" : ""
+                  }`}
     >
       {isEmpty ? (
         <span className="text-[#98A1B3] text-sm">Drop pointers here…</span>
@@ -250,7 +251,7 @@ const RoutePage = () => {
   const [site, setSite] = useState<Site>();
   const { t } = useTranslation();
   const [name, setName] = useState("");
-  const [sidebar, setSidebar] = useState(true)
+  const [sidebar, setSidebar] = useState(true);
 
   /** Demo data pointer (1..5). Ganti sesuai data dari API kalau perlu */
   const [pointers, setPointers] = useState<number[]>([1, 2, 3, 4, 5]);
@@ -352,7 +353,13 @@ const RoutePage = () => {
         return;
       }
 
-      const response = await routeService.addRoute(token, params.idSite, name, remarks, confirmRoute.join(","));
+      const response = await routeService.addRoute(
+        token,
+        params.idSite,
+        name,
+        remarks,
+        confirmRoute.join(",")
+      );
 
       if (response.success) {
         toast.success("Route created successfully");
@@ -379,7 +386,13 @@ const RoutePage = () => {
         return;
       }
 
-      const response = await routeService.editRoute(token, editRoute?.id, name, remarks, confirmRoute.join(","));
+      const response = await routeService.editRoute(
+        token,
+        editRoute?.id,
+        name,
+        remarks,
+        confirmRoute.join(",")
+      );
 
       if (response.success) {
         toast.success("Route updated successfully");
@@ -475,9 +488,9 @@ const RoutePage = () => {
       setRemarks(editRoute.remarks || "");
       const parsedRoute = editRoute.route
         ? editRoute.route
-          .split(",")
-          .map((x) => Number(x.trim()))
-          .filter((n) => !isNaN(n))
+            .split(",")
+            .map((x) => Number(x.trim()))
+            .filter((n) => !isNaN(n))
         : [];
       setConfirmRoute(parsedRoute);
     }
@@ -536,10 +549,36 @@ const RoutePage = () => {
     }
   };
 
+  useEffect(() => {
+    console.log(confirmRoute)
+  }, [confirmRoute])
+
   return (
     <SecondLayout>
       <div className="flex flex-col gap-6 px-6 pb-20 w-full min-h-[calc(100vh-91px)] h-full xl:pr-[156px]">
         <SidebarLayout isOpen={sidebar} closeSidebar={setSidebar} />
+        <nav className="flex flex-wrap">
+          <Link
+            to={`/dashboard/sites/${params.idSite}/routes`}
+            className={`font-medium text-sm text-[#F4F7FF] px-6 ${
+              pathname === `/dashboard/sites/${params.idSite}/routes`
+                ? "pt-[14px] pb-3 border-b-2 border-b-[#F3C511]"
+                : "py-[14px] border-b-0"
+            }`}
+          >
+            {t("Routes")}
+          </Link>
+          <Link
+            to={`/dashboard/sites/${params.idSite}/pointers`}
+            className={`font-medium text-sm text-[#F4F7FF] px-6 ${
+              pathname === `/dashboard/sites/${params.idSite}/pointers`
+                ? "pt-[14px] pb-3 border-b-2 border-b-[#F3C511]"
+                : "py-[14px] border-b-0"
+            }`}
+          >
+            {t("Pointers")}
+          </Link>
+        </nav>
         <div className="flex flex-col gap-10 bg-[#252C38] p-6 rounded-lg w-full h-full flex-1">
           <div className="w-full flex justify-between items-center gap-4 flex-wrap md:flex-nowrap">
             <div className="flex items-end gap-4 w-full">
@@ -653,20 +692,24 @@ const RoutePage = () => {
                                   crossOrigin={undefined}
                                 />
                                 <p
-                                  className={`font-medium text-sm capitalize ${switchStates[route.id]
-                                    ? "text-[#19CE74]"
-                                    : "text-[#FF7E6A]"
-                                    }`}
+                                  className={`font-medium text-sm capitalize ${
+                                    switchStates[route.id]
+                                      ? "text-[#19CE74]"
+                                      : "text-[#FF7E6A]"
+                                  }`}
                                 >
-                                  {switchStates[route.id] ? "active" : "deactive"}
+                                  {switchStates[route.id]
+                                    ? "active"
+                                    : "deactive"}
                                 </p>
                               </div>
                             ) : (
                               <p
-                                className={`font-medium text-sm capitalize ${switchStates[route.id]
-                                  ? "text-[#19CE74]"
-                                  : "text-[#FF7E6A]"
-                                  }`}
+                                className={`font-medium text-sm capitalize ${
+                                  switchStates[route.id]
+                                    ? "text-[#19CE74]"
+                                    : "text-[#FF7E6A]"
+                                }`}
                               >
                                 {switchStates[route.id] ? "active" : "deactive"}
                               </p>
@@ -674,9 +717,41 @@ const RoutePage = () => {
                           </td>
                           <td className="pt-6 pb-3">
                             <div className="flex gap-6 items-center justify-center">
-                              <svg onClick={() => {
-                                navigate(`/dashboard/sites/${site.id}/routes/${route.id}/pointers`)
-                              }} xmlns="http://www.w3.org/2000/svg" className="cursor-pointer" fill="none" version="1.1" width="28" height="28" viewBox="0 0 28 28"><defs><clipPath id="master_svg0_354_16316"><rect x="0" y="0" width="28" height="28" rx="0" /></clipPath></defs><g clip-path="url(#master_svg0_354_16316)"><g><path d="M6,8L4,8L4,22C4,23.1,4.9,24,6,24L20,24L20,22L6,22L6,8ZM22,4L10,4C8.9,4,8,4.9,8,6L8,18C8,19.1,8.9,20,10,20L22,20C23.1,20,24,19.1,24,18L24,6C24,4.9,23.1,4,22,4ZM22,18L10,18L10,6L22,6L22,18ZM15,16L17,16L17,13L20,13L20,11L17,11L17,8L15,8L15,11L12,11L12,13L15,13L15,16Z" fill="#F4F7FF" fill-opacity="1" /></g></g></svg>
+                              <svg
+                                onClick={() => {
+                                  navigate(
+                                    `/dashboard/sites/${site.id}/pointers`
+                                  );
+                                }}
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="cursor-pointer"
+                                fill="none"
+                                version="1.1"
+                                width="28"
+                                height="28"
+                                viewBox="0 0 28 28"
+                              >
+                                <defs>
+                                  <clipPath id="master_svg0_354_16316">
+                                    <rect
+                                      x="0"
+                                      y="0"
+                                      width="28"
+                                      height="28"
+                                      rx="0"
+                                    />
+                                  </clipPath>
+                                </defs>
+                                <g clip-path="url(#master_svg0_354_16316)">
+                                  <g>
+                                    <path
+                                      d="M6,8L4,8L4,22C4,23.1,4.9,24,6,24L20,24L20,22L6,22L6,8ZM22,4L10,4C8.9,4,8,4.9,8,6L8,18C8,19.1,8.9,20,10,20L22,20C23.1,20,24,19.1,24,18L24,6C24,4.9,23.1,4,22,4ZM22,18L10,18L10,6L22,6L22,18ZM15,16L17,16L17,13L20,13L20,11L17,11L17,8L15,8L15,11L12,11L12,13L15,13L15,16Z"
+                                      fill="#F4F7FF"
+                                      fill-opacity="1"
+                                    />
+                                  </g>
+                                </g>
+                              </svg>
                               {hasPermission("edit_site_route") && (
                                 <svg
                                   onClick={() => {
@@ -871,10 +946,7 @@ const RoutePage = () => {
         ariaTitle="Edit Route"
         width={568}
       >
-        <form
-          className="flex flex-col gap-6 p-6 h-full"
-          onSubmit={handleEdit}
-        >
+        <form className="flex flex-col gap-6 p-6 h-full" onSubmit={handleEdit}>
           <h2 className="text-2xl text-white">Edit Route</h2>
 
           {/* ROUTE NAME */}

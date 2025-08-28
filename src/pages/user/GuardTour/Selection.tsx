@@ -3,6 +3,8 @@ import { ChevronRight, ArrowLeft } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Route } from "../../../types/route";
 import routeService from "../../../services/routeService";
+import { useSelector } from "react-redux";
+import { RootState } from "../../../store";
 const getStepTitle = (step: string) => {
     const titles: Record<string, string> = {
         "1": "Section 2 Door",
@@ -17,11 +19,13 @@ const Selection = () => {
     const navigate = useNavigate();
     const [points, setPoints] = useState<(Route & { path: string })[]>([]);
     const { idSite } = useParams<{ idSite: string }>();
+    const { idRoute } = useParams<{ idRoute: string }>();
     const [loading, setLoading] = useState(true);
+    const token = useSelector((state: RootState) => state.token.token);
 
     const fetchRoute = async () => {
         try {
-            const res = await routeService.getAllRoutes();
+            const res = await routeService.getRouteById(token, idRoute);
 
             const routes = res.data?.data || res.data || [];
 

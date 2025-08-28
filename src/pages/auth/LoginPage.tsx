@@ -5,8 +5,8 @@ import { useNavigate } from "react-router-dom";
 import { Bounce, ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Loader from "../../components/Loader";
-import { setToken } from "../../features/user/tokenSlice";
-import { setUser } from "../../features/user/userSlice";
+import { clearToken, setToken } from "../../features/user/tokenSlice";
+import { clearUser, setUser } from "../../features/user/userSlice";
 import authService from "../../services/authService";
 
 const LoginPage: React.FC = () => {
@@ -81,13 +81,6 @@ const LoginPage: React.FC = () => {
           return;
         }
 
-        if (user.role.name != 'SO' && user.role.name != 'SSO' && user.role.name != 'Administrator') {
-          console.log(user.role.name)
-          toast.error("Forbidden.");
-          setLoading(false);
-          return;
-        }
-
         localStorage.setItem("token", token);
         localStorage.setItem("user", JSON.stringify(user));
 
@@ -99,6 +92,16 @@ const LoginPage: React.FC = () => {
         if (user.role.name === "Administrator") {
           navigate("/dashboard");
         } else {
+          if (user.role.name != "SO" && user.role.name != "SSO") {
+            dispatch(clearUser());
+            dispatch(clearToken());
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            toast.error("Forbidden.");
+            setLoading(false);
+            return;
+          }
+
           navigate("/user");
         }
       } else {
@@ -181,8 +184,9 @@ const LoginPage: React.FC = () => {
         <button
           type="submit"
           disabled={loading}
-          className={`w-full flex justify-center items-center py-4 text-center text-[#181D26] font-medium bg-[#EFBF04] border-[1px] border-[#EFBF04] rounded-full transition-all hover:text-[#EFBF04] hover:bg-[#181D26] ${loading ? "opacity-70 cursor-not-allowed" : ""
-            }`}
+          className={`w-full flex justify-center items-center py-4 text-center text-[#181D26] font-medium bg-[#EFBF04] border-[1px] border-[#EFBF04] rounded-full transition-all hover:text-[#EFBF04] hover:bg-[#181D26] ${
+            loading ? "opacity-70 cursor-not-allowed" : ""
+          }`}
         >
           {loading ? <Loader primary /> : "Login"}
         </button>
