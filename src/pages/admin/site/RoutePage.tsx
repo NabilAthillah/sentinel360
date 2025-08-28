@@ -196,9 +196,8 @@ function DroppableRow({
     <div
       ref={setNodeRef}
       className={`flex gap-4 p-4 bg-[#222834] rounded-md min-h-[56px] items-center
-                  overflow-x-auto flex-nowrap ${
-                    isOver ? "outline outline-2 outline-[#EFBF04]" : ""
-                  }`}
+                  overflow-x-auto flex-nowrap ${isOver ? "outline outline-2 outline-[#EFBF04]" : ""
+        }`}
     >
       {isEmpty ? (
         <span className="text-[#98A1B3] text-sm">Drop pointers here…</span>
@@ -252,14 +251,25 @@ const RoutePage = () => {
   const { t } = useTranslation();
   const [name, setName] = useState("");
   const [sidebar, setSidebar] = useState(true);
+  const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 5;
+  const filteredRoutes = useMemo(() => {
+    if (!site?.routes) return [];
+    return site.routes.filter((route) =>
+      route.name.toLowerCase().includes(search.toLowerCase())
+    );
+  }, [site, search]);
 
-  /** Demo data pointer (1..5). Ganti sesuai data dari API kalau perlu */
+  const totalPages = Math.ceil(filteredRoutes.length / pageSize);
+  const paginatedRoutes = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredRoutes.slice(start, start + pageSize);
+  }, [filteredRoutes, currentPage, pageSize]);
+
+
   const [pointers, setPointers] = useState<number[]>([1, 2, 3, 4, 5]);
-
-  /** List yang sudah dikonfirmasi urutannya */
   const [confirmRoute, setConfirmRoute] = useState<number[]>([]);
-
-  /** Tersisa = pointers - confirmRoute */
   const availablePointers = useMemo(
     () => pointers.filter((p) => !confirmRoute.includes(p)),
     [pointers, confirmRoute]
@@ -488,24 +498,22 @@ const RoutePage = () => {
       setRemarks(editRoute.remarks || "");
       const parsedRoute = editRoute.route
         ? editRoute.route
-            .split(",")
-            .map((x) => Number(x.trim()))
-            .filter((n) => !isNaN(n))
+          .split(",")
+          .map((x) => Number(x.trim()))
+          .filter((n) => !isNaN(n))
         : [];
       setConfirmRoute(parsedRoute);
     }
   }, [editData, editRoute]);
 
-  /* ------------------------------ DnD logic ------------------------------ */
   const onDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over) return;
 
-    const [from, aVal] = String(active.id).split(":"); // "available:3" | "confirm:4"
-    const to = String(over.id); // "confirmZone" | "availableZone" | "confirm:4"
+    const [from, aVal] = String(active.id).split(":");
+    const to = String(over.id);
     const val = Number(aVal);
 
-    // 1) Reorder di dalam confirm: drop di atas chip lain
     if (from === "confirm" && to.startsWith("confirm:")) {
       const overVal = Number(to.split(":")[1]);
       if (val === overVal) return;
@@ -514,15 +522,11 @@ const RoutePage = () => {
       setConfirmRoute((cr) => arrayMove(cr, oldIndex, newIndex));
       return;
     }
-
-    // 2) Reorder ke ujung: dari confirm → area kosong confirmZone
     if (from === "confirm" && to === "confirmZone") {
       const oldIndex = confirmRoute.indexOf(val);
       setConfirmRoute((cr) => arrayMove(cr, oldIndex, cr.length - 1));
       return;
     }
-
-    // 3) Tambah dari available → area kosong confirmZone (append)
     if (from === "available" && to === "confirmZone") {
       if (!confirmRoute.includes(val)) {
         setConfirmRoute((cr) => [...cr, val]);
@@ -530,19 +534,17 @@ const RoutePage = () => {
       return;
     }
 
-    // 4) ⬅️ FIX UTAMA: Tambah dari available → di atas chip confirm:<n> (insert)
     if (from === "available" && to.startsWith("confirm:")) {
       const overVal = Number(to.split(":")[1]);
       const idx = confirmRoute.indexOf(overVal);
       if (!confirmRoute.includes(val)) {
         const next = [...confirmRoute];
-        next.splice(Math.max(0, idx + 1), 0, val); // insert sebelum chip yang di-hover
+        next.splice(Math.max(0, idx + 1), 0, val);
         setConfirmRoute(next);
       }
       return;
     }
 
-    // 5) Kembalikan ke available: dari confirm → availableZone
     if (from === "confirm" && to === "availableZone") {
       setConfirmRoute((cr) => cr.filter((x) => x !== val));
       return;
@@ -560,21 +562,19 @@ const RoutePage = () => {
         <nav className="flex flex-wrap">
           <Link
             to={`/dashboard/sites/${params.idSite}/routes`}
-            className={`font-medium text-sm text-[#F4F7FF] px-6 ${
-              pathname === `/dashboard/sites/${params.idSite}/routes`
-                ? "pt-[14px] pb-3 border-b-2 border-b-[#F3C511]"
-                : "py-[14px] border-b-0"
-            }`}
+            className={`font-medium text-sm text-[#F4F7FF] px-6 ${pathname === `/dashboard/sites/${params.idSite}/routes`
+              ? "pt-[14px] pb-3 border-b-2 border-b-[#F3C511]"
+              : "py-[14px] border-b-0"
+              }`}
           >
             {t("Routes")}
           </Link>
           <Link
             to={`/dashboard/sites/${params.idSite}/pointers`}
-            className={`font-medium text-sm text-[#F4F7FF] px-6 ${
-              pathname === `/dashboard/sites/${params.idSite}/pointers`
-                ? "pt-[14px] pb-3 border-b-2 border-b-[#F3C511]"
-                : "py-[14px] border-b-0"
-            }`}
+            className={`font-medium text-sm text-[#F4F7FF] px-6 ${pathname === `/dashboard/sites/${params.idSite}/pointers`
+              ? "pt-[14px] pb-3 border-b-2 border-b-[#F3C511]"
+              : "py-[14px] border-b-0"
+              }`}
           >
             {t("Pointers")}
           </Link>
@@ -587,13 +587,17 @@ const RoutePage = () => {
                   type={"text"}
                   className="w-full px-4 pt-[17.5px] pb-[10.5px] bg-[#222834] rounded-[4px_4px_0px_0px] text-[#F4F7FF] text-base placeholder:text-[#98A1B3]  placeholder:text-base active:outline-none focus-visible:outline-none"
                   placeholder="Search"
+                  value={search}
+                  onChange={(e) => {
+                    setSearch(e.target.value);
+                    setCurrentPage(1);
+                  }}
                 />
                 <button
                   type="button"
                   className="p-2 rounded-[4px_4px_0px_0px]"
                   tabIndex={-1}
                 >
-                  {/* search icon */}
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
@@ -628,8 +632,6 @@ const RoutePage = () => {
               </div>
             )}
           </div>
-
-          {/* table */}
           <div className="w-full h-full relative flex flex-1 pb-10">
             <div className="w-full h-fit overflow-auto pb-5">
               <table className="min-w-[700px] w-full">
@@ -662,8 +664,8 @@ const RoutePage = () => {
                 ) : (
                   <tbody>
                     {site?.routes &&
-                      site?.routes?.length > 0 &&
-                      site?.routes?.map((route, index) => (
+                      paginatedRoutes.length > 0 &&
+                      paginatedRoutes.map((route, index) => (
                         <tr key={index}>
                           <td className="text-[#F4F7FF] pt-6 pb-3">
                             {index + 1}
@@ -692,11 +694,10 @@ const RoutePage = () => {
                                   crossOrigin={undefined}
                                 />
                                 <p
-                                  className={`font-medium text-sm capitalize ${
-                                    switchStates[route.id]
-                                      ? "text-[#19CE74]"
-                                      : "text-[#FF7E6A]"
-                                  }`}
+                                  className={`font-medium text-sm capitalize ${switchStates[route.id]
+                                    ? "text-[#19CE74]"
+                                    : "text-[#FF7E6A]"
+                                    }`}
                                 >
                                   {switchStates[route.id]
                                     ? "active"
@@ -705,11 +706,10 @@ const RoutePage = () => {
                               </div>
                             ) : (
                               <p
-                                className={`font-medium text-sm capitalize ${
-                                  switchStates[route.id]
-                                    ? "text-[#19CE74]"
-                                    : "text-[#FF7E6A]"
-                                }`}
+                                className={`font-medium text-sm capitalize ${switchStates[route.id]
+                                  ? "text-[#19CE74]"
+                                  : "text-[#FF7E6A]"
+                                  }`}
                               >
                                 {switchStates[route.id] ? "active" : "deactive"}
                               </p>
@@ -801,13 +801,21 @@ const RoutePage = () => {
               </table>
             </div>
             <div className="grid grid-cols-3 w-fit absolute bottom-0 right-0">
-              <button className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[8px_0px_0px_8px] bg-[#575F6F]">
-                {t("prev")}
+              <button className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[8px_0px_0px_8px] bg-[#575F6F] disabled:opacity-50"
+                onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                disabled={currentPage === 1}
+              >
+                {t("Prev")}
               </button>
               <button className="font-medium text-xs leading-[21px] text-[#181D26] py-1 px-3 bg-[#D4AB0B]">
-                1
+                {currentPage}
               </button>
-              <button className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[0px_8px_8px_0px] bg-[#575F6F]">
+              <button className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[0px_8px_8px_0px] bg-[#575F6F] disabled:opacity-50"
+                disabled={currentPage === totalPages}
+                onClick={() =>
+                  setCurrentPage((p) => Math.min(p + 1, totalPages))
+                }
+              >
                 {t("Next")}
               </button>
             </div>
@@ -815,7 +823,6 @@ const RoutePage = () => {
         </div>
       </div>
 
-      {/* ------------------------------ ADD ROUTE ------------------------------ */}
       <SlideOver
         isOpen={addData}
         onClose={() => setAddData(false)}

@@ -49,7 +49,7 @@ const siteService = {
 
     deleteSite: async (token, id) => {
         try {
-            const response = await api.post(`/sites/${id}`, {
+            const response = await api.delete(`/sites/${id}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }

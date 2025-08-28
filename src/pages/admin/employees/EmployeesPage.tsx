@@ -578,30 +578,28 @@ const EmployeesPage = () => {
                             </table>
                         </div>
 
+                    </div>
                         {searchTerm.trim() === '' && !listLoading && (
-                            <div className="flex items-center justify-center gap-3 absolute bottom-0 right-3">
+                            <div className="flex justify-end mt-4 text-[#F4F7FF]">
                                 <button
                                     onClick={goToPrevPage}
                                     disabled={currentPage === 1}
-                                    className="flex items-center gap-1 font-medium text-xs leading-[21px] text-[#B3BACA] disabled:opacity-50"
+                                    className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[8px_0px_0px_8px] bg-[#575F6F] disabled:opacity-50"
                                 >
-                                    <ArrowLeft />
                                     {t('Prev')}
                                 </button>
-                                <button className="font-medium text-xs leading-[21px] text-[#181D26] py-1 px-3 bg-[#D4AB0B] rounded-md">
+                                <button className="font-medium text-xs leading-[21px] text-[#181D26] py-1 px-3 bg-[#D4AB0B]">
                                     {currentPage}
                                 </button>
                                 <button
                                     onClick={goToNextPage}
                                     disabled={currentPage === totalPages}
-                                    className="flex items-center gap-1 font-medium text-xs leading-[21px] text-[#B3BACA] disabled:opacity-50"
+                                    className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[0px_8px_8px_0px] bg-[#575F6F] disabled:opacity-50"
                                 >
                                     {t('Next')}
-                                    <ArrowRight />
                                 </button>
                             </div>
                         )}
-                    </div>
                 </div>
             </div>
 

@@ -434,12 +434,12 @@ const SopDocumentPage = () => {
                                     className="w-full bg-[#222834] text-[#F4F7FF] text-base placeholder:text-[#98A1B3] placeholder:text-base active:outline-none focus-visible:outline-none"
                                     placeholder='SOP Document name'
                                     onChange={(e) => setName(e.target.value)}
-                                    value={editData?.name}
+                                    value={name}
                                     required
                                 />
                             </div>
                             <div className="flex flex-col w-full py-2 rounded-[4px_4px_0px_0px] gap-2">
-                                <label className="text-xs leading-[21px] text-[#98A1B3]">SOP Document image <span className='text-xs'>(Maximum image size is 5MB!)</span></label>
+                                <label className="text-xs leading-[21px] text-[#98A1B3]">{t('SOP Document Image')}<span className='text-xs'>(Maximum image size is 5MB!)</span></label>
                                 <div className="flex items-center gap-4">
                                     <button
                                         type="button"

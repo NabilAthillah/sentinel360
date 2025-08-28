@@ -94,7 +94,7 @@ const RolesPage = () => {
     try {
       const payload = {
         name,
-        selectedPermissions,
+        permissions: selectedPermissions,
       };
       const response = await roleService.addRole(payload);
       if (response.success) toast.success("Role added successfully");

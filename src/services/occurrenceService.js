@@ -3,7 +3,7 @@ import api from "../utils/api";
 const occurrenceService = {
     addOccurrence: async (token, data) => {
         try {
-            const response = await api.post(`/occurrences`, {
+            const response = await api.post(`/occcurrences`, {
                 occurrences: data,
             }, {
                 headers: {
@@ -21,7 +21,7 @@ const occurrenceService = {
 
     getAllOccurrence: async (token) => {
         try {
-            const response = await api.get(`/occurrences`, {
+            const response = await api.get(`/occcurrences`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -37,7 +37,7 @@ const occurrenceService = {
 
     deleteOccurrence: async (token, id) => {
         try {
-            const response = await api.delete(`/occurrences/${id}`, {
+            const response = await api.delete(`/occcurrences/${id}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -53,7 +53,7 @@ const occurrenceService = {
 
     updateOccurrence: async (token, id, data) => {
         try {
-            const response = await api.put(`/occurrences/${id}`, data);
+            const response = await api.put(`/occcurrences/${id}`, data);
 
             if (response.data) {
                 return response.data;

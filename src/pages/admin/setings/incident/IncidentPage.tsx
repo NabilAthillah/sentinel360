@@ -311,28 +311,26 @@ const IncidentPageMaster = () => {
                                     )}
                                 </table>
                             </div>
-                            <div className="grid grid-cols-3 w-[162px] absolute bottom-0 right-0">
-                                <div className="grid grid-cols-3 w-[250px] absolute bottom-0 right-0">
-                                    <button
-                                        onClick={goToPrevPage}
-                                        disabled={currentPage === 1}
-                                        className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[8px_0px_0px_8px] bg-[#575F6F] disabled:opacity-50"
-                                    >
-                                        {t('Prev')}
-                                    </button>
-                                    <button
-                                        className="font-medium text-xs leading-[21px] text-[#181D26] py-1 px-3 bg-[#D4AB0B]"
-                                    >
-                                        {currentPage}
-                                    </button>
-                                    <button
-                                        onClick={goToNextPage}
-                                        disabled={currentPage === totalPages}
-                                        className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[0px_8px_8px_0px] bg-[#575F6F] disabled:opacity-50"
-                                    >
-                                        {t('Next')}
-                                    </button>
-                                </div>
+                            <div className="grid grid-cols-3 w-fit absolute bottom-0 right-0">
+                                <button
+                                    onClick={goToPrevPage}
+                                    disabled={currentPage === 1}
+                                    className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[8px_0px_0px_8px] bg-[#575F6F] disabled:opacity-50"
+                                >
+                                    {t('Prev')}
+                                </button>
+                                <button
+                                    className="font-medium text-xs leading-[21px] text-[#181D26] py-1 px-3 bg-[#D4AB0B]"
+                                >
+                                    {currentPage}
+                                </button>
+                                <button
+                                    onClick={goToNextPage}
+                                    disabled={currentPage === totalPages}
+                                    className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[0px_8px_8px_0px] bg-[#575F6F] disabled:opacity-50"
+                                >
+                                    {t('Next')}
+                                </button>
                             </div>
                         </div>
                     </div>

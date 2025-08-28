@@ -32,12 +32,12 @@ const EmployeeDocumentPage = () => {
     const [documentName, setDocumentName] = useState('');
     const [switchStates, setSwitchStates] = useState<Record<string, boolean>>({});
 
-    // Middleware & permission check
     useEffect(() => {
         if (!token) navigate('/auth/login');
         if (!user?.role?.permissions?.some(p => p.name === 'list_employee_documents')) navigate('/dashboard');
         auditAccess();
     }, [token, user]);
+
 
     useEffect(() => {
         if (employeeDocuments) {
@@ -168,7 +168,6 @@ const EmployeeDocumentPage = () => {
                 <div className="flex flex-col gap-8 w-full h-full flex-1">
                     <Navbar />
                     <div className="flex flex-col gap-10 bg-[#252C38] p-6 rounded-lg w-full h-full flex-1">
-                        {/* Search & Add */}
                         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
                             <div className="flex items-center gap-4 w-full md:max-w-[400px] bg-[#222834] border-b-[1px] border-b-[#98A1B3] rounded-t">
                                 <input
@@ -178,6 +177,37 @@ const EmployeeDocumentPage = () => {
                                     value={searchTerm}
                                     onChange={e => { setSearchTerm(e.target.value); setCurrentPage(1); }}
                                 />
+                                <button
+                                    type="button"
+                                    className="p-2 rounded-[4px_4px_0px_0px]"
+                                    tabIndex={-1}
+                                    
+                                >
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        fill="none"
+                                        version="1.1"
+                                        width="32"
+                                        height="32"
+                                        viewBox="0 0 32 32"
+                                    >
+                                        <defs>
+                                            <clipPath id="master_svg0_247_12873">
+                                                <rect x="0" y="0" width="32" height="32" rx="0" />
+                                            </clipPath>
+                                        </defs>
+                                        <g clipPath="url(#master_svg0_247_12873)">
+                                            <g>
+                                                <path
+                                                    d="M20.666698807907103,18.666700953674315L19.613298807907107,18.666700953674315L19.239998807907106,18.306700953674316C20.591798807907104,16.738700953674318,21.334798807907106,14.736900953674317,21.333298807907106,12.666670953674316C21.333298807907106,7.880200953674317,17.453098807907104,4.000000953674316,12.666668807907104,4.000000953674316C7.880198807907105,4.000000953674316,4.000000715257104,7.880200953674317,4.000000715257104,12.666670953674316C4.000000715257104,17.453100953674316,7.880198807907105,21.333300953674318,12.666668807907104,21.333300953674318C14.813298807907104,21.333300953674318,16.786698807907104,20.546700953674318,18.306698807907104,19.24000095367432L18.666698807907103,19.61330095367432L18.666698807907103,20.666700953674315L25.333298807907106,27.320000953674317L27.319998807907105,25.333300953674318L20.666698807907103,18.666700953674315ZM12.666668807907104,18.666700953674315C9.346668807907104,18.666700953674315,6.666668807907104,15.986700953674317,6.666668807907104,12.666670953674316C6.666668807907104,9.346670953674316,9.346668807907104,6.666670953674316,12.666668807907104,6.666670953674316C15.986698807907105,6.666670953674316,18.666698807907103,9.346670953674316,18.666698807907103,12.666670953674316C18.666698807907103,15.986700953674317,15.986698807907105,18.666700953674315,12.666668807907104,18.666700953674315Z"
+                                                    fill="#98A1B3"
+                                                    fillOpacity="1"
+                                                />
+                                            </g>
+                                        </g>
+                                    </svg>
+                                </button>
+
                             </div>
                             {user?.role?.permissions?.some(p => p.name === 'add_employee_document') && (
                                 <button
@@ -284,7 +314,6 @@ const EmployeeDocumentPage = () => {
                             </table>
                         </div>
 
-                        {/* Pagination */}
                         <div className="flex justify-end mt-4 text-[#F4F7FF]">
                             <button
                                 onClick={goToPrevPage}
@@ -307,7 +336,6 @@ const EmployeeDocumentPage = () => {
                     </div>
                 </div>
 
-                {/* Add Document Modal */}
                 <AnimatePresence>
                     {addDocumentOpen && (
                         <motion.div
@@ -365,8 +393,6 @@ const EmployeeDocumentPage = () => {
                     )}
                 </AnimatePresence>
 
-
-                {/* Edit Document Modal */}
                 <AnimatePresence>
                     {editDocumentOpen && editDocumentData && (
                         <motion.div

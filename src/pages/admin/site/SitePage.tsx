@@ -172,29 +172,35 @@ const SitePage = () => {
     const [unit, setUnit] = useState('');
     const [postalCode, setPostalCode] = useState('');
     const [lat, setLat] = useState('');
+    const [searchTerm, setSearchTerm] = useState("");
     const [long, setLong] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 5;
     const totalPages = Math.ceil(sites.length / itemsPerPage);
-    const paginatedSites = sites.slice(
+
+    const filteredSites = sites.filter(
+        (site) =>
+            site.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            site.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            site.postal_code.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    const paginatedSites = filteredSites.slice(
         (currentPage - 1) * itemsPerPage,
         currentPage * itemsPerPage
     );
+
     const navigate = useNavigate();
 
     const baseURL = new URL(process.env.REACT_APP_API_URL || '');
     baseURL.pathname = baseURL.pathname.replace(/\/api$/, '');
 
-    const handlePrev = () => {
-        if (currentPage > 1) {
-            setCurrentPage((prev) => prev - 1);
-        }
+    const goToNextPage = () => {
+        if (currentPage < totalPages) setCurrentPage(currentPage + 1);
     };
 
-    const handleNext = () => {
-        if (currentPage < totalPages) {
-            setCurrentPage((prev) => prev + 1);
-        }
+    const goToPrevPage = () => {
+        if (currentPage > 1) setCurrentPage(currentPage - 1);
     };
     const toBase64 = (file: File): Promise<string> =>
         new Promise((resolve, reject) => {
@@ -441,6 +447,7 @@ const SitePage = () => {
                                     type={'text'}
                                     className="w-full px-4 pt-[17.5px] pb-[10.5px] bg-[#222834] rounded-[4px_4px_0px_0px] text-[#F4F7FF] text-base placeholder:text-[#98A1B3]  placeholder:text-base active:outline-none focus-visible:outline-none"
                                     placeholder="Search"
+                                    onChange={(e) => setSearchTerm(e.target.value)}
                                 />
                                 <button type="button" className="p-2 rounded-[4px_4px_0px_0px]" tabIndex={-1}>
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="32" height="32" viewBox="0 0 32 32">
@@ -475,7 +482,7 @@ const SitePage = () => {
                     </div>
 
                     <div className="w-full h-full relative flex flex-1">
-                        <div className="w-full h-fit overflow-auto pb-5">
+                        <div className="w-full h-fit overflow-auto pb-5 " >
                             <table className="min-w-[700px] w-full">
                                 <thead>
                                     <tr>
@@ -501,8 +508,8 @@ const SitePage = () => {
                                     </tbody>
                                 ) : (
                                     <tbody>
-                                        {sites.length > 0 &&
-                                            sites.map((site, index) => (
+                                        {paginatedSites.length > 0 &&
+                                            paginatedSites.map((site, index) => (
                                                 <tr key={site.id ?? index}>
                                                     <td className="text-[#F4F7FF] pt-6 pb-3">{index + 1}</td>
                                                     <td className="text-[#F4F7FF] pt-6 pb-3 ">
@@ -608,33 +615,29 @@ const SitePage = () => {
                                 )}
                             </table>
                         </div>
-
-                        <div className="flex items-center justify-center gap-3 absolute bottom-0 right-3">
-                            <button
-                                onClick={handlePrev}
-                                disabled={currentPage === 1}
-                                className="flex items-center gap-1 font-medium text-xs leading-[21px] text-[#B3BACA] disabled:opacity-50"
-                            >
-                                <ArrowLeft />
-                                {t('Prev')}
-                            </button>
-                            <button className="font-medium text-xs leading-[21px] text-[#181D26] py-1 px-3 bg-[#D4AB0B] rounded-md">
-                                {currentPage}
-                            </button>
-                            <button
-                                onClick={handleNext}
-                                disabled={currentPage === totalPages}
-                                className="flex items-center gap-1 font-medium text-xs leading-[21px] text-[#B3BACA] disabled:opacity-50"
-                            >
-                                {t('Next')}
-                                <ArrowRight />
-                            </button>
-                        </div>
+                    </div>
+                    <div className="flex justify-end mt-4 text-[#F4F7FF]">
+                        <button
+                            onClick={goToPrevPage}
+                            disabled={currentPage === 1}
+                            className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[8px_0px_0px_8px] bg-[#575F6F] disabled:opacity-50"
+                        >
+                            {t('Prev')}
+                        </button>
+                        <button className="font-medium text-xs leading-[21px] text-[#181D26] py-1 px-3 bg-[#D4AB0B]">
+                            {currentPage}
+                        </button>
+                        <button
+                            onClick={goToNextPage}
+                            disabled={currentPage === totalPages}
+                            className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[0px_8px_8px_0px] bg-[#575F6F] disabled:opacity-50"
+                        >
+                            {t('Next')}
+                        </button>
                     </div>
                 </div>
             </div>
 
-            {/* EDIT SLIDE-OVER */}
             <SlideOver isOpen={editData && !!editSite} onClose={() => { setEditData(false); setEditSite(null); }} ariaTitle="Edit site" width={568}>
                 {editData && editSite && (
                     <form onSubmit={handleUpdate} className="flex flex-col gap-6 p-6 max-h-full">

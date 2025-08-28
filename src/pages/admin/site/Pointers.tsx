@@ -94,6 +94,23 @@ const Pointers = () => {
   const [routes, setRoutes] = useState<Route[]>([]);
   const [deleteModal, setDeleteModal] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Pointer | null>(null);
+  const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
+  const filteredPointers = pointers.filter((item) => {
+    const query = search.toLowerCase();
+    return (
+      item.route?.name?.toLowerCase().includes(query) ||
+      item.nfc_tag?.toLowerCase().includes(query) ||
+      item.remarks?.toLowerCase().includes(query) ||
+      item.status?.toLowerCase().includes(query)
+    );
+  });
+
+  const totalPages = Math.ceil(filteredPointers.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedData = filteredPointers.slice(startIndex, startIndex + itemsPerPage);
 
   const [addPayload, setAddPayload] = useState({
     nfc_tag: "",
@@ -260,21 +277,19 @@ const Pointers = () => {
         <nav className="flex flex-wrap">
           <Link
             to={`/dashboard/sites/${params.idSite}/routes`}
-            className={`font-medium text-sm text-[#F4F7FF] px-6 ${
-              pathname === `/dashboard/sites/${params.idSite}/routes`
-                ? "pt-[14px] pb-3 border-b-2 border-b-[#F3C511]"
-                : "py-[14px] border-b-0"
-            }`}
+            className={`font-medium text-sm text-[#F4F7FF] px-6 ${pathname === `/dashboard/sites/${params.idSite}/routes`
+              ? "pt-[14px] pb-3 border-b-2 border-b-[#F3C511]"
+              : "py-[14px] border-b-0"
+              }`}
           >
             {t("Routes")}
           </Link>
           <Link
             to={`/dashboard/sites/${params.idSite}/pointers`}
-            className={`font-medium text-sm text-[#F4F7FF] px-6 ${
-              pathname === `/dashboard/sites/${params.idSite}/pointers`
-                ? "pt-[14px] pb-3 border-b-2 border-b-[#F3C511]"
-                : "py-[14px] border-b-0"
-            }`}
+            className={`font-medium text-sm text-[#F4F7FF] px-6 ${pathname === `/dashboard/sites/${params.idSite}/pointers`
+              ? "pt-[14px] pb-3 border-b-2 border-b-[#F3C511]"
+              : "py-[14px] border-b-0"
+              }`}
           >
             {t("Pointers")}
           </Link>
@@ -286,6 +301,11 @@ const Pointers = () => {
                 type="text"
                 className="w-full px-4 pt-[17.5px] pb-[10.5px] bg-[#222834] rounded-t-md text-[#F4F7FF] placeholder:text-[#98A1B3] text-base focus:outline-none"
                 placeholder={t("Search")}
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setCurrentPage(1); 
+                }}
               />
               <button type="button" className="p-2" tabIndex={-1}>
                 <svg
@@ -370,9 +390,9 @@ const Pointers = () => {
                             {Array.isArray(data.route.route)
                               ? data.route.route.join("-")
                               : String(data.route.route ?? "").replace(
-                                  /\s*,\s*/g,
-                                  "-"
-                                )}
+                                /\s*,\s*/g,
+                                "-"
+                              )}
                           </td>
                           <td className="text-[#F4F7FF] font-inter">
                             {data.route.name}
@@ -507,7 +527,6 @@ const Pointers = () => {
               </select>
             </div>
 
-            {/* NFC Tag */}
             <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b border-b-[#98A1B3]">
               <input
                 type="text"
@@ -523,7 +542,6 @@ const Pointers = () => {
               />
             </div>
 
-            {/* Remarks */}
             <div className="flex flex-col w-full px-4 pt-2 py-2 rounded-[4px_4px_0px_0px] bg-[#222834] border-b border-b-[#98A1B3]">
               <input
                 type="text"
@@ -538,7 +556,6 @@ const Pointers = () => {
               />
             </div>
 
-            {/* Action buttons */}
             <div className="flex gap-4 mt-auto flex-wrap pt-12">
               <button
                 type="submit"
@@ -731,9 +748,9 @@ const Pointers = () => {
                       {Array.isArray(deleteTarget?.route?.route)
                         ? deleteTarget?.route?.route.join("-")
                         : String(deleteTarget?.route?.route ?? "").replace(
-                            /\s*,\s*/g,
-                            "-"
-                          )}
+                          /\s*,\s*/g,
+                          "-"
+                        )}
                     </span>
                   </div>
                   <div className="flex gap-2">

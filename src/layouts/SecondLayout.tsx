@@ -28,19 +28,19 @@ const SecondLayout = ({ children }: { children: React.ReactNode }) => {
     const fetchSiteName = async () => {
         const token = localStorage.getItem("token");
         if (
-          token &&
-          idSite &&
-          (pathname.includes(`/dashboard/sites/${idSite}/routes`) ||
-            pathname.includes(`/dashboard/sites/${idSite}/pointers`))
+            token &&
+            idSite &&
+            (pathname.includes(`/dashboard/sites/${idSite}/routes`) ||
+                pathname.includes(`/dashboard/sites/${idSite}/pointers`))
         ) {
-          try {
-            const res = await siteService.getSiteById(idSite, token);
-            if (res.success) {
-              setSiteName(res.data.site.name);
+            try {
+                const res = await siteService.getSiteById(idSite, token);
+                if (res.success) {
+                    setSiteName(res.data.site.name);
+                }
+            } catch (e) {
+                console.error(e);
             }
-          } catch (e) {
-            console.error(e);
-          }
         }
     };
 
@@ -128,6 +128,10 @@ const SecondLayout = ({ children }: { children: React.ReactNode }) => {
                 return t("Incidents");
             case "/dashboard/sites":
                 return t("Sites");
+            case "/dashboard/sites/map":
+                return t("Sites : Map");
+            case "/dashboard/sites/allocation":
+                return t("Sites : Allocation");
             case "/dashboard/reports":
                 return t("Reports");
             case "/dashboard/guard-tours":

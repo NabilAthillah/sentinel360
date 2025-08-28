@@ -169,7 +169,7 @@ const OccurencePage = () => {
   const token = useSelector((state: RootState) => state.token.token)
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const itemsPerPage = 5;
   const { t, i18n } = useTranslation();
   const [site, setSite] = useState("");
   const [category, setCategory] = useState("");
@@ -537,28 +537,26 @@ const OccurencePage = () => {
                 )}
               </table>
             </div>
-            <div className="flex items-center justify-center gap-3 absolute bottom-0 right-3">
+          </div>
+            <div className="flex justify-end mt-4 text-[#F4F7FF]">
               <button
                 onClick={handlePrev}
                 disabled={currentPage === 1}
-                className="flex items-center gap-1 font-medium text-xs leading-[21px] text-[#B3BACA] disabled:opacity-50"
+                className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[8px_0px_0px_8px] bg-[#575F6F] disabled:opacity-50"
               >
-                <ArrowLeft />
                 {t('Prev')}
               </button>
-              <button className="font-medium text-xs leading-[21px] text-[#181D26] py-1 px-3 bg-[#D4AB0B] rounded-md">
+              <button className="font-medium text-xs leading-[21px] text-[#181D26] py-1 px-3 bg-[#D4AB0B]">
                 {currentPage}
               </button>
               <button
                 onClick={handleNext}
                 disabled={currentPage === totalPages}
-                className="flex items-center gap-1 font-medium text-xs leading-[21px] text-[#B3BACA] disabled:opacity-50"
+                className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[0px_8px_8px_0px] bg-[#575F6F] disabled:opacity-50"
               >
                 {t('Next')}
-                <ArrowRight />
               </button>
             </div>
-          </div>
         </div>
       </div>
 
@@ -650,7 +648,6 @@ const OccurencePage = () => {
         </form>
       </CenterModal>
 
-      {/* ADD SLIDE-OVER (kanan) */}
       <SlideOver isOpen={addData} onClose={() => setAddData(false)} ariaTitle="Add occurrence" width={568}>
         <form onSubmit={handleSubmit} className="flex flex-col gap-6 p-6 max-h-full">
           <div className="flex justify-between items-center">
