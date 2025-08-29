@@ -34,6 +34,8 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import SidebarLayout from "../../../components/SidebarLayout";
+import pointerService from "../../../services/pointerService";
+import { Pointer } from "../../../types/pointer";
 
 /* ------------------------------ UI Helpers ------------------------------ */
 
@@ -109,7 +111,7 @@ function SlideOver({
 const chipBase =
   "relative w-10 h-10 rounded-full flex items-center justify-center text-[#F4F7FF] bg-[#434A57] text-sm select-none";
 
-function AvailableChip({ id, label }: { id: string; label: number }) {
+function AvailableChip({ id, label }: { id: string; label: string }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({ id });
 
@@ -125,7 +127,7 @@ function AvailableChip({ id, label }: { id: string; label: number }) {
       {...attributes}
       {...listeners}
       style={style}
-      className={`${chipBase}`}
+      className={chipBase}
     >
       {label}
     </div>
@@ -138,17 +140,11 @@ function SortableChip({
   onRemove,
 }: {
   id: string;
-  label: number;
-  onRemove: (n: number) => void;
+  label: string;
+  onRemove: (id: string) => void;
 }) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id });
 
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
@@ -163,14 +159,14 @@ function SortableChip({
       style={style}
       {...attributes}
       {...listeners}
-      className={`${chipBase}`}
+      className={chipBase}
     >
       {label}
       <button
         type="button"
         onClick={(e) => {
           e.stopPropagation();
-          onRemove(label);
+          onRemove(id);
         }}
         className="absolute -right-1 -bottom-1 w-4 h-4 rounded-full bg-[#FF7E6A] text-[10px] leading-4 text-white"
         aria-label="remove"
@@ -268,10 +264,10 @@ const RoutePage = () => {
   }, [filteredRoutes, currentPage, pageSize]);
 
 
-  const [pointers, setPointers] = useState<number[]>([1, 2, 3, 4, 5]);
+  const [pointers, setPointers] = useState<Pointer[]>([]);
   const [confirmRoute, setConfirmRoute] = useState<number[]>([]);
   const availablePointers = useMemo(
-    () => pointers.filter((p) => !confirmRoute.includes(p)),
+    () => pointers.filter((p) => !confirmRoute.includes(p.order)),
     [pointers, confirmRoute]
   );
 
@@ -368,7 +364,6 @@ const RoutePage = () => {
         params.idSite,
         name,
         remarks,
-        confirmRoute.join(",")
       );
 
       if (response.success) {
@@ -441,6 +436,28 @@ const RoutePage = () => {
     }
   };
 
+  const getPointersData = async (id: string, route: Route) => {
+    setLoading(true)
+    try {
+      const response = await pointerService.getPointersByRouteId(id);
+
+      if (response.success) {
+        const sorted = response.data.sort((a: Pointer, b: Pointer) =>
+          a.order > b.order ? 1 : -1
+        );
+        setPointers(sorted);
+        setEditData(true);
+        setEditRoute(route);
+      }
+    } catch (error) {
+      toast.error("Oops! Something went wrong");
+      setEditData(false);
+      setEditRoute(null)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const hasPermission = (permissionName: string) => {
     return user?.role?.permissions?.some((p) => p.name === permissionName);
   };
@@ -497,10 +514,7 @@ const RoutePage = () => {
       setName(editRoute.name);
       setRemarks(editRoute.remarks || "");
       const parsedRoute = editRoute.route
-        ? editRoute.route
-          .split(",")
-          .map((x) => Number(x.trim()))
-          .filter((n) => !isNaN(n))
+        ? editRoute.route.split(",").map((x) => parseInt(x.trim(), 10)).filter(Boolean)
         : [];
       setConfirmRoute(parsedRoute);
     }
@@ -512,10 +526,10 @@ const RoutePage = () => {
 
     const [from, aVal] = String(active.id).split(":");
     const to = String(over.id);
-    const val = Number(aVal);
+    const val = parseInt(aVal, 10);
 
     if (from === "confirm" && to.startsWith("confirm:")) {
-      const overVal = Number(to.split(":")[1]);
+      const overVal = parseInt(to.split(":")[1], 10);
       if (val === overVal) return;
       const oldIndex = confirmRoute.indexOf(val);
       const newIndex = confirmRoute.indexOf(overVal);
@@ -533,9 +547,8 @@ const RoutePage = () => {
       }
       return;
     }
-
     if (from === "available" && to.startsWith("confirm:")) {
-      const overVal = Number(to.split(":")[1]);
+      const overVal = parseInt(to.split(":")[1], 10);
       const idx = confirmRoute.indexOf(overVal);
       if (!confirmRoute.includes(val)) {
         const next = [...confirmRoute];
@@ -544,7 +557,6 @@ const RoutePage = () => {
       }
       return;
     }
-
     if (from === "confirm" && to === "availableZone") {
       setConfirmRoute((cr) => cr.filter((x) => x !== val));
       return;
@@ -717,7 +729,7 @@ const RoutePage = () => {
                           </td>
                           <td className="pt-6 pb-3">
                             <div className="flex gap-6 items-center justify-center">
-                              <svg
+                              {/* <svg
                                 onClick={() => {
                                   navigate(
                                     `/dashboard/sites/${site.id}/pointers`
@@ -751,12 +763,11 @@ const RoutePage = () => {
                                     />
                                   </g>
                                 </g>
-                              </svg>
+                              </svg> */}
                               {hasPermission("edit_site_route") && (
                                 <svg
                                   onClick={() => {
-                                    setEditData(true);
-                                    setEditRoute(route);
+                                    getPointersData(route.id, route);
                                   }}
                                   className="cursor-pointer"
                                   xmlns="http://www.w3.org/2000/svg"
@@ -845,12 +856,11 @@ const RoutePage = () => {
             />
           </div>
 
-          <DndContext
+          {/* <DndContext
             sensors={sensors}
             onDragEnd={onDragEnd}
             collisionDetection={closestCenter}
           >
-            {/* AVAILABLE */}
             <DndMonitor setDragging={setDragging} setOverId={setOverId} />
             <div className="flex flex-col gap-3">
               <label className="text-sm text-[#98A1B3]">
@@ -869,7 +879,6 @@ const RoutePage = () => {
                 ))}
               </DroppableRow>
 
-              {/* legend sample, optional */}
               <div className="grid grid-cols-2 gap-y-1 text-sm text-[#98A1B3] px-1">
                 <span>1. Section 2 Door</span>
                 <span>4. Section 3 garden</span>
@@ -879,13 +888,11 @@ const RoutePage = () => {
               </div>
             </div>
 
-            {/* CONFIRM */}
             <div className="flex flex-col gap-3 mt-2">
               <label className="text-sm text-[#98A1B3]">
                 Confirm pointers route
               </label>
 
-              {/* droppable background for appending */}
               <DroppableRow
                 id="confirmZone"
                 isEmpty={confirmRoute.length === 0 && !showConfirmPlaceholder}
@@ -909,7 +916,7 @@ const RoutePage = () => {
                 {showConfirmPlaceholder && <PlaceholderCircle />}
               </DroppableRow>
             </div>
-          </DndContext>
+          </DndContext> */}
 
           <div className="flex flex-col w-full px-4 pt-2 pb-1 bg-[#222834] border-b border-b-[#98A1B3]">
             <input
@@ -981,18 +988,23 @@ const RoutePage = () => {
               <label className="text-sm text-[#98A1B3]">
                 Drag pointers route below
               </label>
-              <DroppableRow
-                id="availableZone"
-                isEmpty={availablePointers.length === 0}
-              >
-                {availablePointers.map((n) => (
+              <DroppableRow id="availableZone" isEmpty={availablePointers.length === 0}>
+                {availablePointers.map((p) => (
                   <AvailableChip
-                    key={`available:${n}`}
-                    id={`available:${n}`}
-                    label={n}
+                    key={`available:${p.order}`}
+                    id={`available:${p.order}`}
+                    label={`${p.order}`}
                   />
                 ))}
               </DroppableRow>
+
+              {pointers ? (
+                <div className="grid grid-cols-2 gap-y-1 text-sm text-[#98A1B3] px-1">
+                  {pointers.map((data) => (
+                    <span>{data.order}. {data.name}</span>
+                  ))}
+                </div>
+              ) : <Loader primary={false} />}
             </div>
 
             {/* CONFIRM */}
@@ -1000,24 +1012,24 @@ const RoutePage = () => {
               <label className="text-sm text-[#98A1B3]">
                 Confirm pointers route
               </label>
-              <DroppableRow
-                id="confirmZone"
-                isEmpty={confirmRoute.length === 0 && !showConfirmPlaceholder}
-              >
+              <DroppableRow id="confirmZone" isEmpty={confirmRoute.length === 0 && !showConfirmPlaceholder}>
                 <SortableContext
-                  items={confirmRoute.map((n) => `confirm:${n}`)}
+                  items={confirmRoute.map((order) => `confirm:${order}`)}
                   strategy={horizontalListSortingStrategy}
                 >
-                  {confirmRoute.map((n) => (
-                    <SortableChip
-                      key={`confirm:${n}`}
-                      id={`confirm:${n}`}
-                      label={n}
-                      onRemove={(num) =>
-                        setConfirmRoute((cr) => cr.filter((x) => x !== num))
-                      }
-                    />
-                  ))}
+                  {confirmRoute.map((order) => {
+                    const pointer = pointers.find((p) => p.order === order);
+                    return (
+                      <SortableChip
+                        key={`confirm:${order}`}
+                        id={`confirm:${order}`}
+                        label={pointer ? `${pointer.order}` : `${order}`}
+                        onRemove={(ord) =>
+                          setConfirmRoute((cr) => cr.filter((x) => x !== parseInt(ord.split(":")[1], 10)))
+                        }
+                      />
+                    );
+                  })}
                 </SortableContext>
                 {showConfirmPlaceholder && <PlaceholderCircle />}
               </DroppableRow>

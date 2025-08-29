@@ -3,9 +3,10 @@ import { Site } from "./site";
 
 export type Pointer = {
     id: string;
+    name: string;
     nfc_tag: string;
     remarks?: string;
     route: Route;
-    status: string;
-    site: Site;
+    created_at: string;
+    order: number;
 }

@@ -1,13 +1,12 @@
 import api from "../utils/api";
 
 const routeService = {
-    addRoute: async (token, id_site, name, remarks, route) => {
+    addRoute: async (token, id_site, name, remarks) => {
         try {
             const response = await api.post(`/routes`, {
                 name,
                 id_site,
                 remarks,
-                route
             }, {
                 headers: {
                     'Authorization': `Bearer ${token}`

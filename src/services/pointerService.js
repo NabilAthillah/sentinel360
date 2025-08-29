@@ -1,9 +1,9 @@
 import api from "../utils/api";
 
 const pointerService = {
-    getAllPointers: async (idSite) => {
+    getAllPointers: async () => {
         try {
-            const response = await api.get(`/pointers/${idSite}`);
+            const response = await api.get(`/pointers`);
 
             if (response.data) return response.data
         } catch (error) {
@@ -40,6 +40,16 @@ const pointerService = {
             throw error.response ? error.response.data : { message: "Network error" };
         }
     },
+
+    getPointersByRouteId: async (id) => {
+        try {
+            const response = await api.get(`/pointers/route/${id}`);
+
+            if (response.data) return response.data
+        } catch (error) {
+            throw error.response ? error.response.data : { message: "Network error" };
+        }
+    }
 }
 
 export default pointerService;

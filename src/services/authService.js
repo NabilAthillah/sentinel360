@@ -82,7 +82,7 @@ const authService = {
 
   checkToken: async (token) => {
     try {
-      const response = await api.get('/check-token');
+      const response = await api.get('/check-token', token);
       return response.data;
     } catch (error) {
       throw error.response ? error.response.data : { message: 'Network error' };

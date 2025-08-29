@@ -22,36 +22,40 @@ const LoginPage: React.FC = () => {
 
   const togglePassword = () => setShowPassword((prev) => !prev);
 
-  // Check token saat halaman dimuat
-  useEffect(() => {
-    const checkToken = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) return;
+  const checkToken = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
 
-      try {
-        const response = await authService.checkToken();
-        if (response.success) {
-          const user = response.data.user || response.user; // sesuaikan struktur API
-          if (user.role.name === "Administrator") {
-            navigate("/dashboard");
-          } else {
-            navigate("/user");
-          }
+    try {
+      const response = await authService.checkToken(token);
+      if (response.success) {
+        const user = response.user; // sesuaikan struktur API
+        dispatch(setUser(user));
+        dispatch(setToken(response.token));
+        localStorage.setItem("token", response.token)
+        localStorage.setItem("user", user)
+        if (user.role.name === "Administrator") {
+          navigate("/dashboard");
         } else {
-          localStorage.removeItem("token");
-          localStorage.removeItem("user");
-          navigate("/auth/login");
+          navigate("/user");
         }
-      } catch (error) {
-        console.error(error);
+      } else {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
         navigate("/auth/login");
       }
-    };
+    } catch (error) {
+      console.error(error);
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      navigate("/auth/login");
+    }
+  };
 
+  // Check token saat halaman dimuat
+  useEffect(() => {
     checkToken();
-  }, [navigate]);
+  }, []);
 
   // Handle login
   const handleLogin = async (e: React.FormEvent) => {
