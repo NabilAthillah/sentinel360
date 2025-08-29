@@ -45,13 +45,9 @@ const siteEmployeeService = {
         }
     },
 
-    getAllSiteUser: async (token, user) => {
+    getAllSiteUser: async (user) => {
         try {
-            const response = await api.get(`/site-user/user/data/${user.employee.id}`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
+            const response = await api.get(`/site-user/user/data/${user.employee.id}`);
             return response.data;
         } catch (error) {
             throw error.response ? error.response.data : { message: 'Network error' };

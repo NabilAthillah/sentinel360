@@ -1,15 +1,19 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { useSelector } from "react-redux";
 import Swal from "sweetalert2";
 import MapUser from "../../../components/MapUser";
 import attendanceService from "../../../services/attendanceService";
 import attendanceSettingService from "../../../services/attendanceSettingService";
 import siteEmployeeService from "../../../services/siteEmployeeService";
+import { RootState } from "../../../store";
 
 type GeoState = "checking" | "granted" | "prompt" | "denied" | "unsupported";
 type Coords = { lat: number; lng: number; accuracy?: number };
 
 const Checkin = () => {
+  const user = useSelector((state: RootState) => state.user.user);
+
   const [geoState, setGeoState] = useState<GeoState>("checking");
   const [geoError, setGeoError] = useState<string | null>(null);
   const [coords, setCoords] = useState<Coords | null>(null);
@@ -23,6 +27,15 @@ const Checkin = () => {
 
   const { id } = useParams();
   const navigate = useNavigate();
+
+  const todayISOInSG = () =>
+    new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Singapore" });
+
+  const swalBase = {
+    background: "#1e1e1e",
+    color: "#f4f4f4",
+    confirmButtonColor: "#EFBF04",
+  } as const;
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 1000);
@@ -46,7 +59,9 @@ const Checkin = () => {
       const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`;
       const res = await fetch(url);
       const data = await res.json();
-      setAddress(data?.display_name || `Lat: ${round(lat, 5)}, Lng: ${round(lng, 5)}`);
+      setAddress(
+        data?.display_name || `Lat: ${round(lat, 5)}, Lng: ${round(lng, 5)}`
+      );
     } catch {
       setAddress(`Lat: ${round(lat, 5)}, Lng: ${round(lng, 5)}`);
     }
@@ -65,15 +80,23 @@ const Checkin = () => {
     return 2 * R * Math.asin(Math.sqrt(h));
   };
 
-  const recalcDistance = (user: Coords | null, site: Coords | null, r: number) => {
+  const recalcDistance = (
+    user: Coords | null,
+    site: Coords | null,
+    r: number
+  ) => {
     if (!user || !site || !Number.isFinite(r)) {
       setDistanceM(null);
       setWithin(false);
       return;
     }
     const d = haversineMeters(user, site);
+    const acc = Number.isFinite(user.accuracy ?? NaN)
+      ? (user.accuracy as number)
+      : 0;
+
     setDistanceM(d);
-    setWithin(d <= r);
+    setWithin(d - acc <= r);
   };
 
   const startWatching = () => {
@@ -157,7 +180,6 @@ const Checkin = () => {
         navigator.geolocation.clearWatch(watchIdRef.current);
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -166,11 +188,14 @@ const Checkin = () => {
         const token = localStorage.getItem("token");
         if (!token) throw new Error("Unauthorized");
 
-        const settings = await attendanceSettingService.getAttendanceSetting(token);
+        const settings = await attendanceSettingService.getAttendanceSetting(
+          token
+        );
         const r = Number(settings?.data?.geo_fencing ?? 0);
         setRadius(Number.isFinite(r) ? r : 0);
 
         let target: Coords | null = null;
+
         if (id) {
           const se = await siteEmployeeService.getById(token, id);
           const lat = Number(se?.data?.site?.lat ?? se?.data?.lat);
@@ -181,27 +206,30 @@ const Checkin = () => {
         }
 
         if (!target) {
-          const lat = Number(localStorage.getItem("site_lat"));
-          const lng = Number(localStorage.getItem("site_lng"));
+          const latStr = localStorage.getItem("site_lat");
+          const lngStr = localStorage.getItem("site_lng");
+
+          const lat = latStr === null ? NaN : parseFloat(latStr);
+          const lng = lngStr === null ? NaN : parseFloat(lngStr);
+
           if (Number.isFinite(lat) && Number.isFinite(lng)) {
             target = { lat, lng };
+          } else {
+            target = null;
           }
         }
 
         setSitePos(target);
-
         recalcDistance(coords, target, Number.isFinite(r) ? r : 0);
       } catch (e) {
         console.error(e);
       }
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   useEffect(() => {
     recalcDistance(coords, sitePos, radius);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [radius, sitePos]);
+  }, [coords, radius, sitePos]);
 
   const openBrowserLocationSettings = () => {
     const ua = navigator.userAgent.toLowerCase();
@@ -210,7 +238,9 @@ const Checkin = () => {
     } else if (ua.includes("firefox")) {
       window.open("about:preferences#privacy", "_blank");
     } else {
-      setGeoError("Please enable location permission for your browser/app, then return and tap Retry.");
+      setGeoError(
+        "Please enable location permission for your browser/app, then return and tap Retry."
+      );
     }
   };
 
@@ -221,29 +251,29 @@ const Checkin = () => {
 
     if (!sitePos || !Number.isFinite(radius) || radius <= 0) {
       await Swal.fire({
+        ...swalBase,
         title: "Geofence not configured",
         text: "Site location or radius is missing.",
         icon: "error",
-        background: "#1e1e1e",
-        confirmButtonColor: "#EFBF04",
-        color: "#f4f4f4",
-        customClass: { popup: "swal2-dark-popup" },
       });
       return;
     }
 
     if (!within) {
       await Swal.fire({
+        ...swalBase,
         title: "Outside geofence",
         text:
           distanceM !== null
-            ? `You are ~${Math.round(distanceM)} m away. Please move within ${Math.round(radius)} m from the site to check in.`
-            : `Please move within ${Math.round(radius)} m from the site to check in.`,
+            ? `You are ~${Math.round(
+                distanceM
+              )} m away. Please move within ${Math.round(
+                radius
+              )} m from the site to check in.`
+            : `Please move within ${Math.round(
+                radius
+              )} m from the site to check in.`,
         icon: "warning",
-        background: "#1e1e1e",
-        confirmButtonColor: "#EFBF04",
-        color: "#f4f4f4",
-        customClass: { popup: "swal2-dark-popup" },
       });
       return;
     }
@@ -255,71 +285,64 @@ const Checkin = () => {
         navigate("/auth/login");
         return;
       }
-
-      const id_site_employee = id || localStorage.getItem("id_site_employee");
-      if (!id_site_employee) {
+      if (!user?.id) {
         await Swal.fire({
-          title: "Error!",
-          text: "Oops! Something went wrong",
+          ...swalBase,
           icon: "error",
-          background: "#1e1e1e",
-          confirmButtonColor: "#EFBF04",
-          color: "#f4f4f4",
-          customClass: { popup: "swal2-dark-popup" },
+          title: "Error",
+          text: "User not found. Please re-login.",
         });
+        localStorage.clear();
+        navigate("/auth/login");
         return;
       }
 
-      const time_in = new Intl.DateTimeFormat("en-GB", {
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        hour12: false,
-        timeZone: "Asia/Singapore",
-      }).format(new Date());
+      const site_id = localStorage.getItem("site_id") || undefined;
+      const shift_api = localStorage.getItem("shift_api") || undefined;
+      const date = todayISOInSG();
 
-      const payload: any = {
-        id_site_employee,
-        time_in,
-        lat: coords.lat,
-        lng: coords.lng,
-        accuracy: coords.accuracy,
-        distance_from_site_m: distanceM !== null ? Math.round(distanceM) : undefined,
+      if (!site_id || !shift_api) {
+        await Swal.fire({
+          ...swalBase,
+          icon: "error",
+          title: "Missing context",
+          text: "Site or shift not set. Please go back to Attendance and try again.",
+        });
+        navigate("/user/attendance");
+        return;
+      }
+
+      const payload = {
+        site_id,
+        user_id: user.id,
+        shift: shift_api as "day" | "night" | "relief day" | "relief night",
+        date,
       };
 
-      const response = await attendanceService.storeAttendance(token, payload);
+      const response = await attendanceService.checkIn(token, payload);
 
       if (response?.success) {
         await Swal.fire({
+          ...swalBase,
           title: "Checked in!",
-          text: "Successfully checked in.",
+          text: response?.message ?? "Successfully checked in.",
           icon: "success",
-          background: "#1e1e1e",
-          confirmButtonColor: "#EFBF04",
-          color: "#f4f4f4",
-          customClass: { popup: "swal2-dark-popup" },
         });
         navigate("/user/attendance");
       } else {
         await Swal.fire({
+          ...swalBase,
           title: "Error!",
-          text: "Oops! Something went wrong",
+          text: response?.message || "Oops! Something went wrong",
           icon: "error",
-          background: "#1e1e1e",
-          confirmButtonColor: "#EFBF04",
-          color: "#f4f4f4",
-          customClass: { popup: "swal2-dark-popup" },
         });
       }
     } catch (error: any) {
       await Swal.fire({
+        ...swalBase,
         title: "Error!",
         text: error?.message || "Oops! Something went wrong",
         icon: "error",
-        background: "#1e1e1e",
-        confirmButtonColor: "#EFBF04",
-        color: "#f4f4f4",
-        customClass: { popup: "swal2-dark-popup" },
       });
     }
   };
@@ -330,24 +353,53 @@ const Checkin = () => {
     distanceM === null
       ? "-"
       : distanceM < 1000
-        ? `${Math.round(distanceM)} m`
-        : `${(distanceM / 1000).toFixed(2)} km`;
+      ? `${Math.round(distanceM)} m`
+      : `${(distanceM / 1000).toFixed(2)} km`;
 
   const radiusText =
     !Number.isFinite(radius) || radius <= 0 ? "-" : `${Math.round(radius)} m`;
 
   const statusBadge = within ? (
-    <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-700">Within geofence</span>
+    <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-700">
+      Within geofence
+    </span>
   ) : (
-    <span className="px-2 py-1 text-xs rounded-full bg-red-100 text-red-700">Outside geofence</span>
+    <span className="px-2 py-1 text-xs rounded-full bg-red-100 text-red-700">
+      Outside geofence
+    </span>
   );
+
+  useEffect(() => {
+    const siteId = localStorage.getItem("site_id");
+    const shiftApi = localStorage.getItem("shift_api");
+    if (!siteId || !shiftApi) {
+      Swal.fire({
+        ...swalBase,
+        icon: "info",
+        title: "Missing context",
+        text: "Site or shift not set. Please go back to Attendance.",
+      }).then(() => navigate("/user/attendance"));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="relative flex flex-col h-screen bg-white">
       <div className="flex items-center bg-[#181D26] text-white p-4 pt-6 pb-3 gap-3 z-20">
         <Link to="/user/attendance">
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" stroke="currentColor" fill="none">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="w-5 h-5"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            fill="none"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15 19l-7-7 7-7"
+            />
           </svg>
         </Link>
         <h1 className="text-xl font-normal text-[#F4F7FF]">Check in</h1>
@@ -366,7 +418,9 @@ const Checkin = () => {
         <div className="flex items-center justify-between">
           <div className="flex flex-col gap-1">
             <p className="text-xs text-gray-500">Distance to site</p>
-            <p className="text-sm font-medium">{distanceText} (radius {radiusText})</p>
+            <p className="text-sm font-medium">
+              {distanceText} (radius {radiusText})
+            </p>
           </div>
           {sitePos && statusBadge}
         </div>
@@ -377,11 +431,13 @@ const Checkin = () => {
             {address
               ? address
               : coords
-                ? `Lat: ${coords.lat}, Lng: ${coords.lng}`
-                : "Determining your location..."}
+              ? `Lat: ${coords.lat}, Lng: ${coords.lng}`
+              : "Determining your location..."}
           </p>
           {coords?.accuracy !== undefined && (
-            <p className="text-[11px] text-gray-500">Accuracy ~ {Math.round(coords.accuracy)} m</p>
+            <p className="text-[11px] text-gray-500">
+              Accuracy ~ {Math.round(coords.accuracy)} m
+            </p>
           )}
         </div>
 
@@ -395,38 +451,70 @@ const Checkin = () => {
           disabled={!isGranted || !coords || !sitePos || !within}
           onClick={handleCheckIn}
         >
-          {(!sitePos || !Number.isFinite(radius) || radius <= 0)
+          {!sitePos || !Number.isFinite(radius) || radius <= 0
             ? "Geofence not configured"
             : within
-              ? "Continue"
-              : "Move closer to the site"}
+            ? "Continue"
+            : "Move closer to the site"}
         </button>
-        {!isGranted && <p className="text-xs text-red-500 text-center">Allow location to continue.</p>}
+        {!isGranted && (
+          <p className="text-xs text-red-500 text-center">
+            Allow location to continue.
+          </p>
+        )}
       </div>
 
       {(!isGranted || geoState === "checking") && (
         <div className="absolute inset-0 z-30 bg-[#181D26] text-white flex flex-col items-center justify-center p-6">
           <div className="flex flex-col items-center gap-4 max-w-sm text-center">
             <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M12 2l3 7h7l-5.5 4.1L18 21l-6-4-6 4 1.5-7.9L2 9h7l3-7z" />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="w-6 h-6"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+              >
+                <path
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 2l3 7h7l-5.5 4.1L18 21l-6-4-6 4 1.5-7.9L2 9h7l3-7z"
+                />
               </svg>
             </div>
-            <h2 className="text-lg font-semibold">Location permission required</h2>
-            <p className="text-sm text-white/80">We need your location to continue. Please allow location access when prompted.</p>
+            <h2 className="text-lg font-semibold">
+              Location permission required
+            </h2>
+            <p className="text-sm text-white/80">
+              We need your location to continue. Please allow location access
+              when prompted.
+            </p>
             {geoError && <p className="text-xs text-red-400">{geoError}</p>}
             <div className="flex gap-3 mt-2 flex-wrap justify-center">
-              <button onClick={requestLocation} className="px-4 py-2 rounded-full bg-[#EFBF04] text-[#181D26] font-medium">
+              <button
+                onClick={requestLocation}
+                className="px-4 py-2 rounded-full bg-[#EFBF04] text-[#181D26] font-medium"
+              >
                 Retry permission
               </button>
-              <button onClick={openBrowserLocationSettings} className="px-4 py-2 rounded-full border border-white/30 text-white">
+              <button
+                onClick={openBrowserLocationSettings}
+                className="px-4 py-2 rounded-full border border-white/30 text-white"
+              >
                 Open browser settings
               </button>
             </div>
             <div className="mt-4 text-xs text-white/60 space-y-1">
               <p>Quick tips:</p>
-              <p>• Chrome: Settings → Privacy & security → Site settings → Location</p>
-              <p>• Safari iOS: Settings → Privacy & Security → Location Services → Safari → Allow</p>
+              <p>
+                • Chrome: Settings → Privacy & security → Site settings →
+                Location
+              </p>
+              <p>
+                • Safari iOS: Settings → Privacy & Security → Location Services
+                → Safari → Allow
+              </p>
             </div>
           </div>
         </div>
