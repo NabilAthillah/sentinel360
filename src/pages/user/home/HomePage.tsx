@@ -33,7 +33,7 @@ const HomePage = () => {
   const fetchSites = async () => {
     try {
       const response = await siteService.getAllSite(token);
-
+      
       if (response.success) {
         setSites(response.data);
       }
@@ -215,6 +215,7 @@ const HomePage = () => {
         Number(site.lat),
         Number(site.long)
       );
+      console.log(dist,currentLat, currentLng)
       console.log(site.name, dist)
       return dist <= geoFencing;
     });
@@ -223,7 +224,7 @@ const HomePage = () => {
       setIsSecondHome(true);
       return;
     }
-
+    console.log(nearestSite)
     if (!siteEmployee || siteEmployee?.site.id !== nearestSite.id) {
       setIsSecondHome(true);
     } else {
@@ -286,9 +287,9 @@ const HomePage = () => {
       return;
     }
 
+    fetchSites();
     fetchSiteEmployee();
     fetchSettings();
-    fetchSites();
   }, []);
 
   useEffect(() => {
@@ -555,8 +556,9 @@ const HomePage = () => {
           <span className="text-white">Contacts</span>
         </Link>
 
+      
         <Link
-          to="/user/clocking"
+          to={`/user/clocking/${siteEmployee?.site.id}`}
           className="bg-[#FFFFFF1A] p-4 rounded-xl flex flex-col items-center justify-center gap-2 w-full py-6 px-3"
         >
           <svg

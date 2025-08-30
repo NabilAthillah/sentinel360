@@ -57,6 +57,7 @@ import GuardChoice from "../pages/user/GuardTour/GuardChoice";
 import GuardSubmit from "../pages/user/GuardTour/GuardSubmit";
 import Pointers from "../pages/admin/site/Pointers";
 import Selection from "../pages/user/GuardTour/Selection";
+import RouteSelect from "../pages/user/Clocking/RouteSelect";
 
 const AppRoutes = () => {
   return (
@@ -134,7 +135,8 @@ const AppRoutes = () => {
           />
           <Route path="/user/contact" element={<Contact />} />
           <Route path="/user/sop-document" element={<SopDocument />} />
-          <Route path="/user/clocking" element={<Clocking />} />
+          <Route path="/user/clocking/:idSite" element={<Clocking />} />
+          <Route path="/user/clocking/:idSite/route-select" element={<RouteSelect />} />
           <Route path="/user/clocking/scan" element={<ScanClocking />} />
           <Route path="/user/e-occurence" element={<Occurence />} />
           <Route

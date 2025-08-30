@@ -449,7 +449,9 @@ const Pointers = () => {
                             <button
                                 disabled
                                 className="font-medium text-xs leading-[21px] text-[#181D26] py-1 px-3 bg-[#D4AB0B] rounded-md"
-                            ></button>
+                            > 
+                            {currentPage}
+                            </button>
                             <button className="flex items-center gap-1 font-medium text-xs leading-[21px] text-[#B3BACA] disabled:opacity-50">
                                 {t("Next")}
                                 <ArrowRight size={14} />
