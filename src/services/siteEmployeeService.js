@@ -47,9 +47,10 @@ const siteEmployeeService = {
 
     getAllSiteUser: async (user) => {
         try {
-            const response = await api.get(`/site-user/user/data/${user.employee.id}`);
+            const response = await api.get(`/site-user/user/data/${user.id}`);
             return response.data;
         } catch (error) {
+            console.error(error)
             throw error.response ? error.response.data : { message: 'Network error' };
         }
     },
