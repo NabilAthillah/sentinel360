@@ -150,7 +150,7 @@ const Pointers = () => {
     const fetchPointers = async () => {
         setLoading(true);
         try {
-            const response = await pointerService.getAllPointers();
+            const response = await pointerService.getAllPointers(params.idSite);
 
             if (response.success) {
                 setPointers(response.data);
