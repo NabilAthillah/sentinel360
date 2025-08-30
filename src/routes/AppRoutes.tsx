@@ -149,8 +149,8 @@ const AppRoutes = () => {
             path="/user/e-occurence/history"
             element={<HistoryOccurance />}
           />
-          <Route path="/user/incident" element={<Incident />} />
-          <Route path="/user/incident/report" element={<Report />} />
+          <Route path="/user/incident/:idSite" element={<Incident />} />
+          <Route path="/user/incident/:idSite/report" element={<Report />} />
           <Route path="/user/incident/history" element={<History />} />
           <Route path="/user/attendance" element={<Attendance />} />
           <Route path="/user/attendance/checkin" element={<Checkin />} />

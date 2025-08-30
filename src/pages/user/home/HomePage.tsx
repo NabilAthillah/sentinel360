@@ -583,7 +583,7 @@ const HomePage = () => {
         </Link>
 
         <Link
-          to="/user/incident"
+          to={`/user/incident/${siteEmployee?.id}`}
           className="bg-[#FFFFFF1A] p-4 rounded-xl flex flex-col justify-center items-center gap-2 w-full py-6 px-3"
         >
           <svg
