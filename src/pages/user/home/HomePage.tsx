@@ -215,6 +215,7 @@ const HomePage = () => {
         Number(site.lat),
         Number(site.long)
       );
+      console.log(site.name, dist)
       return dist <= geoFencing;
     });
 
