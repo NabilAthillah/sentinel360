@@ -98,6 +98,7 @@ const OccurrenceCatgPage = () => {
 
   const handleSubmit = async (e: React.SyntheticEvent) => {
     e.preventDefault();
+    
     if (!token) {
       navigate("/auth/login");
       return;

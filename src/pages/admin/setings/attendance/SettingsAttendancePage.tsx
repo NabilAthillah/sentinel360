@@ -41,14 +41,16 @@ const SettingsAttendancePage = () => {
     ]);
 
     const fetchSettings = async () => {
-        if (!token) return;
+        if (!token) {
+            navigate('/auth/login');
+            return;
+        }
         try {
             setLoading(true);
             const response = await attendanceSettingService.getAttendanceSetting(token);
             if (response.success) {
                 const data = response.data;
 
-                // simpan id dari API
                 setSettingId(data.id);
 
                 const mappedData: FormField[] = [
@@ -83,7 +85,10 @@ const SettingsAttendancePage = () => {
     const handleSubmit = async (e: React.SyntheticEvent) => {
         e.preventDefault();
         setLoading(true);
-        if (!token) return;
+        if (!token) {
+            navigate('/auth/login');
+            return;
+        }
 
         const dataToSend = {
             id: settingId, // tambahkan id di payload
@@ -127,12 +132,12 @@ const SettingsAttendancePage = () => {
     };
 
     useEffect(() => {
-            if (!hasPermission('show_attendance_settings')) {
-                navigate('/dashboard');
-                return;
-            }
-            fetchSettings();
-            audit();
+        if (!hasPermission('show_attendance_settings')) {
+            navigate('/dashboard');
+            return;
+        }
+        fetchSettings();
+        audit();
     }, []);
 
     return (

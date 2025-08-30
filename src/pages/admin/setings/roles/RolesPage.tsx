@@ -86,10 +86,17 @@ const RolesPage = () => {
 
   const handleSubmit = async (e: React.SyntheticEvent) => {
     e.preventDefault();
+
+    if (!token) {
+      navigate('/auth/login');
+      return;
+    }
+
     if (selectedPermissions.length === 0) {
       toast.error("Pilih minimal 1 permission");
       return;
     }
+
     setLoading(true);
     try {
       const payload = {
@@ -110,6 +117,12 @@ const RolesPage = () => {
 
   const handleEditRole = async (e: React.SyntheticEvent) => {
     e.preventDefault();
+
+    if (!token) {
+      navigate('/auth/login');
+      return;
+    }
+
     if (!editedRole || editedRole.permissions.length === 0) {
       toast.error("Pilih minimal 1 permission");
       return;
@@ -135,6 +148,10 @@ const RolesPage = () => {
 
   const fetchRoles = async () => {
     setLoading(true);
+    if (!token) {
+      navigate('/auth/login');
+      return;
+    }
     try {
       const response = await roleService.getAllRoles(token);
       if (response.success) setRoles(response.data);
@@ -146,6 +163,12 @@ const RolesPage = () => {
   };
 
   const fetchPermissions = async () => {
+
+    if (!token) {
+      navigate('/auth/login');
+      return;
+    }
+
     try {
       const response = await permissionService.getAllPermissions();
 

@@ -69,11 +69,11 @@ const SopDocumentPage = () => {
 
     const fetchSopDocument = async () => {
         setLoading(true);
+        if (!token) {
+            navigate('/auth/login');
+            return;
+        }
         try {
-            if (!token) {
-                navigate('/auth/login');
-                return;
-            }
             const response = await sopDocumentService.getSop(token);
             if (response.success) setDatas(response.data);
         } catch (error: any) {
@@ -87,6 +87,11 @@ const SopDocumentPage = () => {
         e.preventDefault();
         setLoading(true);
 
+        if (!token) {
+            navigate('/auth/login');
+            return;
+        }
+
         try {
             const toBase64 = (file: File): Promise<string> =>
                 new Promise((resolve, reject) => {
@@ -97,11 +102,6 @@ const SopDocumentPage = () => {
                 });
 
             const imageBase64 = imageFile ? await toBase64(imageFile) : null;
-
-            if (!token) {
-                navigate('/auth/login');
-                return;
-            }
 
             const payload = {
                 name,
@@ -127,11 +127,11 @@ const SopDocumentPage = () => {
 
     const handleDelete = async () => {
         setLoading(true);
+        if (!token) {
+            navigate('/auth/login');
+            return;
+        }
         try {
-            if (!token) {
-                navigate('/auth/login');
-                return;
-            }
             if (!selectedId) {
                 toast.error("No selected ID");
                 return;
@@ -156,12 +156,12 @@ const SopDocumentPage = () => {
         e.preventDefault();
         setLoading(true);
 
-        try {
-            if (!token) {
-                navigate('/auth/login');
-                return;
-            }
+        if (!token) {
+            navigate('/auth/login');
+            return;
+        }
 
+        try {
             const toBase64 = (file: File): Promise<string> =>
                 new Promise((resolve, reject) => {
                     const reader = new FileReader();
@@ -201,7 +201,6 @@ const SopDocumentPage = () => {
 
     const audit = async () => {
         try {
-
             const title = `Access sop document settings page`;
             const description = `User ${user?.email} access sop document settings page`;
             const status = 'success';

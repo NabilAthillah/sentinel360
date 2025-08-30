@@ -20,6 +20,7 @@ import autoTable from 'jspdf-autotable';
 import sopDocumentService from '../../../services/sopDocumentService';
 import { toast } from 'react-toastify';
 import Loader from '../../../components/Loader';
+import { useNavigate } from 'react-router-dom';
 
 const reportHeaders: Record<string, { header: string; dataKey: string }[]> = {
     Employees: [
@@ -143,6 +144,9 @@ const ReportPage = () => {
     const [document, setDocument] = useState<SopDocument[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
+    const user = useSelector((state: RootState) => state.user.user);
+    const navigate = useNavigate();
+
 
     const reports = [
         { title: t('Employees'), data: employee },
@@ -275,10 +279,14 @@ const ReportPage = () => {
         }
     };
 
-
-
+    const hasPermission = (permissionName: string) =>
+        user?.role?.permissions?.some((p) => p.name === permissionName);
 
     useEffect(() => {
+        if (!hasPermission('list_reports')) {
+            navigate('/dashboard');
+            return;
+        }
         fetchAll();
     }, [token]);
 
@@ -307,13 +315,13 @@ const ReportPage = () => {
 
                                         <div className="flex gap-4 items-center flex-wrap 2xl:flex-nowrap">
                                             <button
-                                                onClick={() => exportPdf(report.title , report.data)}
+                                                onClick={() => exportPdf(report.title, report.data)}
                                                 className="border border-[#EFBF04] text-[#181D26] bg-[#EFBF04] px-6 py-2 rounded-full hover:bg-[#EFBF04]/90 transition min-w-[125px] w-full"
                                             >
                                                 {t('Export Pdf')}
                                             </button>
                                             <button
-                                                onClick={() => exportExcel(report.title , report.data)}
+                                                onClick={() => exportExcel(report.title, report.data)}
                                                 className="border border-[#EFBF04] text-[#EFBF04] px-6 py-2 rounded-full hover:bg-gray-700 transition min-w-[140px] w-full"
                                             >
                                                 {t('Export Excel')}

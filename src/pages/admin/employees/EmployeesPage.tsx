@@ -96,8 +96,15 @@ const EmployeesPage = () => {
         return d.toISOString().slice(0, 19).replace("T", " ");
     };
 
+    const hasPermission = (permissionName: string) => {
+        return user?.role?.permissions?.some(p => p.name === permissionName);
+    };
+
     const handleSubmit = async (e: React.SyntheticEvent) => {
-        if (!token) return;
+        if (!token) {
+            navigate('/auth/login');
+            return;
+        }
         e.preventDefault();
         setLoading(true);
         try {
@@ -171,9 +178,12 @@ const EmployeesPage = () => {
     };
 
     const handleEdit = async (e: React.SyntheticEvent) => {
-        if (!token) return;
         e.preventDefault();
         setLoading(true);
+        if (!token) {
+            navigate('/auth/login');
+            return;
+        }
         try {
 
             if (!editData) {
@@ -242,6 +252,10 @@ const EmployeesPage = () => {
 
     const handleStatusUpdate = async (employeeId: string, status: 'pending' | 'accepted' | 'rejected') => {
         setLoading(true);
+        if (!token) {
+            navigate('/auth/login');
+            return;
+        }
         try {
             const token = localStorage.getItem('token');
             if (!token) {
@@ -281,10 +295,12 @@ const EmployeesPage = () => {
     };
 
     const fetchEmployees = async () => {
-        if (!token || !user) return;
+        if (!token || !user) {
+            navigate('/auth/login');
+            return;
+        }
         setListLoading(true);
         try {
-
             const response = await employeeService.getAllEmployee(token);
             if (response.success) {
                 setEmployees(response.data);
@@ -298,7 +314,10 @@ const EmployeesPage = () => {
     };
 
     const fetchRoles = async () => {
-        if (!token) return;
+        if (!token) {
+            navigate('/auth/login');
+            return;
+        }
         try {
             const response = await roleService.getAllRoles(token);
             if (response.success) setRoles(response.data);
@@ -324,6 +343,10 @@ const EmployeesPage = () => {
     };
 
     useEffect(() => {
+        if (!hasPermission('list_employees')) {
+            navigate('/dashboard');
+            return;
+        }
         audit();
         fetchEmployees();
         fetchRoles();
@@ -403,6 +426,10 @@ const EmployeesPage = () => {
     };
 
     const handleDelete = async () => {
+        if (!token) {
+            navigate('/auth/login');
+            return;
+        }
         try {
             const token = localStorage.getItem('token');
             const response = await employeeService.deleteEmployee(deleteId, token);
@@ -579,27 +606,27 @@ const EmployeesPage = () => {
                         </div>
 
                     </div>
-                        {searchTerm.trim() === '' && !listLoading && (
-                            <div className="flex justify-end mt-4 text-[#F4F7FF]">
-                                <button
-                                    onClick={goToPrevPage}
-                                    disabled={currentPage === 1}
-                                    className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[8px_0px_0px_8px] bg-[#575F6F] disabled:opacity-50"
-                                >
-                                    {t('Prev')}
-                                </button>
-                                <button className="font-medium text-xs leading-[21px] text-[#181D26] py-1 px-3 bg-[#D4AB0B]">
-                                    {currentPage}
-                                </button>
-                                <button
-                                    onClick={goToNextPage}
-                                    disabled={currentPage === totalPages}
-                                    className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[0px_8px_8px_0px] bg-[#575F6F] disabled:opacity-50"
-                                >
-                                    {t('Next')}
-                                </button>
-                            </div>
-                        )}
+                    {searchTerm.trim() === '' && !listLoading && (
+                        <div className="flex justify-end mt-4 text-[#F4F7FF]">
+                            <button
+                                onClick={goToPrevPage}
+                                disabled={currentPage === 1}
+                                className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[8px_0px_0px_8px] bg-[#575F6F] disabled:opacity-50"
+                            >
+                                {t('Prev')}
+                            </button>
+                            <button className="font-medium text-xs leading-[21px] text-[#181D26] py-1 px-3 bg-[#D4AB0B]">
+                                {currentPage}
+                            </button>
+                            <button
+                                onClick={goToNextPage}
+                                disabled={currentPage === totalPages}
+                                className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[0px_8px_8px_0px] bg-[#575F6F] disabled:opacity-50"
+                            >
+                                {t('Next')}
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
 

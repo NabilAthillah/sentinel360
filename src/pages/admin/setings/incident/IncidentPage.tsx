@@ -84,6 +84,11 @@ const IncidentPageMaster = () => {
         const newStatus = !prevStatus;
         setSwitchStates(prev => ({ ...prev, [id]: newStatus }));
 
+        if (!token) {
+            navigate('/auth/login');
+            return;
+        }
+
         try {
             const response = await IncidentTypesService.editIncidentTypesStatus(
                 token,
@@ -103,6 +108,12 @@ const IncidentPageMaster = () => {
     const handleSubmit = async (e: React.SyntheticEvent) => {
         e.preventDefault();
         setLoading(true);
+
+        if (!token) {
+            navigate('/auth/login');
+            return;
+        }
+
         try {
             const response = await IncidentTypesService.addIncidentTypes(token, name);
             if (response.success) {
@@ -121,6 +132,11 @@ const IncidentPageMaster = () => {
     const handleEdit = async (e: React.SyntheticEvent) => {
         e.preventDefault();
         if (!editData) return;
+
+        if (!token) {
+            navigate('/auth/login');
+            return;
+        }
 
         setLoading(true);
         try {

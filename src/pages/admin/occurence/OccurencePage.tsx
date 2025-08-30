@@ -315,6 +315,9 @@ const OccurencePage = () => {
     }
   };
 
+  const hasPermission = (permissionName: string) =>
+    user?.role?.permissions?.some((p) => p.name === permissionName);
+
   const handleSearch = () => {
     // tetap ada kalau kamu mau trigger manual; sekarang filter pakai useMemo
   };
@@ -332,6 +335,10 @@ const OccurencePage = () => {
   };
 
   useEffect(() => {
+    if (!hasPermission('list_e-occurrences')) {
+      navigate('/dashboard');
+      return;
+    }
     audit();
     fetchAll();
   }, []);
@@ -400,9 +407,11 @@ const OccurencePage = () => {
                 </div>
                 <button onClick={handleDownload} className="font-medium text-sm min-w-[142px] text-[#EFBF04] px-4 py-[9.5px] border-[1px] border-[#EFBF04] rounded-full hover:bg-[#EFBF04] hover:text-[#252C38] transition-all">{t('Download Report')}</button>
               </div>
-              <div className="w-[210px]">
-                <button onClick={() => setAddData(true)} className="font-medium text-base min-w-[210px] text-[#181d26] px-[46.5px] py-3 border-[1px] border-[#EFBF04] bg-[#EFBF04] rounded-full hover:bg-[#181d26] hover:text-[#EFBF04] transition-all">{t('Add Occurence')}</button>
-              </div>
+              {hasPermission("add_e-occurrence") && (
+                <div className="w-[210px]">
+                  <button onClick={() => setAddData(true)} className="font-medium text-base min-w-[210px] text-[#181d26] px-[46.5px] py-3 border-[1px] border-[#EFBF04] bg-[#EFBF04] rounded-full hover:bg-[#181d26] hover:text-[#EFBF04] transition-all">{t('Add Occurence')}</button>
+                </div>
+              )}
             </div>
             <div className="flex flex-wrap items-end gap-4 w-full">
               <select
@@ -442,19 +451,23 @@ const OccurencePage = () => {
                 ))}
               </select>
 
-              <div className="flex gap-2">
+              <div className="flex flex-wrap sm:flex-nowrap gap-2 w-full">
                 <input
                   type="date"
                   value={dateFrom}
                   onChange={(e) => setDateFrom(e.target.value)}
-                  className="max-w-[200px] w-full px-4 py-[10.5px] bg-[#222834] rounded-[4px] text-[#F4F7FF] text-base border-b border-b-[#98A1B3] outline-none"
+                  className="flex-1 min-w-[140px] sm:max-w-[200px] w-full px-4 py-[10.5px] 
+               bg-[#222834] rounded-[4px] text-[#F4F7FF] text-base 
+               border-b border-b-[#98A1B3] outline-none"
                   placeholder="From"
                 />
                 <input
                   type="date"
                   value={dateTo}
                   onChange={(e) => setDateTo(e.target.value)}
-                  className="max-w-[200px] w-full px-4 py-[10.5px] bg-[#222834] rounded-[4px] text-[#F4F7FF] text-base border-b border-b-[#98A1B3] outline-none"
+                  className="flex-1 min-w-[140px] sm:max-w-[200px] w-full px-4 py-[10.5px] 
+               bg-[#222834] rounded-[4px] text-[#F4F7FF] text-base 
+               border-b border-b-[#98A1B3] outline-none"
                   placeholder="To"
                 />
               </div>
@@ -499,29 +512,31 @@ const OccurencePage = () => {
                         <td className="text-[#F4F7FF] pt-6 pb-3 ">{occurrence.reported_by.name}</td>
                         <td className="pt-6 pb-3">
                           <div className="flex gap-6 items-center justify-center">
-                            <svg
-                              onClick={() => {
-                                setEditId(occurrence.id);
-                                setEditForm({
-                                  id_site: occurrence.site.id,
-                                  id_category: occurrence.category.id,
-                                  occurred_at: `${occurrence.date}T${occurrence.time}`,
-                                  detail: occurrence.detail || "",
-                                });
-                                setEditData(true);
-                              }}
-                              className="cursor-pointer"
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              width="28"
-                              height="28"
-                              viewBox="0 0 28 28"
-                            >
-                              <path
-                                d="M3.5,20.1249V24.5H7.875L20.7783,11.5967L16.4033,7.2217L3.5,20.1249ZM24.1617,8.2133C24.6166,7.7593,24.6166,7.0223,24.1617,6.5683L21.4317,3.8383C20.9777,3.3834,20.2406,3.3834,19.7867,3.8383L17.6517,5.9733L22.0267,10.3483L24.1617,8.2133Z"
-                                fill="#F4F7FF"
-                              />
-                            </svg>
+                            {hasPermission("edit_e-occurrence") && (
+                              <svg
+                                onClick={() => {
+                                  setEditId(occurrence.id);
+                                  setEditForm({
+                                    id_site: occurrence.site.id,
+                                    id_category: occurrence.category.id,
+                                    occurred_at: `${occurrence.date}T${occurrence.time}`,
+                                    detail: occurrence.detail || "",
+                                  });
+                                  setEditData(true);
+                                }}
+                                className="cursor-pointer"
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                width="28"
+                                height="28"
+                                viewBox="0 0 28 28"
+                              >
+                                <path
+                                  d="M3.5,20.1249V24.5H7.875L20.7783,11.5967L16.4033,7.2217L3.5,20.1249ZM24.1617,8.2133C24.6166,7.7593,24.6166,7.0223,24.1617,6.5683L21.4317,3.8383C20.9777,3.3834,20.2406,3.3834,19.7867,3.8383L17.6517,5.9733L22.0267,10.3483L24.1617,8.2133Z"
+                                  fill="#F4F7FF"
+                                />
+                              </svg>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -538,25 +553,25 @@ const OccurencePage = () => {
               </table>
             </div>
           </div>
-            <div className="flex justify-end mt-4 text-[#F4F7FF]">
-              <button
-                onClick={handlePrev}
-                disabled={currentPage === 1}
-                className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[8px_0px_0px_8px] bg-[#575F6F] disabled:opacity-50"
-              >
-                {t('Prev')}
-              </button>
-              <button className="font-medium text-xs leading-[21px] text-[#181D26] py-1 px-3 bg-[#D4AB0B]">
-                {currentPage}
-              </button>
-              <button
-                onClick={handleNext}
-                disabled={currentPage === totalPages}
-                className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[0px_8px_8px_0px] bg-[#575F6F] disabled:opacity-50"
-              >
-                {t('Next')}
-              </button>
-            </div>
+          <div className="flex justify-end mt-4 text-[#F4F7FF]">
+            <button
+              onClick={handlePrev}
+              disabled={currentPage === 1}
+              className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[8px_0px_0px_8px] bg-[#575F6F] disabled:opacity-50"
+            >
+              {t('Prev')}
+            </button>
+            <button className="font-medium text-xs leading-[21px] text-[#181D26] py-1 px-3 bg-[#D4AB0B]">
+              {currentPage}
+            </button>
+            <button
+              onClick={handleNext}
+              disabled={currentPage === totalPages}
+              className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[0px_8px_8px_0px] bg-[#575F6F] disabled:opacity-50"
+            >
+              {t('Next')}
+            </button>
+          </div>
         </div>
       </div>
 

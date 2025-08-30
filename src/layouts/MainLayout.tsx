@@ -31,31 +31,31 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
         if (!token || !user) return;
 
 
-            if (token || user) {
-                axios.get(`${process.env.REACT_APP_API_URL}/check-token` || 'http://localhost:8000/api/check-token', {
-                    headers: {
-                        Authorization: `Bearer ${token}`
+        if (token || user) {
+            axios.get(`${process.env.REACT_APP_API_URL}/check-token` || 'http://localhost:8000/api/check-token', {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            })
+                .then((res) => {
+                    const parsedUser = res.data.user ? res.data.user : null;
+
+                    if (!parsedUser || !parsedUser.id) {
+                        localStorage.clear();
+                        navigate('/auth/login');
+                        return;
                     }
                 })
-                    .then((res) => {
-                        const parsedUser = res.data.user ? res.data.user : null;
-
-                        if (!parsedUser || !parsedUser.id) {
-                            localStorage.clear();
-                            navigate('/auth/login');
-                            return;
-                        }
-                    })
-                    .catch((err) => {
-                        navigate('/auth/login')
-                        localStorage.removeItem('token');
-                        localStorage.removeItem('user');
-                    });
-            } else {
-                navigate('/auth/login')
-                localStorage.removeItem('token');
-                localStorage.removeItem('user');
-            }
+                .catch((err) => {
+                    navigate('/auth/login')
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                });
+        } else {
+            navigate('/auth/login')
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+        }
     }, [navigate])
 
     return (
@@ -73,10 +73,14 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
                 theme="dark"
                 transition={Bounce}
             />
-            <Sidebar isOpen={sidebar} closeSidebar={setSidebar} user={user} />
-            <div className='flex flex-col max-w-screen w-full pl-0 min-h-screen h-full transition-all duration-200 md:pl-[265px]'>
+            {/* <Sidebar isOpen={sidebar} closeSidebar={setSidebar} user={user} /> */}
+            {/* <div className='flex flex-col max-w-screen w-full pl-0 min-h-screen h-full transition-all duration-200 md:pl-[265px]'>
                 <Header openSidebar={setSidebar} user={user} handleLogout={handleLogout} />
                 {children}
+            </div> */}
+            <div className='flex flex-col max-w-screen w-full min-h-screen h-full transition-all duration-200'>
+                <Header openSidebar={setSidebar} user={user} handleLogout={handleLogout} />
+                <div className="flex-1 p-6 max-w-screen w-full min-h-screen h-full">{children}</div>
             </div>
         </main>
     );

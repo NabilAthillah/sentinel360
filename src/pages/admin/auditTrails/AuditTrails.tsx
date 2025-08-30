@@ -13,6 +13,7 @@ import SecondLayout from '../../../layouts/SecondLayout';
 import auditTrialsService from '../../../services/auditTrailsService';
 import { RootState } from '../../../store';
 import { AuditTrail } from '../../../types/auditTrials';
+import { useNavigate } from "react-router-dom";
 
 const AuditTrails = () => {
     const [logs, setLogs] = useState<AuditTrail[]>([]);
@@ -21,6 +22,7 @@ const AuditTrails = () => {
     const [selectedLog, setSelectedLog] = useState<AuditTrail | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
+    const navigate = useNavigate();
     const [showModal, setShowModal] = useState(false);
     const [showDropdown, setShowDropdown] = useState(false);
     const token = useSelector((state: RootState) => state.token.token);
@@ -213,6 +215,9 @@ const AuditTrails = () => {
         }
     };
 
+    const hasPermission = (permissionName: string) => {
+        return user?.role?.permissions?.some(p => p.name === permissionName);
+    };
 
     const getStatusClasses = (status?: string) => {
         const s = (status || 'info').toLowerCase();
@@ -223,7 +228,15 @@ const AuditTrails = () => {
     };
 
 
-    useEffect(() => { audit(); fetchAuditTrails(); }, []);
+    useEffect(() => {
+        if (!hasPermission('list_audit_trails')) {
+            navigate('/dashboard');
+            return;
+        }
+        audit();
+        fetchAuditTrails();
+    },
+        []);
 
     useEffect(() => {
         const onDown = (e: MouseEvent) => {
@@ -383,13 +396,15 @@ const AuditTrails = () => {
                                                 </td>
                                                 <td className="text-[#F4F7FF] py-3">{formatDateTime(log.created_at)}</td>
                                                 <td>
-                                                    <svg
-                                                        onClick={() => openModal(log)}
-                                                        className="w-6 h-6 text-white ml-3 cursor-pointer hover:text-blue-400 transition"
-                                                        aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                                                        <path stroke="currentColor" strokeWidth="2" d="M21 12c0 1.2-4.03 6-9 6s-9-4.8-9-6c0-1.2 4.03-6 9-6s9 4.8 9 6Z" />
-                                                        <path stroke="currentColor" strokeWidth="2" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                                                    </svg>
+                                                    {hasPermission("show_audit_trails") && (
+                                                        <svg
+                                                            onClick={() => openModal(log)}
+                                                            className="w-6 h-6 text-white ml-3 cursor-pointer hover:text-blue-400 transition"
+                                                            aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                                            <path stroke="currentColor" strokeWidth="2" d="M21 12c0 1.2-4.03 6-9 6s-9-4.8-9-6c0-1.2 4.03-6 9-6s9 4.8 9 6Z" />
+                                                            <path stroke="currentColor" strokeWidth="2" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                                        </svg>
+                                                    )}
                                                 </td>
                                             </tr>
                                         ))}
