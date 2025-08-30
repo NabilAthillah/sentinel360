@@ -1,4 +1,3 @@
-// SecondHomePage.tsx
 import { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { Link, useNavigate, useParams } from "react-router-dom";
@@ -13,6 +12,7 @@ import siteService from "../../../services/siteService";
 import { Site } from "../../../types/site";
 import { SiteEmployee } from "../../../types/siteEmployee";
 import Swal from "sweetalert2";
+import attendanceService from "../../../services/attendanceService";
 
 type Settings = { label: string; placeholder: string; value: string };
 
@@ -34,13 +34,15 @@ const BottomSheet = ({
   return (
     <div className={`fixed inset-0 z-50 ${open ? "" : "pointer-events-none"}`}>
       <div
-        className={`absolute inset-0 bg-black/40 transition-opacity ${open ? "opacity-100" : "opacity-0"
-          }`}
+        className={`absolute inset-0 bg-black/40 transition-opacity ${
+          open ? "opacity-100" : "opacity-0"
+        }`}
         onClick={onClose}
       />
       <div
-        className={`absolute left-0 right-0 bottom-0 w-full transition-transform duration-300 ${open ? "translate-y-0" : "translate-y-full"
-          }`}
+        className={`absolute left-0 right-0 bottom-0 w-full transition-transform duration-300 ${
+          open ? "translate-y-0" : "translate-y-full"
+        }`}
       >
         <div className="rounded-t-2xl w-full md:max-w-2xl mx-auto bg-[#1C1F2A] text-white p-5 shadow-2xl flex flex-col items-center">
           <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-white/20" />
@@ -65,6 +67,47 @@ const BottomSheet = ({
   );
 };
 
+type Shift = "relief day" | "relief night";
+
+const todayISOInSG = () =>
+  new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Singapore" });
+
+const nowMinutesInSG = () => {
+  const parts = new Intl.DateTimeFormat("en-SG", {
+    timeZone: "Asia/Singapore",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(new Date());
+  const hh = Number(parts.find((p) => p.type === "hour")?.value ?? "0");
+  const mm = Number(parts.find((p) => p.type === "minute")?.value ?? "0");
+  return hh * 60 + mm;
+};
+const inRangeClock = (nowMin: number, startMin: number, endMin: number) =>
+  startMin <= endMin
+    ? nowMin >= startMin && nowMin < endMin
+    : nowMin >= startMin || nowMin < endMin;
+
+const timeToMin = (hhmm?: string | null) => {
+  if (!hhmm) return null;
+  const [h, m] = hhmm.split(":").map(Number);
+  if (!Number.isFinite(h) || !Number.isFinite(m)) return null;
+  return h * 60 + m;
+};
+
+const parseEmployeeShift = (raw: any): Shift | null => {
+  const s = String(raw ?? "")
+    .trim()
+    .toLowerCase();
+  if (s === "relief day" || s === "relief-day" || s === "relief_day")
+    return "relief day";
+  if (s === "relief night" || s === "relief-night" || s === "relief_night")
+    return "relief night";
+  return null; // day/night diabaikan
+};
+
+const toApiShift = (s: Shift): "relief day" | "relief night" => s;
+
 const SecondHomePage = () => {
   const user = useSelector((state: RootState) => state.user.user);
   const token = useSelector((state: RootState) => state.token.token);
@@ -77,6 +120,40 @@ const SecondHomePage = () => {
   const [loadingLocation, setLoadingLocation] = useState(true);
   const [nearestSite, setNearestSite] = useState<Site | null>(null);
   const [openSheet, setOpenSheet] = useState(false);
+
+  const getSetting = (label: string) =>
+    settings.find(
+      (s) => s.label.trim().toLowerCase() === label.trim().toLowerCase()
+    )?.value ?? null;
+
+  const getGraceMin = () => {
+    const v = Number(getSetting("Grace period (in minutes)") ?? 0);
+    return Number.isFinite(v) ? Math.max(0, v) : 0;
+  };
+
+  const getShiftStartEndMin = (shift: Shift) => {
+    const timeToMin = (hhmm?: string | null) => {
+      if (!hhmm) return null;
+      const [h, m] = hhmm.split(":").map(Number);
+      return Number.isFinite(h) && Number.isFinite(m) ? h * 60 + m : null;
+    };
+
+    const getSetting = (label: string) =>
+      settings.find(
+        (s) => s.label.trim().toLowerCase() === label.trim().toLowerCase()
+      )?.value ?? null;
+
+    if (shift === "relief day") {
+      return {
+        start: timeToMin(getSetting("RELIEF Day shift start time")),
+        end: timeToMin(getSetting("RELIEF Day shift end time")),
+      };
+    }
+    return {
+      start: timeToMin(getSetting("RELIEF night shift start time")),
+      end: timeToMin(getSetting("RELIEF night shift end time")),
+    };
+  };
 
   const geoFencingMeters = useMemo(() => {
     const s = settings.find((d) =>
@@ -98,10 +175,10 @@ const SecondHomePage = () => {
     const Δφ = ((lat2 - lat1) * Math.PI) / 180;
     const Δλ = ((lon2 - lon1) * Math.PI) / 180;
     const a =
-      Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-      Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+      Math.sin(Δφ / 2) ** 2 +
+      Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) ** 2;
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c; // meters
+    return R * c;
   };
 
   const fetchSites = async () => {
@@ -202,7 +279,6 @@ const SecondHomePage = () => {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const { latitude, longitude } = pos.coords;
-
         let candidate: { s: Site; d: number } | null = null;
         for (const s of sites) {
           const d = getDistance(
@@ -215,15 +291,12 @@ const SecondHomePage = () => {
             if (!candidate || d < candidate.d) candidate = { s, d };
           }
         }
-
         if (candidate) {
           setNearestSite(candidate.s);
-          setOpenSheet(true);
         } else {
           setNearestSite(null);
           setOpenSheet(false);
         }
-
         setTimeout(() => setLoadingLocation(false), 400);
       },
       (error) => {
@@ -234,6 +307,79 @@ const SecondHomePage = () => {
       { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 }
     );
   }, [sites, geoFencingMeters]);
+
+  useEffect(() => {
+    (async () => {
+      if (!nearestSite || !token || !user?.id || settings.length === 0) {
+        setOpenSheet(false);
+        return;
+      }
+
+      let shift: Shift | null =
+        parseEmployeeShift((siteEmployee as any)?.shift) ||
+        parseEmployeeShift((siteEmployee as any)?.site_employee?.shift) ||
+        parseEmployeeShift((siteEmployee as any)?.siteEmployee?.shift) ||
+        null;
+
+      if (!shift) {
+        const now = nowMinutesInSG();
+        const rd = getShiftStartEndMin("relief day");
+        const rn = getShiftStartEndMin("relief night");
+        if (
+          rd.start != null &&
+          rd.end != null &&
+          inRangeClock(now, rd.start, rd.end)
+        )
+          shift = "relief day";
+        else if (
+          rn.start != null &&
+          rn.end != null &&
+          inRangeClock(now, rn.start, rn.end)
+        )
+          shift = "relief night";
+      }
+
+      if (!shift) {
+        setOpenSheet(false);
+        return;
+      }
+
+      const date = todayISOInSG();
+      let alreadyIn = false;
+      try {
+        const res = await attendanceService.getAttendanceBySiteUserShift(
+          token,
+          {
+            site_id: String(nearestSite.id),
+            user_id: user.id,
+            shift: toApiShift(shift),
+            date,
+          }
+        );
+        alreadyIn = !!res?.data?.time_in;
+      } catch {
+        setOpenSheet(false);
+        return;
+      }
+      if (alreadyIn) {
+        setOpenSheet(false);
+        return;
+      }
+
+      const { start } = getShiftStartEndMin(shift);
+      const grace = Number(getSetting("Grace period (in minutes)") ?? 0) || 0;
+      if (start == null) {
+        setOpenSheet(false);
+        return;
+      }
+
+      const now = nowMinutesInSG();
+      const startPlusGrace = (start + Math.max(0, grace)) % 1440;
+      const canOpen = inRangeClock(now, start, startPlusGrace);
+
+      setOpenSheet(canOpen);
+    })();
+  }, [nearestSite, token, user?.id, settings, siteEmployee]);
 
   const handleProceed = () => {
     navigate(`/user/attendance?siteId=${nearestSite?.id ?? ""}`);
@@ -285,11 +431,11 @@ const SecondHomePage = () => {
         <div
           onClick={() => {
             if (nearestSite) {
-              navigate('/user/guard-tours/${nearestSite?.id}/route')
+              navigate(`/user/guard-tours/${nearestSite?.id}/route`);
             } else {
               Swal.fire({
                 title: "Error!",
-                text: 'There is currently no nearby site.',
+                text: "There is currently no nearby site.",
                 icon: "error",
                 background: "#1e1e1e",
                 confirmButtonColor: "#EFBF04",

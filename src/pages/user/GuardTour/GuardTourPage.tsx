@@ -1,129 +1,440 @@
 import React, { useEffect, useState } from "react";
-import { ChevronRight, ArrowLeft, Wifi } from "lucide-react";
+import { ChevronRight, ArrowLeft } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../store";
-import routeService from "../../../services/routeService";
+
+import siteService from "../../../services/siteService";
+import attendanceService from "../../../services/attendanceService";
+import attendanceSettingService from "../../../services/attendanceSettingService";
+import siteEmployeeService from "../../../services/siteEmployeeService";
+
 import { Site } from "../../../types/site";
 import { SiteEmployee } from "../../../types/siteEmployee";
-import siteService from "../../../services/siteService";
+import Loader from "../../../components/Loader";
+import Swal from "sweetalert2";
 
-type Settings = {
-  label: string;
-  placeholder: string;
-  value: string;
+type Settings = { label: string; placeholder: string; value: string };
+type ShiftApi = "day" | "night" | "relief day" | "relief night";
+
+const swalBase = {
+  background: "#1e1e1e",
+  color: "#f4f4f4",
+  confirmButtonColor: "#EFBF04",
+} as const;
+
+// --- Time helpers (Asia/Singapore) ---
+const todayISOInSG = () =>
+  new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Singapore" });
+
+const dateISOInSG = (daysOffset = 0) =>
+  new Date(Date.now() + daysOffset * 86400000).toLocaleDateString("en-CA", {
+    timeZone: "Asia/Singapore",
+  });
+
+const nowMinutesInSG = () => {
+  const parts = new Intl.DateTimeFormat("en-SG", {
+    timeZone: "Asia/Singapore",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(new Date());
+  const hh = Number(parts.find((p) => p.type === "hour")?.value ?? "0");
+  const mm = Number(parts.find((p) => p.type === "minute")?.value ?? "0");
+  return hh * 60 + mm;
+};
+
+const inRangeClock = (nowMin: number, startMin: number, endMin: number) =>
+  startMin <= endMin
+    ? nowMin >= startMin && nowMin < endMin
+    : nowMin >= startMin || nowMin < endMin;
+
+// --- Shift helpers ---
+const parseEmployeeShift = (raw: any): ShiftApi | null => {
+  const s = String(raw ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/[_-]+/g, " "); // normalize "relief-night" / "relief_night" -> "relief night"
+  if (
+    s === "day" ||
+    s === "night" ||
+    s === "relief day" ||
+    s === "relief night"
+  ) {
+    return s as ShiftApi;
+  }
+  return null;
 };
 
 const GuardTourPage = () => {
   const navigate = useNavigate();
   const token = useSelector((state: RootState) => state.token.token);
-  const [site, setSite] = useState<Site>();
-  const [siteEmployee, setSiteEmployee] = useState<SiteEmployee>();
-  const [routes, setRoutes] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [settings, setSettings] = useState<Settings[]>([]);
-  const [isSecondHome, setIsSecondHome] = useState(false);
+  const user = useSelector((state: RootState) => state.user.user);
   const { idSite } = useParams<{ idSite: string }>();
-  //   const fetchRoutes = async () => {
-  //     if (!token) return;
-  //     try {
-  //       setLoading(true);
-  //       const response = await routeService.getAllRoutes(token);
-  //       setRoutes(response.data);
-  //     } catch (err: any) {
-  //       console.error("Failed to fetch routes", err.message || err);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
 
+  const [site, setSite] = useState<Site>();
+  const [routes, setRoutes] = useState<any[]>([]);
+  const [settings, setSettings] = useState<Settings[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [allowed, setAllowed] = useState<boolean | null>(null);
+
+  // ---- Settings helpers
+  const getSetting = (label: string) =>
+    settings.find(
+      (s) => s.label.trim().toLowerCase() === label.trim().toLowerCase()
+    )?.value ?? null;
+
+  const timeToMin = (hhmm?: string | null) => {
+    if (!hhmm) return null;
+    const [h, m] = hhmm.split(":").map(Number);
+    return Number.isFinite(h) && Number.isFinite(m) ? h * 60 + m : null;
+  };
+
+  const getShiftStartEndMin = (shift: ShiftApi) => {
+    if (shift === "day") {
+      return {
+        start: timeToMin(getSetting("Day shift start time")),
+        end: timeToMin(getSetting("Day shift end time")),
+      };
+    }
+    if (shift === "night") {
+      return {
+        start: timeToMin(getSetting("Night shift start time")),
+        end: timeToMin(getSetting("Night shift end time")),
+      };
+    }
+    if (shift === "relief day") {
+      return {
+        start: timeToMin(getSetting("RELIEF Day shift start time")),
+        end: timeToMin(getSetting("RELIEF Day shift end time")),
+      };
+    }
+    // relief night
+    return {
+      start: timeToMin(getSetting("RELIEF night shift start time")),
+      end: timeToMin(getSetting("RELIEF night shift end time")),
+    };
+  };
+
+  const crossesMidnight = (shift: ShiftApi) => {
+    const { start, end } = getShiftStartEndMin(shift);
+    return start != null && end != null && start > end;
+  };
+
+  // ---- Data fetchers
   const fetchSite = async () => {
-    if (!token) return;
+    if (!token || !idSite) return;
     try {
       const res = await siteService.getSiteById(idSite, token);
       if (res?.success) {
-        setSite(res.data.site);
-        setRoutes(res.data.site.routes);
+        const s = res.data?.site ?? res.data;
+        setSite(s);
+        setRoutes(s?.routes ?? []);
       }
     } catch (e: any) {
       console.error(e?.message || e);
     }
   };
 
-  //   const fetchRoutesByid = async () => {
-  //     if (!token) return;
-  //     try {
-  //       setLoading(true);
-  //       const response = await routeService.getRouteById(token);
-  //       if (response.success) {
-  //         setRoutes(response.data);
-  //       }
-  //     } catch (err: any) {
-  //       console.error("Failed to fetch routes", err.message || err);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-  const getDistance = (
-    lat1: number,
-    lon1: number,
-    lat2: number,
-    lon2: number
-  ) => {
-    const R = 6371e3;
-    const φ1 = (lat1 * Math.PI) / 180;
-    const φ2 = (lat2 * Math.PI) / 180;
-    const Δφ = ((lat2 - lat1) * Math.PI) / 180;
-    const Δλ = ((lon2 - lon1) * Math.PI) / 180;
-
-    const a =
-      Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-      Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-    return R * c;
+  const fetchSettings = async () => {
+    if (!token) return;
+    try {
+      const res = await attendanceSettingService.getAttendanceSetting(token);
+      if (res?.success) {
+        const d = res.data;
+        setSettings([
+          {
+            label: "Grace period (in minutes)",
+            placeholder: "",
+            value: String(d.grace_period),
+          },
+          {
+            label: "Geo fencing (in meters)",
+            placeholder: "",
+            value: String(d.geo_fencing),
+          },
+          {
+            label: "Day shift start time",
+            placeholder: "00:00",
+            value: d.day_shift_start_time.slice(0, 5),
+          },
+          {
+            label: "Day shift end time",
+            placeholder: "00:00",
+            value: d.day_shift_end_time.slice(0, 5),
+          },
+          {
+            label: "Night shift start time",
+            placeholder: "00:00",
+            value: d.night_shift_start_time.slice(0, 5),
+          },
+          {
+            label: "Night shift end time",
+            placeholder: "00:00",
+            value: d.night_shift_end_time.slice(0, 5),
+          },
+          {
+            label: "RELIEF Day shift start time",
+            placeholder: "00:00",
+            value: d.relief_day_shift_start_time.slice(0, 5),
+          },
+          {
+            label: "RELIEF Day shift end time",
+            placeholder: "00:00",
+            value: d.relief_day_shift_end_time.slice(0, 5),
+          },
+          {
+            label: "RELIEF night shift start time",
+            placeholder: "00:00",
+            value: d.relief_night_shift_start_time.slice(0, 5),
+          },
+          {
+            label: "RELIEF night shift end time",
+            placeholder: "00:00",
+            value: d.relief_night_shift_end_time.slice(0, 5),
+          },
+        ]);
+      }
+    } catch (e: any) {
+      console.error(e?.message || e);
+    }
   };
 
-  //   const checkLocation = (currentLat: number, currentLng: number) => {
-  //     if (!sites || sites.length === 0) return;
+  // ---- Gating logic
+  useEffect(() => {
+    (async () => {
+      if (!token || !user?.id || !idSite) return;
+      setLoading(true);
 
-  //     const geoFencingStr = settings.find((d) =>
-  //       d.label.toLowerCase().includes("geo fencing")
-  //     )?.value;
-  //     const geoFencing = geoFencingStr ? Number(geoFencingStr) : 0;
+      try {
+        if (settings.length === 0) {
+          await fetchSettings();
+        }
 
-  //     if (geoFencing === 0) {
-  //       console.warn("Geo fencing setting tidak ditemukan atau 0");
-  //       return;
-  //     }
+        // 1) Try site_employee for this user & site (via nearest API, then check if site matches param)
+        let seData: SiteEmployee | undefined;
+        let seShift: ShiftApi | null = null;
+        let seSiteId: string | null = null;
 
-  //     const nearestSite = sites.find((site) => {
-  //       const dist = getDistance(
-  //         currentLat,
-  //         currentLng,
-  //         Number(site.lat),
-  //         Number(site.long)
-  //       );
-  //       return dist <= geoFencing;
-  //     });
+        try {
+          const seRes = await siteEmployeeService.getNearestSiteUser(
+            token,
+            user
+          );
+          if (seRes?.success && seRes?.data) {
+            seData = seRes.data;
+            seShift =
+              parseEmployeeShift(seRes.data?.shift) ||
+              parseEmployeeShift(seRes.data?.site_employee?.shift) ||
+              parseEmployeeShift(seRes.data?.siteEmployee?.shift);
+            seSiteId = String(seRes.data?.site?.id ?? "");
+          }
+        } catch (e) {
+          console.warn("[guard-tour] getNearestSiteUser error:", e);
+        }
 
-  //     if (!nearestSite) {
-  //       setIsSecondHome(true);
-  //       return;
-  //     }
+        const dateToday = todayISOInSG();
 
-  //     if (!siteEmployee || siteEmployee?.site.id !== nearestSite.id) {
-  //       setIsSecondHome(true);
-  //     } else {
-  //       setIsSecondHome(false);
-  //     }
-  //   };
+        if (seData && seSiteId === String(idSite) && seShift) {
+          // Handle overnight date for this employed shift
+          const { end } = getShiftStartEndMin(seShift);
+          const nowMin = nowMinutesInSG();
+          const useYesterday =
+            crossesMidnight(seShift) && end != null && nowMin < end!;
+          const dateForQuery = useYesterday ? dateISOInSG(-1) : dateToday;
+
+          console.log("[guard-tour] employed params", {
+            siteId: idSite,
+            userId: user?.id,
+            shift: seShift,
+            dateForQuery,
+          });
+
+          // Attendance check for employed shift
+          let att = await attendanceService.getAttendanceBySiteUserShift(
+            token,
+            {
+              site_id: String(idSite),
+              user_id: user.id,
+              shift: seShift,
+              date: dateForQuery,
+            }
+          );
+
+          // Fallback shift string variants if needed
+          if (!att?.data?.time_in) {
+            const alt1 = (seShift as string).replace(" ", "-");
+            const alt2 = (seShift as string).replace(" ", "_");
+            for (const alt of [alt1, alt2]) {
+              try {
+                const res =
+                  await attendanceService.getAttendanceBySiteUserShift(token, {
+                    site_id: String(idSite),
+                    user_id: user.id,
+                    shift: alt as any,
+                    date: dateForQuery,
+                  });
+                if (res?.data?.time_in) {
+                  att = res;
+                  break;
+                }
+              } catch {}
+            }
+          }
+
+          console.log("[guard-tour] employed attendance", att);
+
+          const hasIn = !!att?.data?.time_in;
+          const hasOut = !!att?.data?.time_out;
+
+          if (hasIn && !hasOut) {
+            setAllowed(true);
+            setLoading(false);
+            return;
+          }
+
+          setAllowed(false);
+          await Swal.fire({
+            ...swalBase,
+            icon: "info",
+            title: "Guard Tour Locked",
+            text: "Access is only available if you have checked in and have not yet checked out for your shift.",
+          });
+          navigate(-1);
+          setLoading(false);
+          return;
+        }
+
+        // 2) No employed site/shift match → try active relief shift (day or night)
+        const now = nowMinutesInSG();
+        const rd = getShiftStartEndMin("relief day");
+        const rn = getShiftStartEndMin("relief night");
+
+        let reliefShift: ShiftApi | null = null;
+        if (
+          rd.start != null &&
+          rd.end != null &&
+          inRangeClock(now, rd.start, rd.end)
+        ) {
+          reliefShift = "relief day";
+        } else if (
+          rn.start != null &&
+          rn.end != null &&
+          inRangeClock(now, rn.start, rn.end)
+        ) {
+          reliefShift = "relief night";
+        }
+
+        console.log("[guard-tour] relief window", {
+          reliefShift,
+          now,
+          rdStart: rd.start,
+          rdEnd: rd.end,
+          rnStart: rn.start,
+          rnEnd: rn.end,
+        });
+
+        if (!reliefShift) {
+          setAllowed(false);
+          await Swal.fire({
+            ...swalBase,
+            icon: "info",
+            title: "Outside Relief Hours",
+            text: "Guard Tour is available when a Relief shift is active and you have already checked in.",
+          });
+          navigate(-1);
+          setLoading(false);
+          return;
+        }
+
+        // Handle overnight date for relief shift (e.g., relief night)
+        const { end: reliefEnd } = getShiftStartEndMin(reliefShift);
+        const nowMin = nowMinutesInSG();
+        const useYesterday =
+          crossesMidnight(reliefShift) &&
+          reliefEnd != null &&
+          nowMin < reliefEnd!;
+        const dateForQuery = useYesterday ? dateISOInSG(-1) : dateToday;
+
+        console.log("[guard-tour] relief params", {
+          siteId: idSite,
+          userId: user?.id,
+          shift: reliefShift,
+          dateForQuery,
+        });
+
+        // Attendance check for relief shift
+        let attRelief = await attendanceService.getAttendanceBySiteUserShift(
+          token,
+          {
+            site_id: String(idSite),
+            user_id: user.id,
+            shift: reliefShift,
+            date: dateForQuery,
+          }
+        );
+
+        // Fallback shift string variants if needed
+        if (!attRelief?.data?.time_in) {
+          const alt1 = (reliefShift as string).replace(" ", "-");
+          const alt2 = (reliefShift as string).replace(" ", "_");
+          for (const alt of [alt1, alt2]) {
+            try {
+              const res = await attendanceService.getAttendanceBySiteUserShift(
+                token,
+                {
+                  site_id: String(idSite),
+                  user_id: user.id,
+                  shift: alt as any,
+                  date: dateForQuery,
+                }
+              );
+              if (res?.data?.time_in) {
+                attRelief = res;
+                break;
+              }
+            } catch {}
+          }
+        }
+
+        console.log("[guard-tour] relief attendance", attRelief);
+
+        const hasInRelief = !!attRelief?.data?.time_in;
+        const hasOutRelief = !!attRelief?.data?.time_out;
+
+        if (hasInRelief && !hasOutRelief) {
+          setAllowed(true);
+          setLoading(false);
+          return;
+        }
+
+        setAllowed(false);
+        await Swal.fire({
+          ...swalBase,
+          icon: "info",
+          title: "Guard Tour Locked",
+          text: "Access is only available if you have checked in and have not yet checked out for your shift.",
+        });
+        navigate(-1);
+      } catch (e) {
+        console.error("[guard-tour] gating error:", e);
+        setAllowed(false);
+        await Swal.fire({
+          ...swalBase,
+          icon: "info",
+          title: "Guard Tour Locked",
+          text: "Access is only available if you have checked in and have not yet checked out for your shift.",
+        });
+        navigate(-1);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [token, user?.id, idSite, settings.length]);
 
   useEffect(() => {
-    // fetchRoutes();
-    // fetchRoutesByid();
     fetchSite();
-  }, [token]);
+  }, [token, idSite]);
 
   return (
     <div className="min-h-screen bg-[#181D26] text-white">
@@ -159,10 +470,12 @@ const GuardTourPage = () => {
       </div>
 
       <div className="flex flex-col gap-3 p-4">
-        {loading ? (
-          <p className="text-gray-400">Loading...</p>
-        ) : (
-          routes && routes.map((route) => (
+        {loading || allowed === null ? (
+          <div className="flex w-full justify-center">
+            <Loader primary />
+          </div>
+        ) : allowed ? (
+          routes.map((route) => (
             <button
               key={route.id}
               onClick={() =>
@@ -174,6 +487,10 @@ const GuardTourPage = () => {
               <ChevronRight size={18} className="text-gray-400" />
             </button>
           ))
+        ) : (
+          <div className="text-center text-sm text-white/70">
+            Access denied.
+          </div>
         )}
       </div>
     </div>
