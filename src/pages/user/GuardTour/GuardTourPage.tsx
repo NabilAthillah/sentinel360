@@ -2,17 +2,17 @@ import React, { useEffect, useState } from "react";
 import { ChevronRight, ArrowLeft } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { RootState } from "../../../store";
+import Swal from "sweetalert2";
 
 import siteService from "../../../services/siteService";
 import attendanceService from "../../../services/attendanceService";
 import attendanceSettingService from "../../../services/attendanceSettingService";
 import siteEmployeeService from "../../../services/siteEmployeeService";
 
+import { RootState } from "../../../store";
 import { Site } from "../../../types/site";
 import { SiteEmployee } from "../../../types/siteEmployee";
 import Loader from "../../../components/Loader";
-import Swal from "sweetalert2";
 
 type Settings = { label: string; placeholder: string; value: string };
 type ShiftApi = "day" | "night" | "relief day" | "relief night";
@@ -23,14 +23,19 @@ const swalBase = {
   confirmButtonColor: "#EFBF04",
 } as const;
 
-// --- Time helpers (Asia/Singapore) ---
-const todayISOInSG = () =>
+/* =========================
+   Time helpers (Asia/Singapore)
+   ========================= */
+const sgTodayISO = () =>
   new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Singapore" });
 
-const dateISOInSG = (daysOffset = 0) =>
-  new Date(Date.now() + daysOffset * 86400000).toLocaleDateString("en-CA", {
-    timeZone: "Asia/Singapore",
-  });
+const addDaysInSG = (iso: string, days: number) => {
+  // Pastikan manipulasi hari aman di zona SG
+  const d = new Date(`${iso}T00:00:00+08:00`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+};
+const sgYesterdayISO = () => addDaysInSG(sgTodayISO(), -1);
 
 const nowMinutesInSG = () => {
   const parts = new Intl.DateTimeFormat("en-SG", {
@@ -49,7 +54,9 @@ const inRangeClock = (nowMin: number, startMin: number, endMin: number) =>
     ? nowMin >= startMin && nowMin < endMin
     : nowMin >= startMin || nowMin < endMin;
 
-// --- Shift helpers ---
+/* =========================
+   Shift helpers
+   ========================= */
 const parseEmployeeShift = (raw: any): ShiftApi | null => {
   const s = String(raw ?? "")
     .trim()
@@ -66,6 +73,98 @@ const parseEmployeeShift = (raw: any): ShiftApi | null => {
   return null;
 };
 
+const getSettingFrom = (settings: Settings[], label: string) =>
+  settings.find(
+    (s) => s.label.trim().toLowerCase() === label.trim().toLowerCase()
+  )?.value ?? null;
+
+const timeToMin = (hhmm?: string | null) => {
+  if (!hhmm) return null;
+  const [h, m] = hhmm.split(":").map(Number);
+  return Number.isFinite(h) && Number.isFinite(m) ? h * 60 + m : null;
+};
+
+const getShiftStartEndMinFrom = (settings: Settings[], shift: ShiftApi) => {
+  if (shift === "day") {
+    return {
+      start: timeToMin(getSettingFrom(settings, "Day shift start time")),
+      end: timeToMin(getSettingFrom(settings, "Day shift end time")),
+    };
+  }
+  if (shift === "night") {
+    return {
+      start: timeToMin(getSettingFrom(settings, "Night shift start time")),
+      end: timeToMin(getSettingFrom(settings, "Night shift end time")),
+    };
+  }
+  if (shift === "relief day") {
+    return {
+      start: timeToMin(getSettingFrom(settings, "RELIEF Day shift start time")),
+      end: timeToMin(getSettingFrom(settings, "RELIEF Day shift end time")),
+    };
+  }
+  // relief night
+  return {
+    start: timeToMin(getSettingFrom(settings, "RELIEF night shift start time")),
+    end: timeToMin(getSettingFrom(settings, "RELIEF night shift end time")),
+  };
+};
+
+const crossesMidnightFrom = (settings: Settings[], shift: ShiftApi) => {
+  const { start, end } = getShiftStartEndMinFrom(settings, shift);
+  return start != null && end != null && start > end;
+};
+
+// Tanggal efektif (tanggal start-shift) buat query attendance
+const computeActiveAttendanceDateISOFrom = (
+  settings: Settings[],
+  shift: ShiftApi
+) => {
+  const { start, end } = getShiftStartEndMinFrom(settings, shift);
+  if (start == null || end == null) return sgTodayISO();
+  const now = nowMinutesInSG();
+  if (!crossesMidnightFrom(settings, shift)) return sgTodayISO();
+  // masih di paruh pagi (sebelum jam end) => pakai kemarin
+  return now < end ? sgYesterdayISO() : sgTodayISO();
+};
+
+// Variasi label shift agar tahan terhadap inkonsistensi DB
+const shiftVariants = (s: ShiftApi) =>
+  [s, s.replace(" ", "-"), s.replace(" ", "_")] as const;
+
+// Cari attendance dengan variasi tanggal & label
+const findAttendance = async (
+  token: string,
+  siteId: string,
+  userId: string,
+  shift: ShiftApi,
+  settings: Settings[]
+) => {
+  const mainDate = computeActiveAttendanceDateISOFrom(settings, shift);
+  const altDate = mainDate === sgTodayISO() ? sgYesterdayISO() : sgTodayISO();
+  const dates = Array.from(new Set([mainDate, altDate]));
+
+  for (const date of dates) {
+    for (const sh of shiftVariants(shift)) {
+      try {
+        const res = await attendanceService.getAttendanceBySiteUserShift(
+          token,
+          { site_id: siteId, user_id: userId, shift: sh as any, date }
+        );
+        if (res?.success && res?.data?.time_in) {
+          return { res, date, shiftSent: sh };
+        }
+      } catch {
+        // ignore and continue
+      }
+    }
+  }
+  return null;
+};
+
+/* =========================
+   Component
+   ========================= */
 const GuardTourPage = () => {
   const navigate = useNavigate();
   const token = useSelector((state: RootState) => state.token.token);
@@ -78,50 +177,7 @@ const GuardTourPage = () => {
   const [loading, setLoading] = useState(true);
   const [allowed, setAllowed] = useState<boolean | null>(null);
 
-  // ---- Settings helpers
-  const getSetting = (label: string) =>
-    settings.find(
-      (s) => s.label.trim().toLowerCase() === label.trim().toLowerCase()
-    )?.value ?? null;
-
-  const timeToMin = (hhmm?: string | null) => {
-    if (!hhmm) return null;
-    const [h, m] = hhmm.split(":").map(Number);
-    return Number.isFinite(h) && Number.isFinite(m) ? h * 60 + m : null;
-  };
-
-  const getShiftStartEndMin = (shift: ShiftApi) => {
-    if (shift === "day") {
-      return {
-        start: timeToMin(getSetting("Day shift start time")),
-        end: timeToMin(getSetting("Day shift end time")),
-      };
-    }
-    if (shift === "night") {
-      return {
-        start: timeToMin(getSetting("Night shift start time")),
-        end: timeToMin(getSetting("Night shift end time")),
-      };
-    }
-    if (shift === "relief day") {
-      return {
-        start: timeToMin(getSetting("RELIEF Day shift start time")),
-        end: timeToMin(getSetting("RELIEF Day shift end time")),
-      };
-    }
-    // relief night
-    return {
-      start: timeToMin(getSetting("RELIEF night shift start time")),
-      end: timeToMin(getSetting("RELIEF night shift end time")),
-    };
-  };
-
-  const crossesMidnight = (shift: ShiftApi) => {
-    const { start, end } = getShiftStartEndMin(shift);
-    return start != null && end != null && start > end;
-  };
-
-  // ---- Data fetchers
+  // --- fetchers
   const fetchSite = async () => {
     if (!token || !idSite) return;
     try {
@@ -136,13 +192,13 @@ const GuardTourPage = () => {
     }
   };
 
-  const fetchSettings = async () => {
-    if (!token) return;
+  const fetchSettings = async (): Promise<Settings[]> => {
+    if (!token) return [];
     try {
       const res = await attendanceSettingService.getAttendanceSetting(token);
       if (res?.success) {
         const d = res.data;
-        setSettings([
+        const mapped: Settings[] = [
           {
             label: "Grace period (in minutes)",
             placeholder: "",
@@ -193,11 +249,14 @@ const GuardTourPage = () => {
             placeholder: "00:00",
             value: d.relief_night_shift_end_time.slice(0, 5),
           },
-        ]);
+        ];
+        setSettings(mapped);
+        return mapped;
       }
     } catch (e: any) {
       console.error(e?.message || e);
     }
+    return [];
   };
 
   // ---- Gating logic
@@ -205,17 +264,29 @@ const GuardTourPage = () => {
     (async () => {
       if (!token || !user?.id || !idSite) return;
       setLoading(true);
+      setAllowed(null);
 
       try {
-        if (settings.length === 0) {
-          await fetchSettings();
+        // Pastikan settings siap dan kita punya list lokal untuk perhitungan di efek ini
+        const sList = settings.length > 0 ? settings : await fetchSettings();
+        if (sList.length === 0) {
+          // Tanpa settings, tidak bisa hitung window -> kunci
+          setAllowed(false);
+          await Swal.fire({
+            ...swalBase,
+            icon: "info",
+            title: "Guard Tour Locked",
+            text: "Attendance settings not available. Please contact admin.",
+          });
+          navigate(-1);
+          setLoading(false);
+          return;
         }
 
-        // 1) Try site_employee for this user & site (via nearest API, then check if site matches param)
+        // 1) Coba pakai site_employee milik user di site ini
         let seData: SiteEmployee | undefined;
         let seShift: ShiftApi | null = null;
         let seSiteId: string | null = null;
-
         try {
           const seRes = await siteEmployeeService.getNearestSiteUser(
             token,
@@ -233,61 +304,17 @@ const GuardTourPage = () => {
           console.warn("[guard-tour] getNearestSiteUser error:", e);
         }
 
-        const dateToday = todayISOInSG();
-
         if (seData && seSiteId === String(idSite) && seShift) {
-          // Handle overnight date for this employed shift
-          const { end } = getShiftStartEndMin(seShift);
-          const nowMin = nowMinutesInSG();
-          const useYesterday =
-            crossesMidnight(seShift) && end != null && nowMin < end!;
-          const dateForQuery = useYesterday ? dateISOInSG(-1) : dateToday;
-
-          console.log("[guard-tour] employed params", {
-            siteId: idSite,
-            userId: user?.id,
-            shift: seShift,
-            dateForQuery,
-          });
-
-          // Attendance check for employed shift
-          let att = await attendanceService.getAttendanceBySiteUserShift(
+          const found = await findAttendance(
             token,
-            {
-              site_id: String(idSite),
-              user_id: user.id,
-              shift: seShift,
-              date: dateForQuery,
-            }
+            String(idSite),
+            user.id,
+            seShift,
+            sList
           );
+          console.log("[guard-tour] employed attendance", found);
 
-          // Fallback shift string variants if needed
-          if (!att?.data?.time_in) {
-            const alt1 = (seShift as string).replace(" ", "-");
-            const alt2 = (seShift as string).replace(" ", "_");
-            for (const alt of [alt1, alt2]) {
-              try {
-                const res =
-                  await attendanceService.getAttendanceBySiteUserShift(token, {
-                    site_id: String(idSite),
-                    user_id: user.id,
-                    shift: alt as any,
-                    date: dateForQuery,
-                  });
-                if (res?.data?.time_in) {
-                  att = res;
-                  break;
-                }
-              } catch {}
-            }
-          }
-
-          console.log("[guard-tour] employed attendance", att);
-
-          const hasIn = !!att?.data?.time_in;
-          const hasOut = !!att?.data?.time_out;
-
-          if (hasIn && !hasOut) {
+          if (found && !found.res?.data?.time_out) {
             setAllowed(true);
             setLoading(false);
             return;
@@ -305,10 +332,10 @@ const GuardTourPage = () => {
           return;
         }
 
-        // 2) No employed site/shift match → try active relief shift (day or night)
+        // 2) Jika tidak match, coba Relief window (day/night)
         const now = nowMinutesInSG();
-        const rd = getShiftStartEndMin("relief day");
-        const rn = getShiftStartEndMin("relief night");
+        const rd = getShiftStartEndMinFrom(sList, "relief day");
+        const rn = getShiftStartEndMinFrom(sList, "relief night");
 
         let reliefShift: ShiftApi | null = null;
         if (
@@ -347,62 +374,16 @@ const GuardTourPage = () => {
           return;
         }
 
-        // Handle overnight date for relief shift (e.g., relief night)
-        const { end: reliefEnd } = getShiftStartEndMin(reliefShift);
-        const nowMin = nowMinutesInSG();
-        const useYesterday =
-          crossesMidnight(reliefShift) &&
-          reliefEnd != null &&
-          nowMin < reliefEnd!;
-        const dateForQuery = useYesterday ? dateISOInSG(-1) : dateToday;
-
-        console.log("[guard-tour] relief params", {
-          siteId: idSite,
-          userId: user?.id,
-          shift: reliefShift,
-          dateForQuery,
-        });
-
-        // Attendance check for relief shift
-        let attRelief = await attendanceService.getAttendanceBySiteUserShift(
+        const foundRelief = await findAttendance(
           token,
-          {
-            site_id: String(idSite),
-            user_id: user.id,
-            shift: reliefShift,
-            date: dateForQuery,
-          }
+          String(idSite),
+          user.id,
+          reliefShift,
+          sList
         );
+        console.log("[guard-tour] relief attendance", foundRelief);
 
-        // Fallback shift string variants if needed
-        if (!attRelief?.data?.time_in) {
-          const alt1 = (reliefShift as string).replace(" ", "-");
-          const alt2 = (reliefShift as string).replace(" ", "_");
-          for (const alt of [alt1, alt2]) {
-            try {
-              const res = await attendanceService.getAttendanceBySiteUserShift(
-                token,
-                {
-                  site_id: String(idSite),
-                  user_id: user.id,
-                  shift: alt as any,
-                  date: dateForQuery,
-                }
-              );
-              if (res?.data?.time_in) {
-                attRelief = res;
-                break;
-              }
-            } catch {}
-          }
-        }
-
-        console.log("[guard-tour] relief attendance", attRelief);
-
-        const hasInRelief = !!attRelief?.data?.time_in;
-        const hasOutRelief = !!attRelief?.data?.time_out;
-
-        if (hasInRelief && !hasOutRelief) {
+        if (foundRelief && !foundRelief.res?.data?.time_out) {
           setAllowed(true);
           setLoading(false);
           return;
@@ -430,7 +411,8 @@ const GuardTourPage = () => {
         setLoading(false);
       }
     })();
-  }, [token, user?.id, idSite, settings.length]);
+    // Depend hanya pada token/user/idSite/settings.length agar efek rerun
+  }, [token, user?.id, idSite, settings.length, navigate]);
 
   useEffect(() => {
     fetchSite();
