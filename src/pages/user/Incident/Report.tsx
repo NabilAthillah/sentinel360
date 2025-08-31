@@ -1,10 +1,12 @@
 // src/pages/incident/Report.tsx
 import { ChevronLeft } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import Swal from "sweetalert2";
 import IncidentService from "../../../services/incidentService";
 import IncidentTypesService from "../../../services/incidentTypeService";
+import { useSelector } from "react-redux";
+import { RootState } from "../../../store";
 
 type Yn = "Yes" | "No";
 type YnEmpty = "" | Yn;
@@ -84,9 +86,8 @@ const RadioGroup = ({
             className="flex items-center gap-2 cursor-pointer"
           >
             <span
-              className={`w-4 h-4 rounded-full border flex items-center justify-center ${
-                value === option ? "border-[#EFBF04]" : "border-[#F4F7FF]"
-              }`}
+              className={`w-4 h-4 rounded-full border flex items-center justify-center ${value === option ? "border-[#EFBF04]" : "border-[#F4F7FF]"
+                }`}
             >
               {value === option && (
                 <span className="w-2 h-2 rounded-full bg-[#EFBF04]" />
@@ -114,7 +115,7 @@ const Report = () => {
   // incident types (from DB)
   const [incidentTypes, setIncidentTypes] = useState<IncidentType[]>([]);
   const [incidentTypeId, setIncidentTypeId] = useState<string>("");
-
+  const user = useSelector((state: RootState) => state.user.user);
   // text inputs (no defaults)
   const [occurredAt, setOccurredAt] = useState(""); // YYYY-MM-DD
   const [locationText, setLocationText] = useState("");
@@ -125,7 +126,7 @@ const Report = () => {
   const [remarks, setRemarks] = useState("");
   const [detail, setDetail] = useState("");
   const [acknowledgedBy, setAcknowledgedBy] = useState("");
-
+  const { idSite } = useParams<{ idSite: string }>();
   // radios (no defaults)
   const [managementReport, setManagementReport] = useState<YnEmpty>("");
   const [policeReport, setPoliceReport] = useState<YnEmpty>("");
@@ -156,6 +157,8 @@ const Report = () => {
     })();
   }, []);
 
+
+
   const ynTo01 = (v: Yn) => (v === "Yes" ? "1" : "0");
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -164,6 +167,11 @@ const Report = () => {
   };
 
   const handleSubmit = async () => {
+    console.log({
+      incidentTypeId,
+      occurredAt,
+      locationText,
+    });
     try {
       if (!incidentTypeId || !occurredAt || !locationText) {
         Swal.fire({
@@ -176,7 +184,6 @@ const Report = () => {
         return;
       }
 
-      // ensure radios selected (if required)
       const radios: [string, YnEmpty][] = [
         ["Incident reported to management", managementReport],
         ["Incident reported to Police/ SCDF", policeReport],
@@ -197,9 +204,9 @@ const Report = () => {
       }
 
       const fd = new FormData();
-      fd.append("incident_type_id", incidentTypeId); // <-- use type id
-      fd.append("occurred_at", occurredAt); // YYYY-MM-DD
-      fd.append("location", locationText);
+      fd.append("incident_type_id", incidentTypeId);
+      fd.append("occurred_at", occurredAt);
+      // fd.append("location", locationText);
       fd.append("why_happened", whyHappened);
       fd.append("how_happened", howHappened);
       fd.append("person_involved", personInvolved);
@@ -207,13 +214,13 @@ const Report = () => {
       fd.append("remarks", remarks);
       fd.append("detail", detail);
       fd.append("acknowledged_by", acknowledgedBy);
-
       fd.append("management_report", ynTo01(managementReport as Yn));
       fd.append("police_report", ynTo01(policeReport as Yn));
       fd.append("damage_property", ynTo01(damageProperty as Yn));
       fd.append("picture_attached", ynTo01(pictureAttached as Yn));
       fd.append("cctv_footage", ynTo01(cctvFootage as Yn));
-
+      fd.append("id_site", idSite || "");
+      fd.append("id_user", user?.id || "");
       images.forEach((file) => fd.append("images[]", file));
 
       const res = await IncidentService.addIncident(fd);
@@ -263,7 +270,7 @@ const Report = () => {
             className="bg-[#222630] text-[#F4F7FF] outline-none"
           >
             <option value="" disabled>
-              Select incident type
+              What Happened?
             </option>
             {incidentTypes.map((t) => (
               <option key={t.id} value={t.id}>
@@ -393,13 +400,24 @@ const Report = () => {
         }
         textarea
       />
-      <FormField
-        label="Acknowledged by"
-        value={acknowledgedBy}
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-          setAcknowledgedBy(e.target.value)
-        }
-      />
+      <div className="flex flex-col gap-1 bg-[#222630] w-full p-4 rounded-md">
+        <select
+          value={acknowledgedBy}
+          onChange={(e) => setAcknowledgedBy(e.target.value)}
+          className="bg-[#222630] text-[#F4F7FF] outline-none"
+        >
+          <option value="" disabled hidden>
+            Select user
+          </option>
+          {user && (
+            <option value={user.id}>
+              {user.name}
+            </option>
+          )}
+        </select>
+      </div>
+
+
 
       <div className="flex flex-col gap-4 justify-center items-center pt-6">
         <button
