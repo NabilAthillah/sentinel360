@@ -125,6 +125,7 @@ const ReportOccurance = () => {
           text: "Occurrence report saved.",
           ...swalOpt,
         });
+        navigate("/user/e-occurence")
         setFormData([{ id_site: "", id_category: "", occurred_at: "", detail: "" }]);
       } else {
         Swal.fire({

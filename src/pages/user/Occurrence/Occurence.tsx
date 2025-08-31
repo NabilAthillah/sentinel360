@@ -133,7 +133,7 @@ const Occurence = () => {
                                 <span className="text-[#EFBF04] font-semibold capitalize">situation</span>
                                 <div className="flex gap-2">
                                     <button
-                                        onClick={() => navigate(`/user/e-occurence/edit/${o.id}`)}
+                                        onClick={() => navigate(`/user/e-occurence/report/edit/${o.id}`)}
                                         className="p-2 rounded-md hover:bg-white/5"
                                         aria-label="Edit"
                                     >

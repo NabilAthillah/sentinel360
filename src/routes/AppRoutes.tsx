@@ -144,7 +144,7 @@ const AppRoutes = () => {
             element={<ReportOccurance />}
           />
           <Route
-            path="/user/e-occurence/report/edit"
+            path="/user/e-occurence/report/edit/:id"
             element={<EditOccurance />}
           />
           <Route
