@@ -166,18 +166,6 @@ const Attendance = () => {
     return null;
   };
 
-  const getCurrentCoords = (): Promise<Coords> =>
-    new Promise((resolve, reject) => {
-      if (!("geolocation" in navigator))
-        return reject(new Error("Geolocation unsupported"));
-      navigator.geolocation.getCurrentPosition(
-        (pos) =>
-          resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-        (err) => reject(err),
-        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-      );
-    });
-
   const haversineMeters = (a: Coords, b: Coords) => {
     const R = 6371000;
     const toRad = (deg: number) => (deg * Math.PI) / 180;
@@ -425,6 +413,93 @@ const Attendance = () => {
     };
   };
 
+  const positionOnce = (opts: PositionOptions) =>
+    new Promise<Coords>((resolve, reject) => {
+      if (!("geolocation" in navigator))
+        return reject(new Error("Geolocation unsupported"));
+      navigator.geolocation.getCurrentPosition(
+        (pos) =>
+          resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        (err) => reject(err),
+        opts
+      );
+    });
+
+  const warmupPosition = (timeoutMs = 15000) =>
+    new Promise<Coords>((resolve, reject) => {
+      if (!("geolocation" in navigator))
+        return reject(new Error("Geolocation unsupported"));
+      const watchId = navigator.geolocation.watchPosition(
+        (pos) => {
+          navigator.geolocation.clearWatch(watchId);
+          resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        },
+        () => {},
+        { enableHighAccuracy: true, maximumAge: 0 }
+      );
+      const t = setTimeout(() => {
+        navigator.geolocation.clearWatch(watchId);
+        reject(new Error("Warmup timeout"));
+      }, timeoutMs);
+    });
+
+  const queryGeoPermission = async (): Promise<PermissionState | null> => {
+    try {
+      const p = await navigator.permissions.query({ name: "geolocation" });
+      return p.state as PermissionState;
+    } catch {
+      return null;
+    }
+  };
+
+  const secureContextOk = () =>
+    typeof window !== "undefined" &&
+    (window.isSecureContext || window.location.hostname === "localhost");
+
+  const mapGeoError = (err: GeolocationPositionError | Error) => {
+    const code = (err as GeolocationPositionError)?.code;
+    if (code === 1)
+      return "Permission denied. Please allow Location for this site.";
+    if (code === 2)
+      return "Position unavailable. Turn on GPS/Wi-Fi location and try again.";
+    if (code === 3)
+      return "Location timeout. Please move to open area or try again.";
+    return (err as Error)?.message || "Unable to get current location.";
+  };
+
+  const getCurrentCoords = async (): Promise<Coords> => {
+    if (!secureContextOk()) {
+      throw new Error(
+        "This page needs HTTPS (or run on localhost) to access location."
+      );
+    }
+
+    const perm = await queryGeoPermission();
+    if (perm === "denied") {
+      throw new Error(
+        "Location permission is blocked. Allow it in your browser site settings."
+      );
+    }
+
+    try {
+      return await positionOnce({
+        enableHighAccuracy: false,
+        timeout: 10000,
+        maximumAge: 120000,
+      });
+    } catch {
+      try {
+        return await positionOnce({
+          enableHighAccuracy: true,
+          timeout: 20000,
+          maximumAge: 0,
+        });
+      } catch {
+        return await warmupPosition(15000);
+      }
+    }
+  };
+
   const headerDateText = useMemo(() => {
     return formatHumanDate(siteEmployeeDate ?? new Date());
   }, [siteEmployeeDate]);
@@ -611,9 +686,31 @@ const Attendance = () => {
       return;
     }
 
+    let me: Coords;
+    try {
+      me = await getCurrentCoords();
+    } catch (e: any) {
+      await Swal.fire({
+        title: "Location unavailable",
+        text:
+          `${mapGeoError(e)}\n\nQuick checks:\n• Turn on GPS & Wi-Fi\n` +
+          `• Disable Battery Saver\n• Make sure site has Location permission (padlock icon → Site settings → Location: Allow)\n` +
+          `• Use HTTPS (or localhost during dev)`,
+        icon: "warning",
+        background: "#1e1e1e",
+        confirmButtonColor: "#EFBF04",
+        color: "#f4f4f4",
+      });
+      setDecision({
+        canAttend: false,
+        siteSource: "none",
+        reason: "Location unavailable",
+      });
+      return;
+    }
+
     const all = await siteService.getAllSite(token);
     const sites: MiniSite[] = all?.data ?? [];
-    const me = await getCurrentCoords();
     const nearest = pickNearestSiteWithin(sites, me, geoRadius);
     if (!nearest) {
       await Swal.fire({

@@ -407,6 +407,7 @@ const GuardTourPage = () => {
           text: "Access is only available if you have checked in and have not yet checked out for your shift.",
         });
         navigate(-1);
+        return;
       } finally {
         setLoading(false);
       }

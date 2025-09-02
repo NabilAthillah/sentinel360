@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -13,128 +13,188 @@ import { SiteEmployee } from "../../../types/siteEmployee";
 import BottomNavBar from "../components/BottomBar";
 import SecondHomePage from "./SecondHomePage";
 
-type Settings = {
-  label: string;
-  placeholder: string;
-  value: string;
-};
+type Settings = { label: string; placeholder: string; value: string };
 
 const HomePage = () => {
-  const user = useSelector((state: RootState) => state.user.user);
-  const token = useSelector((state: RootState) => state.token.token);
+  const user = useSelector((s: RootState) => s.user.user);
+  const token = useSelector((s: RootState) => s.token.token);
+
   const [siteEmployee, setSiteEmployee] = useState<SiteEmployee>();
   const [sites, setSites] = useState<Site[]>([]);
-  const [attendance, setAttendance] = useState();
+  const [attendance, setAttendance] = useState<any>();
   const [settings, setSettings] = useState<Settings[]>([]);
+
+  const [sitesLoaded, setSitesLoaded] = useState(false);
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
+
   const navigate = useNavigate();
   const [isSecondHome, setIsSecondHome] = useState(false);
-  const [loadingLocation, setLoadingLocation] = useState(true);
 
+  // penting: jangan true dari awal biar gak ngegantung
+  const [loadingLocation, setLoadingLocation] = useState(false);
+
+  // ====== GEO helpers (robust) ======
+  const hi: PositionOptions = {
+    enableHighAccuracy: true,
+    timeout: 15000,
+    maximumAge: 0,
+  };
+  const lo: PositionOptions = {
+    enableHighAccuracy: false,
+    timeout: 10000,
+    maximumAge: 10 * 60 * 1000,
+  };
+
+  const getOnce = (opts: PositionOptions) =>
+    new Promise<GeolocationPosition>((resolve, reject) =>
+      navigator.geolocation.getCurrentPosition(resolve, reject, opts)
+    );
+
+  const getFirstFix = (opts: PositionOptions) =>
+    new Promise<GeolocationPosition>((resolve, reject) => {
+      const id = navigator.geolocation.watchPosition(
+        (pos) => {
+          navigator.geolocation.clearWatch(id);
+          resolve(pos);
+        },
+        (err) => {
+          navigator.geolocation.clearWatch(id);
+          reject(err);
+        },
+        opts
+      );
+    });
+
+  async function getLocationRobust() {
+    try {
+      // @ts-ignore
+      const p = await navigator.permissions?.query({ name: "geolocation" });
+      if (p && p.state === "denied") {
+        const e: any = new Error("Permission denied");
+        e.code = 1;
+        throw e;
+      }
+    } catch {}
+
+    try {
+      return await getFirstFix(hi);
+    } catch (e: any) {
+      if (e?.code === 2) {
+        try {
+          return await getOnce(lo);
+        } catch {
+          try {
+            return await getOnce(hi);
+          } catch (e2) {
+            return await getOnce(lo);
+          }
+        }
+      }
+      try {
+        return await getOnce(hi);
+      } catch (e2) {
+        return await getOnce(lo);
+      }
+    }
+  }
+
+  // ====== FETCHERS ======
   const fetchSites = async () => {
     try {
-      const response = await siteService.getAllSite(token);
-      
-      if (response.success) {
-        setSites(response.data);
-      }
-    } catch (error) {
-      console.error(error);
+      const res = await siteService.getAllSite(token);
+      if (res?.success) setSites(res.data || []);
+    } catch (e) {
+      console.error(e);
+      toast.error("Gagal mengambil data site");
+    } finally {
+      setSitesLoaded(true);
     }
   };
 
   const fetchSiteEmployee = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const response = await siteEmployeeService.getNearestSiteUser(
-        token,
-        user
-      );
-
-      if (response.success) {
-        setSiteEmployee(response.data);
-      }
-    } catch (error) {
-      console.error(error);
+      const res = await siteEmployeeService.getNearestSiteUser(token, user);
+      if (res?.success) setSiteEmployee(res.data);
+    } catch (e) {
+      console.error(e);
+      // tidak memblokir UI
     }
   };
 
   const fetchSettings = async () => {
     try {
-      const token = localStorage.getItem("token");
-
-      const response = await attendanceSettingService.getAttendanceSetting(
-        token
-      );
-
-      if (response.success) {
-        const data = response.data;
-
-        const mappedData = [
+      const res = await attendanceSettingService.getAttendanceSetting(token);
+      if (res?.success) {
+        const d = res.data;
+        setSettings([
           {
             label: "Grace period (in minutes)",
             placeholder: "Grace period (in minutes)",
-            value: data.grace_period.toString(),
+            value: String(d.grace_period),
           },
           {
             label: "Geo fencing (in meters)",
             placeholder: "Geo fencing (in meters)",
-            value: data.geo_fencing.toString(),
+            value: String(d.geo_fencing),
           },
           {
             label: "Day shift start time",
             placeholder: "00:00",
-            value: data.day_shift_start_time.slice(0, 5),
+            value: d.day_shift_start_time.slice(0, 5),
           },
           {
             label: "Day shift end time",
             placeholder: "00:00",
-            value: data.day_shift_end_time.slice(0, 5),
+            value: d.day_shift_end_time.slice(0, 5),
           },
           {
             label: "Night shift start time",
             placeholder: "00:00",
-            value: data.night_shift_start_time.slice(0, 5),
+            value: d.night_shift_start_time.slice(0, 5),
           },
           {
             label: "Night shift end time",
             placeholder: "00:00",
-            value: data.night_shift_end_time.slice(0, 5),
+            value: d.night_shift_end_time.slice(0, 5),
           },
           {
             label: "RELIEF Day shift start time",
             placeholder: "00:00",
-            value: data.relief_day_shift_start_time.slice(0, 5),
+            value: d.relief_day_shift_start_time.slice(0, 5),
           },
           {
             label: "RELIEF Day shift end time",
             placeholder: "00:00",
-            value: data.relief_day_shift_end_time.slice(0, 5),
+            value: d.relief_day_shift_end_time.slice(0, 5),
           },
           {
             label: "RELIEF night shift start time",
             placeholder: "00:00",
-            value: data.relief_night_shift_start_time.slice(0, 5),
+            value: d.relief_night_shift_start_time.slice(0, 5),
           },
           {
             label: "RELIEF night shift end time",
             placeholder: "00:00",
-            value: data.relief_night_shift_end_time.slice(0, 5),
+            value: d.relief_night_shift_end_time.slice(0, 5),
           },
-        ];
-
-        setSettings(mappedData);
+        ]);
+      } else {
+        setSettings([]);
       }
-    } catch (error: any) {
-      toast.error(error.message);
+    } catch (e) {
+      console.error(e);
+      toast.error("Gagal mengambil setting");
+      setSettings([]);
+    } finally {
+      setSettingsLoaded(true);
     }
   };
 
-  const getSettingTime = (label: string) => {
-    const item = settings.find(
+  // ====== HELPERS ======
+  const getSettingTime = (label: string) =>
+    settings.find(
       (d) => d.label.trim().toLowerCase() === label.trim().toLowerCase()
-    );
-    return item?.value ?? null;
-  };
+    )?.value ?? null;
 
   const toTodayTime = (hhmm: string | null) => {
     if (!hhmm) return null;
@@ -154,24 +214,20 @@ const HomePage = () => {
 
   const getShiftLabels = (shiftRaw?: string) => {
     const s = (shiftRaw || "").toLowerCase().trim();
-    if (s === "day") {
+    if (s === "day")
       return { start: "Day shift start time", end: "Day shift end time" };
-    }
-    if (s === "night") {
+    if (s === "night")
       return { start: "Night shift start time", end: "Night shift end time" };
-    }
-    if (s === "relief day" || s === "relief-day" || s === "relief_day") {
+    if (s === "relief day" || s === "relief-day" || s === "relief_day")
       return {
         start: "RELIEF Day shift start time",
         end: "RELIEF Day shift end time",
       };
-    }
-    if (s === "relief night" || s === "relief-night" || s === "relief_night") {
+    if (s === "relief night" || s === "relief-night" || s === "relief_night")
       return {
         start: "RELIEF night shift start time",
         end: "RELIEF night shift end time",
       };
-    }
     return null;
   };
 
@@ -186,25 +242,27 @@ const HomePage = () => {
     const φ2 = (lat2 * Math.PI) / 180;
     const Δφ = ((lat2 - lat1) * Math.PI) / 180;
     const Δλ = ((lon2 - lon1) * Math.PI) / 180;
-
     const a =
-      Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-      Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-    return R * c;
+      Math.sin(Δφ / 2) ** 2 +
+      Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) ** 2;
+    return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   };
 
   const checkLocation = (currentLat: number, currentLng: number) => {
-    if (!sites || sites.length === 0) return;
+    if (!sites || sites.length === 0) {
+      // tidak ada site → tampilkan SecondHome agar user tetap bisa lanjut
+      setIsSecondHome(true);
+      return;
+    }
 
     const geoFencingStr = settings.find((d) =>
       d.label.toLowerCase().includes("geo fencing")
     )?.value;
     const geoFencing = geoFencingStr ? Number(geoFencingStr) : 0;
 
-    if (geoFencing === 0) {
-      console.warn("Geo fencing setting tidak ditemukan atau 0");
+    if (geoFencing <= 0) {
+      // tanpa geo-fence, jangan blok UI
+      setIsSecondHome(false);
       return;
     }
 
@@ -215,8 +273,6 @@ const HomePage = () => {
         Number(site.lat),
         Number(site.long)
       );
-      console.log(dist,currentLat, currentLng)
-      console.log(site.name, dist)
       return dist <= geoFencing;
     });
 
@@ -224,7 +280,7 @@ const HomePage = () => {
       setIsSecondHome(true);
       return;
     }
-    console.log(nearestSite)
+
     if (!siteEmployee || siteEmployee?.site.id !== nearestSite.id) {
       setIsSecondHome(true);
     } else {
@@ -268,10 +324,8 @@ const HomePage = () => {
       const hasAttendance =
         (siteEmployee as any).attendance != null ||
         (siteEmployee as any).attendancenya != null;
-
       const target = hasAttendance ? end : start;
       const ms = target.getTime() - now.getTime();
-
       setIsLate(ms < 0);
       setDiffLabel(fmtHM(ms));
     };
@@ -281,40 +335,82 @@ const HomePage = () => {
     return () => clearInterval(id);
   }, [siteEmployee, settings]);
 
+  // Bootstrapping
   useEffect(() => {
     if (!user || !token) {
       navigate("/auth/login");
       return;
     }
-
     fetchSites();
     fetchSiteEmployee();
     fetchSettings();
-  }, []);
+  }, []); // eslint-disable-line
 
+  // Jalankan geolocation hanya setelah data siap (apapun hasilnya)
+  const locOnceRef = useRef(false);
   useEffect(() => {
-    if (settings.length > 0 && sites && navigator.geolocation) {
-      setLoadingLocation(true);
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          const { latitude, longitude } = pos.coords;
-          checkLocation(latitude, longitude);
+    if (locOnceRef.current) return;
+    if (!sitesLoaded || !settingsLoaded) return;
 
-          setTimeout(() => {
-            setLoadingLocation(false);
-          }, 1000);
-        },
-        (error) => {
-          console.error(error);
-          toast.error("Gagal mendapatkan lokasi");
-
-          setTimeout(() => {
-            setLoadingLocation(false);
-          }, 1000);
-        }
-      );
+    if (!navigator.geolocation) {
+      // tidak support → jangan blok UI
+      setLoadingLocation(false);
+      return;
     }
-  }, [settings, sites, siteEmployee]);
+
+    // HTTPS requirement
+    const { hostname, protocol } = window.location;
+    const isLocalhost =
+      hostname === "localhost" ||
+      hostname === "127.0.0.1" ||
+      hostname.endsWith(".local");
+    const isSecure = window.isSecureContext || protocol === "https:";
+
+    if (!isSecure && !isLocalhost) {
+      toast.error("Geolocation butuh HTTPS. Buka situs via https://");
+      setLoadingLocation(false);
+      locOnceRef.current = true;
+      return;
+    }
+
+    let cancelled = false;
+    setLoadingLocation(true);
+
+    // safety guard: matikan loader jika lebih dari 15s
+    const safety = setTimeout(
+      () => !cancelled && setLoadingLocation(false),
+      15000
+    );
+
+    (async () => {
+      try {
+        const pos = await getLocationRobust();
+        if (cancelled) return;
+        const { latitude, longitude } = pos.coords;
+        checkLocation(latitude, longitude);
+      } catch (error: any) {
+        if (error?.code === 1) {
+          toast.error("Izin lokasi ditolak");
+        } else if (error?.code === 2) {
+          toast.error(
+            "Lokasi tidak tersedia. Aktifkan GPS/Wi-Fi & Precise Location."
+          );
+        } else {
+          toast.error("Gagal mendapatkan lokasi");
+        }
+        console.error(error);
+      } finally {
+        if (!cancelled) setLoadingLocation(false);
+        clearTimeout(safety);
+      }
+    })();
+
+    locOnceRef.current = true;
+    return () => {
+      cancelled = true;
+      clearTimeout(safety);
+    };
+  }, [sitesLoaded, settingsLoaded]); // eslint-disable-line
 
   if (loadingLocation) {
     return (
@@ -324,10 +420,10 @@ const HomePage = () => {
     );
   }
 
-
   if (isSecondHome) {
     return <SecondHomePage />;
   }
+
   return (
     <div className="bg-[#0F101C] text-white min-h-screen px-4 pt-6 pb-20">
       <div className="mt-2 relative">
@@ -338,6 +434,7 @@ const HomePage = () => {
         </p>
 
         <div className="absolute top-6 right-4">
+          {/* perbaikan fill-rule → fillRule */}
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
@@ -352,7 +449,7 @@ const HomePage = () => {
                 <g>
                   <path
                     d="M18.16290232696533,13.823723231506348L18.16290232696533,9.597263231506346Q18.16290232696533,6.808623231506347,16.210602326965333,4.859263231506348Q14.256002326965332,2.8900232315063477,11.500002326965333,2.8900232315063477Q8.738172326965332,2.8900232315063477,6.785472326965332,4.859563231506348Q4.837072326965332,6.824753231506348,4.837072326965332,9.597263231506346L4.837072326965332,13.823723231506348Q4.080786326965332,13.905023231506348,3.522651226965332,14.467323231506347Q2.872502326965332,15.122323231506348,2.872502326965332,16.046923231506348Q2.872502326965332,16.97142323150635,3.522648026965332,17.626423231506347Q4.175104326965332,18.283823231506346,5.098342326965332,18.283823231506346L17.90170232696533,18.283823231506346Q18.824902326965333,18.283823231506346,19.477402326965333,17.626423231506347Q20.12750232696533,16.97142323150635,20.12750232696533,16.046923231506348Q20.12750232696533,15.122323231506348,19.477402326965333,14.467323231506347Q18.919202326965333,13.905023231506348,18.16290232696533,13.823723231506348ZM17.41290232696533,15.310023231506348L17.90170232696533,15.310023231506348Q18.627502326965335,15.310023231506348,18.627502326965335,16.046923231506348Q18.627502326965335,16.783823231506346,17.90170232696533,16.783823231506346L5.098342326965332,16.783823231506346Q4.372502326965332,16.783823231506346,4.372502326965332,16.046923231506348Q4.372502326965332,15.310023231506348,5.098342326965332,15.310023231506348L5.587072326965332,15.310023231506348Q5.660942326965332,15.310023231506348,5.7333923269653315,15.295623231506347Q5.805842326965331,15.281223231506347,5.874082326965333,15.252923231506347Q5.942332326965332,15.224623231506348,6.003752326965332,15.183623231506347Q6.065172326965332,15.142623231506347,6.1174023269653315,15.090323231506348Q6.169632326965332,15.038123231506347,6.210672326965332,14.976723231506348Q6.2517123269653325,14.915323231506347,6.279982326965332,14.847023231506348Q6.308252326965333,14.778823231506347,6.322662326965332,14.706323231506348Q6.337072326965332,14.633923231506348,6.337072326965332,14.560023231506348L6.337072326965332,9.597263231506346Q6.337072326965332,7.442303231506347,7.8506723269653325,5.915653231506347Q9.363262326965332,4.390023231506348,11.500002326965333,4.390023231506348Q13.631402326965333,4.390023231506348,15.146002326965332,5.915953231506347Q16.66290232696533,7.430603231506348,16.66290232696533,9.597263231506346L16.66290232696533,14.560023231506348Q16.66290232696533,14.633923231506348,16.677302326965332,14.706323231506348Q16.69180232696533,14.778823231506347,16.720002326965332,14.847023231506348Q16.74830232696533,14.915323231506347,16.789302326965334,14.976723231506348Q16.830402326965334,15.038123231506347,16.882602326965333,15.090323231506348Q16.934802326965332,15.142623231506347,16.99630232696533,15.183623231506347Q17.057702326965334,15.224623231506348,17.12590232696533,15.252923231506347Q17.194202326965332,15.281223231506347,17.266602326965334,15.295623231506347Q17.33910232696533,15.310023231506348,17.41290232696533,15.310023231506348Z"
-                    fill-rule="evenodd"
+                    fillRule="evenodd"
                     fill="#FFFFFF"
                     fillOpacity="1"
                   />
@@ -360,7 +457,7 @@ const HomePage = () => {
                 <g>
                   <path
                     d="M14.451685129699708,16.79341983795166L8.548375129699707,16.79341983795166Q8.474506629699707,16.79341983795166,8.402057129699706,16.80783083795166Q8.329608129699707,16.822241837951662,8.261362129699707,16.85050983795166Q8.193117129699708,16.87877883795166,8.131697129699708,16.919817837951662Q8.070278129699707,16.96085683795166,8.018045129699708,17.01308983795166Q7.965812129699707,17.065322837951662,7.924773129699707,17.12674183795166Q7.883734129699707,17.18816183795166,7.855465129699707,17.25640683795166Q7.827197129699707,17.32465283795166,7.812786129699707,17.39710183795166Q7.798375129699707,17.46955133795166,7.798375129699707,17.54341983795166Q7.798375129699707,19.08347983795166,8.880956129699706,20.17417983795166Q9.965855129699706,21.26721983795166,11.500025129699708,21.26720983795166Q13.035365129699706,21.26720983795166,14.118505129699706,20.17839983795166Q15.201685129699708,19.08953983795166,15.201685129699708,17.54341983795166Q15.201685129699708,17.46955133795166,15.187275129699707,17.39710183795166Q15.172855129699707,17.32465283795166,15.144595129699706,17.25640683795166Q15.116325129699707,17.18816183795166,15.075285129699708,17.12674183795166Q15.034245129699707,17.065322837951662,14.982015129699708,17.01308983795166Q14.929775129699706,16.96085683795166,14.868355129699708,16.919817837951662Q14.806935129699706,16.87877883795166,14.738695129699707,16.85050983795166Q14.670445129699708,16.822241837951662,14.597995129699708,16.80783083795166Q14.525555129699708,16.79341983795166,14.451685129699708,16.79341983795166ZM9.420466129699706,18.29341983795166Q9.579475129699707,18.74864983795166,9.945575129699707,19.11748983795166Q10.590455129699707,19.76720983795166,11.500025129699708,19.76720983795166Q12.411745129699707,19.76720983795166,13.055075129699707,19.12050983795166Q13.422065129699707,18.75159983795166,13.580765129699707,18.29341983795166L9.420466129699706,18.29341983795166Z"
-                    fill-rule="evenodd"
+                    fillRule="evenodd"
                     fill="#FFFFFF"
                     fillOpacity="1"
                   />
@@ -380,28 +477,28 @@ const HomePage = () => {
             <p className="text-sm font-semibold capitalize">
               {siteEmployee.shift} Shift
             </p>
-            {/* <p className="text-xs font-normal">{attendance?.value}</p> */}
             <p
-              className={`text-xs font-normal ${isLate ? "text-red-400" : "text-[#181D26]"
-                }`}
+              className={`text-xs font-normal ${
+                isLate ? "text-red-400" : "text-[#181D26]"
+              }`}
             >
               {siteEmployee?.date
                 ? (() => {
-                  const dateObj = new Date(siteEmployee.date);
-                  const day = dateObj.toLocaleDateString("en-GB", {
-                    day: "2-digit",
-                  });
-                  const month = dateObj.toLocaleDateString("en-GB", {
-                    month: "long",
-                  });
-                  const year = dateObj.toLocaleDateString("en-GB", {
-                    year: "numeric",
-                  });
-                  const weekday = dateObj.toLocaleDateString("en-GB", {
-                    weekday: "long",
-                  });
-                  return `${day} ${month} ${year}, ${weekday}`;
-                })()
+                    const dateObj = new Date(siteEmployee.date);
+                    const day = dateObj.toLocaleDateString("en-GB", {
+                      day: "2-digit",
+                    });
+                    const month = dateObj.toLocaleDateString("en-GB", {
+                      month: "long",
+                    });
+                    const year = dateObj.toLocaleDateString("en-GB", {
+                      year: "numeric",
+                    });
+                    const weekday = dateObj.toLocaleDateString("en-GB", {
+                      weekday: "long",
+                    });
+                    return `${day} ${month} ${year}, ${weekday}`;
+                  })()
                 : "Invalid date"}{" "}
               {diffLabel ? ` | ${diffLabel}` : ""}
             </p>
@@ -556,7 +653,6 @@ const HomePage = () => {
           <span className="text-white">Contacts</span>
         </Link>
 
-      
         <Link
           to={`/user/clocking/${siteEmployee?.site.id}`}
           className="bg-[#FFFFFF1A] p-4 rounded-xl flex flex-col items-center justify-center gap-2 w-full py-6 px-3"

@@ -4,6 +4,12 @@ import {
   BrowserRouter as Router,
   Routes,
 } from "react-router-dom";
+// import {
+//   Navigate,
+//   Route,
+//   BrowserRouter as Router,
+//   Routes,
+// } from "react-router-dom";
 
 import Attendance from "../pages/user/Attendance/Attendance";
 import Checkin from "../pages/user/Attendance/Checkin";
