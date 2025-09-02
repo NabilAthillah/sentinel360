@@ -78,7 +78,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
                 <Header openSidebar={setSidebar} user={user} handleLogout={handleLogout} />
                 {children}
             </div> */}
-            <div className='flex flex-col max-w-screen w-full min-h-screen h-full transition-all duration-200'>
+            <div className='flex flex-col max-w-screen  w-full min-h-screen h-full transition-all duration-200'>
                 <Header openSidebar={setSidebar} user={user} handleLogout={handleLogout} />
                 <div className="flex-1 p-6 max-w-screen w-full min-h-screen h-full">{children}</div>
             </div>

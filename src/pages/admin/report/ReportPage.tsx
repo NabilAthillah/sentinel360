@@ -221,29 +221,59 @@ const ReportPage = () => {
         }
     };
 
-    const exportExcel = (title: string, data: any[]) => {
+    const exportExcel = (title: string, data: any[], headers?: { header: string; dataKey: string }[]) => {
         if (!data || data.length === 0) {
-            toast.warning(`Tidak ada data untuk ${title}!`);
+            toast.warning(`No data available for ${title}!`);
             return;
         }
-        const worksheet = XLSX.utils.json_to_sheet(data);
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, title);
-        XLSX.writeFile(workbook, `${title}.xlsx`);
+
+        try {
+            const headerKeys = headers ? headers.map(h => h.dataKey) : Object.keys(data[0] || {});
+            const headerTitles = headers ? headers.map(h => h.header) : headerKeys;
+
+            const rows = data.map((row, i) => {
+                const newRow: any = { No: i + 1 };
+                headerKeys.forEach((key, idx) => {
+                    newRow[headerTitles[idx]] = row[key] ?? "";
+                });
+                return newRow;
+            });
+
+            const ws = XLSX.utils.json_to_sheet(rows, { header: ["No", ...headerTitles] });
+
+            const colWidths = ["No", ...headerTitles].map((key) => {
+                if (key.toLowerCase().includes("description") || key.toLowerCase().includes("detail")) {
+                    return { wch: 40 };
+                }
+                const maxLen = Math.max(
+                    key.length,
+                    ...rows.map(r => String(r[key] ?? "").length)
+                );
+                return { wch: Math.min(Math.max(maxLen + 2, 10), 40) };
+            });
+            (ws["!cols"] as any) = colWidths;
+
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, title);
+            XLSX.writeFile(wb, `${title}.xlsx`);
+        } catch (err) {
+            toast.error(`Failed to export ${title}`);
+            console.error(err);
+        }
     };
+
 
     const exportPdf = (title: string, rows: any[], filters?: Record<string, string | undefined>) => {
         if (!rows.length) {
-            toast.warning(`Tidak ada data untuk ${title}!`);
+            toast.warning(`No data available for ${title}!`);
             return;
         }
         try {
-
             const doc = new jsPDF({ orientation: 'landscape' });
 
             const headers = reportHeaders[title];
             if (!headers) {
-                alert(`Header belum didefinisikan untuk ${title}`);
+                alert(`Headers are not defined for ${title}`);
                 return;
             }
 
@@ -275,9 +305,12 @@ const ReportPage = () => {
             });
 
             doc.save(`${title}.pdf`);
-        } finally {
+        } catch (err) {
+            toast.error(`Failed to export ${title}`);
+            console.error(err);
         }
     };
+
 
     const hasPermission = (permissionName: string) =>
         user?.role?.permissions?.some((p) => p.name === permissionName);

@@ -140,6 +140,20 @@ const SecondLayout = ({ children }: { children: React.ReactNode }) => {
                 return t("Audit Trails");
             case "/dashboard/settings/profile":
                 return t("Profile");
+            case "/dashboard/settings/attendance":
+                return t("Attendance");
+            case "/dashboard/settings/client-info":
+                return t("Client Info");
+            case "/dashboard/settings/employee-document":
+                return t("Employee Document");
+            case "/dashboard/settings/incident":
+                return t("incident");
+            case "/dashboard/settings/occurrence-catg":
+                return t("Occurence Catg");
+            case "/dashboard/settings/roles":
+                return t("Roles");
+            case "/dashboard/settings/sop-document":
+                return t("SOP Document");
             default:
                 return "";
         }

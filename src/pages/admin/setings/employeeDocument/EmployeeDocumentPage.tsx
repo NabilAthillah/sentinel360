@@ -12,6 +12,8 @@ import auditTrailsService from "../../../../services/auditTrailsService";
 import employeeDocumentService from "../../../../services/employeeDocumentService";
 import { RootState } from "../../../../store";
 import { EmployeeDocument } from "../../../../types/employeeDocument";
+import SecondLayout from "../../../../layouts/SecondLayout";
+import SidebarLayout from "../../../../components/SidebarLayout";
 
 const EmployeeDocumentPage = () => {
     const { t } = useTranslation();
@@ -25,7 +27,7 @@ const EmployeeDocumentPage = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
     const [loading, setLoading] = useState(false);
-
+    const [sidebar ,setSidebar]= useState(true);
     const [addDocumentOpen, setAddDocumentOpen] = useState(false);
     const [editDocumentOpen, setEditDocumentOpen] = useState(false);
     const [editDocumentData, setEditDocumentData] = useState<EmployeeDocument | null>(null);
@@ -162,7 +164,8 @@ const EmployeeDocumentPage = () => {
     };
 
     return (
-        <MainLayout>
+        <SecondLayout>
+            <SidebarLayout isOpen={sidebar} closeSidebar={setSidebar} />
             <div className="flex flex-col gap-4 px-6 pb-20 w-full h-full flex-1">
                 <h2 className="text-2xl leading-9 text-white font-noto">{t('Settings')}</h2>
                 <div className="flex flex-col gap-8 w-full h-full flex-1">
@@ -458,7 +461,7 @@ const EmployeeDocumentPage = () => {
                     )}
                 </AnimatePresence>
             </div>
-        </MainLayout>
+        </SecondLayout>
     );
 };
 

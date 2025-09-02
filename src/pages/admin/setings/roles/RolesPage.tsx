@@ -11,6 +11,8 @@ import auditTrialsService from "../../../../services/auditTrailsService";
 import permissionService from "../../../../services/permissionService";
 import roleService from "../../../../services/roleService";
 import { RootState } from "../../../../store";
+import SecondLayout from "../../../../layouts/SecondLayout";
+import SidebarLayout from "../../../../components/SidebarLayout";
 type Role = {
   id: string;
   name: string;
@@ -31,7 +33,7 @@ const RolesPage = () => {
   const { t, i18n } = useTranslation();
   const [addRole, setAddRole] = useState(false);
   const [editRole, setEditRole] = useState(false);
-  const [sidebar, setSidebar] = useState(false);
+  const [sidebar, setSidebar] = useState(true);
   const [permissions, setPermissions] = useState<PermissionGroup>({});
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
   const [name, setName] = useState("");
@@ -235,19 +237,18 @@ const RolesPage = () => {
   }, [searchTerm, roles]);
 
   useEffect(() => {
-    const anyOpen = addRole || editRole || sidebar;
+    const anyOpen = addRole || editRole ;
     document.body.style.overflow = anyOpen ? "hidden" : "";
     return () => {
       document.body.style.overflow = "";
     };
-  }, [addRole, editRole, sidebar]);
+  }, [addRole, editRole, ]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         setAddRole(false);
         setEditRole(false);
-        setSidebar(false);
       }
     };
     window.addEventListener("keydown", onKey);
@@ -255,7 +256,8 @@ const RolesPage = () => {
   }, []);
 
   return (
-    <MainLayout>
+    <SecondLayout>
+      <SidebarLayout isOpen={sidebar} closeSidebar={setSidebar}/>
       <div className="flex flex-col gap-4 px-6 pb-20 w-full h-full flex-1">
         <h2 className="text-2xl leading-9 text-white font-noto">
           {t("Settings")}
@@ -624,7 +626,7 @@ const RolesPage = () => {
           </motion.div>
         )}
       </AnimatePresence>
-    </MainLayout>
+    </SecondLayout>
   );
 };
 

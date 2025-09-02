@@ -12,6 +12,8 @@ import auditTrialsService from "../../../../services/auditTrailsService";
 import clientInfoService from "../../../../services/clientInfoService";
 import { RootState } from "../../../../store";
 import { Client } from "../../../../types/client";
+import SecondLayout from "../../../../layouts/SecondLayout";
+import SidebarLayout from "../../../../components/SidebarLayout";
 
 const ClientInfoPage = () => {
     const navigate = useNavigate();
@@ -38,7 +40,7 @@ const ClientInfoPage = () => {
     const [website, setWebsite] = useState("");
     const [email, setEmail] = useState("");
     const [isOpen, setIsOpen] = useState(false);
-
+    const [sidebar , setSidebar] =useState(true)
     const imageInputRef = useRef<HTMLInputElement | null>(null);
     const chartInputRef = useRef<HTMLInputElement | null>(null);
     const [imageName, setImageName] = useState<string | null>(null);
@@ -137,7 +139,8 @@ const ClientInfoPage = () => {
     }, [client]);
 
     return (
-        <MainLayout>
+        <SecondLayout>
+            <SidebarLayout isOpen={sidebar} closeSidebar={setSidebar}/>
             <div className="flex flex-col gap-4 px-6 pb-20 w-full h-full">
                 <h2 className="text-2xl leading-9 text-white font-noto">{t('Settings')}</h2>
                 <div className="flex flex-col gap-8 w-full h-full">
@@ -330,7 +333,7 @@ const ClientInfoPage = () => {
                     )}
                 </div>
             </div>
-        </MainLayout >
+        </SecondLayout >
 
     );
 };

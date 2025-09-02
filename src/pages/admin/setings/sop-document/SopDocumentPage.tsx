@@ -12,6 +12,8 @@ import auditTrialsService from "../../../../services/auditTrailsService";
 import sopDocumentService from "../../../../services/sopDocumentService";
 import { RootState } from "../../../../store";
 import { SopDocument } from "../../../../types/sopDocument";
+import SecondLayout from "../../../../layouts/SecondLayout";
+import SidebarLayout from "../../../../components/SidebarLayout";
 
 const SopDocumentPage = () => {
     const [deleteModal, setDeleteModal] = useState(false);
@@ -225,7 +227,8 @@ const SopDocumentPage = () => {
     }, [sop]);
 
     return (
-        <MainLayout>
+        <SecondLayout>
+            <SidebarLayout isOpen={sidebar} closeSidebar={setSidebar}/>
             <div className='flex flex-col gap-4 px-6 pb-20 w-full h-full flex-1'>
                 <h2 className='text-2xl leading-9 text-white font-noto'>{t('Settings')}</h2>
                 <div className="flex flex-col gap-8 w-full h-full flex-1">
@@ -559,7 +562,7 @@ const SopDocumentPage = () => {
                     </motion.div>
                 )}
             </AnimatePresence>
-        </MainLayout>
+        </SecondLayout>
     )
 }
 
