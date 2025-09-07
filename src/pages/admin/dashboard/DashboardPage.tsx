@@ -238,7 +238,7 @@ const DashboardPage = () => {
                                         </defs>
                                     </svg>
                                     </span>
-                                    <p className="text-white font-medium">Leave Management</p>
+                                    <p className="text-white font-medium">Leave Managements</p>
                                 </div>
                             )}
                         </div>

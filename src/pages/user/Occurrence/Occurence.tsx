@@ -1,11 +1,12 @@
 import { ChevronLeft, Pencil, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import Swal from "sweetalert2";
 import Loader from "../../../components/Loader";
 import occurrenceCatgService from "../../../services/occurrenceCatgService";
 import occurrenceService from "../../../services/occurrenceService";
 import siteService from "../../../services/siteService";
+import { Site } from "../../../types/site";
 
 type Occurrence = {
     id: string;
@@ -21,7 +22,8 @@ const Occurence = () => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [occurrences, setOccurrences] = useState<Occurrence[]>([]);
-
+    const [nearestSite , setNearestSite] =useState<Site[]>([]);
+    const { idSite } = useParams<{ idSite: string }>();
     const swalOpt = {
         background: "#1e1e1e",
         color: "#f4f4f4",
@@ -31,7 +33,7 @@ const Occurence = () => {
 
     const tokenGuard = () => {
         const token = localStorage.getItem("token");
-        if (!token) {
+        if (!token || !idSite ) {
             localStorage.clear();
             Swal.fire({
                 icon: "error",
@@ -126,7 +128,7 @@ const Occurence = () => {
                     <img src="/images/Incident.png" alt="Incident" className="w-1/2" />
                 </div>
             ) : (
-                <div className="px-6 pt-4 flex flex-col gap-4">
+                <div className="px-6 pt-4 flex flex-col gap-4 ">
                     {occurrences.map((o) => (
                         <div key={o.id} className="bg-[#222834] rounded-xl p-4">
                             <div className="flex items-center justify-between mb-2">

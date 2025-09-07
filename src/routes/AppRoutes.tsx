@@ -79,7 +79,8 @@ const AppRoutes = () => {
           <Route path="/dashboard/e-occurrences" element={<OccurencePage />} />
           <Route path="/dashboard/e-learning" element={<LearningPage />} />
           <Route path="/dashboard/guard-tours" element={<GuardTour />} />
-
+          <Route path="/dashboard/leave-managements" element={<LeaveManagementPage />} />
+          
           <Route
             path="/dashboard/e-learning/history"
             element={<HistoryPage />}
@@ -144,7 +145,7 @@ const AppRoutes = () => {
           <Route path="/user/clocking/:idSite" element={<Clocking />} />
           <Route path="/user/clocking/:idSite/route-select" element={<RouteSelect />} />
           <Route path="/user/clocking/scan" element={<ScanClocking />} />
-          <Route path="/user/e-occurence" element={<Occurence />} />
+          <Route path="/user/e-occurence/:idSite" element={<Occurence />} />
           <Route
             path="/user/e-occurence/report"
             element={<ReportOccurance />}

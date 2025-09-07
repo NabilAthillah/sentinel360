@@ -34,15 +34,13 @@ const BottomSheet = ({
   return (
     <div className={`fixed inset-0 z-50 ${open ? "" : "pointer-events-none"}`}>
       <div
-        className={`absolute inset-0 bg-black/40 transition-opacity ${
-          open ? "opacity-100" : "opacity-0"
-        }`}
+        className={`absolute inset-0 bg-black/40 transition-opacity ${open ? "opacity-100" : "opacity-0"
+          }`}
         onClick={onClose}
       />
       <div
-        className={`absolute left-0 right-0 bottom-0 w-full transition-transform duration-300 ${
-          open ? "translate-y-0" : "translate-y-full"
-        }`}
+        className={`absolute left-0 right-0 bottom-0 w-full transition-transform duration-300 ${open ? "translate-y-0" : "translate-y-full"
+          }`}
       >
         <div className="rounded-t-2xl w-full md:max-w-2xl mx-auto bg-[#1C1F2A] text-white p-5 shadow-2xl flex flex-col items-center">
           <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-white/20" />
@@ -103,7 +101,7 @@ const parseEmployeeShift = (raw: any): Shift | null => {
     return "relief day";
   if (s === "relief night" || s === "relief-night" || s === "relief_night")
     return "relief night";
-  return null; // day/night diabaikan
+  return null; 
 };
 
 const toApiShift = (s: Shift): "relief day" | "relief night" => s;
@@ -163,6 +161,7 @@ const SecondHomePage = () => {
     return Number.isFinite(v) && v > 0 ? v : 100;
   }, [settings]);
 
+
   const getDistance = (
     lat1: number,
     lon1: number,
@@ -180,6 +179,7 @@ const SecondHomePage = () => {
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
   };
+
 
   const fetchSites = async () => {
     if (!token) return;
@@ -314,7 +314,6 @@ const SecondHomePage = () => {
         setOpenSheet(false);
         return;
       }
-
       let shift: Shift | null =
         parseEmployeeShift((siteEmployee as any)?.shift) ||
         parseEmployeeShift((siteEmployee as any)?.site_employee?.shift) ||
@@ -380,7 +379,7 @@ const SecondHomePage = () => {
       setOpenSheet(canOpen);
     })();
   }, [nearestSite, token, user?.id, settings, siteEmployee]);
-
+  
   const handleProceed = () => {
     navigate(`/user/attendance?siteId=${nearestSite?.id ?? ""}`);
     setOpenSheet(false);

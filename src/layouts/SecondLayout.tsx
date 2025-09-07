@@ -126,6 +126,8 @@ const SecondLayout = ({ children }: { children: React.ReactNode }) => {
                 return t("E-Occurrences");
             case "/dashboard/incidents":
                 return t("Incidents");
+            case "/dashboard/leave-managements":
+                return t("Leave Managements");
             case "/dashboard/sites":
                 return t("Sites");
             case "/dashboard/sites/map":

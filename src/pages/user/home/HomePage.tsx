@@ -277,6 +277,7 @@ const HomePage = () => {
     });
 
     if (!nearestSite) {
+      console.log(currentLat,currentLng);
       setIsSecondHome(true);
       return;
     }
@@ -525,7 +526,7 @@ const HomePage = () => {
 
       <div className="grid grid-cols-2 gap-4 mt-6">
         <Link
-          to="/user/e-occurence"
+          to="/user/e-occurence/{}"
           className="bg-[#FFFFFF1A] p-4 rounded-xl flex flex-col justify-center items-center gap-2 w-full py-6 px-3 text-center"
         >
           <svg
