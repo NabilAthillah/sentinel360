@@ -17,15 +17,16 @@ const leaveManagement = {
             throw error.response ? error.response.data : { message: "Network error" };
         }
     },
-    addLeaveManagement: async (payload, token) => {
+    addLeaveManagement: async (token, payload) => {
         try {
-            const response = await api.post('/leave-managements', payload, {
+            const response = await api.post(`/leave-managements`, payload, {
                 headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
+                    'Authorization': `Bearer ${token}`
+                }
             });
-            return response.data;
+            if (response.data) {
+                return response.data;
+            }
         } catch (error) {
             throw error.response ? error.response.data : { message: 'Network error' };
         }

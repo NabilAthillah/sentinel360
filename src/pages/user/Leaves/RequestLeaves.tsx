@@ -45,9 +45,7 @@ const RequestLeaves = () => {
                 to,
                 reason
             });
-
-            console.log("Payload yang dikirim:", payload);
-            const res = await leaveManagement.addLeaveManagement(payload, token);
+            const res = await leaveManagement.addLeaveManagement( token , payload);
             toast.success(res.message || "Leave request submitted successfully");
 
             if (res.data) {

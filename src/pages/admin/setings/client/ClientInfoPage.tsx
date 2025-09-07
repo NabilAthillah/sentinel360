@@ -14,6 +14,12 @@ import { RootState } from "../../../../store";
 import { Client } from "../../../../types/client";
 import SecondLayout from "../../../../layouts/SecondLayout";
 import SidebarLayout from "../../../../components/SidebarLayout";
+import siteService from "../../../../services/siteService";
+import { Site } from "../../../../types/site";
+import employeeService from "../../../../services/employeeService";
+import { Employee } from "../../../../types/employee";
+import { SiteEmployee } from "../../../../types/siteEmployee";
+import siteEmployeeService from "../../../../services/siteEmployeeService";
 
 const ClientInfoPage = () => {
     const navigate = useNavigate();
@@ -40,16 +46,23 @@ const ClientInfoPage = () => {
     const [website, setWebsite] = useState("");
     const [email, setEmail] = useState("");
     const [isOpen, setIsOpen] = useState(false);
-    const [sidebar , setSidebar] =useState(true)
+    const [sidebar, setSidebar] = useState(true)
     const imageInputRef = useRef<HTMLInputElement | null>(null);
     const chartInputRef = useRef<HTMLInputElement | null>(null);
     const [imageName, setImageName] = useState<string | null>(null);
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [chartName, setChartName] = useState<string | null>(null);
     const [chartFile, setChartFile] = useState<File | null>(null);
-
+    const [site, setSite] = useState<Site[]>([]);
+    const [employees, setEmployees] = useState<Employee[]>([]);
+    const [siteUser, setSiteUser] = useState<SiteEmployee[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
     const [saving, setSaving] = useState<boolean>(false);
+    const stats = [
+        site.length,
+        employees.length,
+        siteUser.length,
+    ];
 
     const baseURL = new URL(process.env.REACT_APP_API_URL || "http://localhost:8000/api");
     baseURL.pathname = baseURL.pathname.replace(/\/api$/, "");
@@ -72,6 +85,48 @@ const ClientInfoPage = () => {
             setLoading(false);
         }
     };
+
+    const fetchAllSite = async () => {
+        if (!token) return navigate("/auth/login");
+        setLoading(true);
+        try {
+            const response = await siteService.getAllSite();
+            if (response.success) setSite(response.data);
+        } catch (error: any) {
+            console.error(error);
+            toast.error(error.message || "Failed to load client info");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchEmployees = async () => {
+        if (!token) return navigate("/auth/login");
+        setLoading(true);
+        try {
+            const response = await employeeService.getAllEmployee();
+            if (response.success) setEmployees(response.data);
+        } catch (error: any) {
+            console.error(error);
+            toast.error(error.message || "Failed to load client info");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // const fetchSiteUser = async () => {
+    //     if (!token) return navigate("/auth/login");
+    //     setLoading(true);
+    //     try {
+    //         const response = await siteEmployeeService.allocationUserToSite();
+    //         if (response.success) setSiteUser(response.data);
+    //     } catch (error: any) {
+    //         console.error(error);
+    //         toast.error(error.message || "Failed to load client info");
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // };
 
     const handleSubmit = async (e: React.SyntheticEvent) => {
         e.preventDefault();
@@ -126,6 +181,9 @@ const ClientInfoPage = () => {
             return;
         }
         fetchClientInfo();
+        fetchAllSite();
+        fetchEmployees();
+        // fetchSiteUser();
         audit();
     }, []);
 
@@ -140,7 +198,7 @@ const ClientInfoPage = () => {
 
     return (
         <SecondLayout>
-            <SidebarLayout isOpen={sidebar} closeSidebar={setSidebar}/>
+            <SidebarLayout isOpen={sidebar} closeSidebar={setSidebar} />
             <div className="flex flex-col gap-4 px-6 pb-20 w-full h-full">
                 <h2 className="text-2xl leading-9 text-white font-noto">{t('Settings')}</h2>
                 <div className="flex flex-col gap-8 w-full h-full">
@@ -208,24 +266,26 @@ const ClientInfoPage = () => {
                                     </div>
                                 </div>
 
-                                {/* Stats Cards */}
                                 <div className="grid grid-cols-1 justify-between gap-x-2 gap-y-4 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-3">
                                     {["Sites", "Employees", "Assigned", "Unassigned", "On leave"].map((label, i) => (
                                         <div
                                             key={i}
                                             className="flex flex-col gap-2 px-4 py-[14px] w-full bg-[#252C38] shadow-[2px_2px_12px_rgba(24,29,38,0.14)] rounded-xl"
                                         >
-                                            <p className="font-open font-semibold text-sm leading-[20px] text-[#98A1B3]">{label}</p>
+                                            <p className="font-open font-semibold text-sm leading-[20px] text-[#98A1B3]">
+                                                {label}
+                                            </p>
                                             <p className="font-open font-semibold text-2xl leading-[20px] text-[#F4F7FF]">
                                                 {loading ? (
                                                     <span className="inline-block h-6 w-10 bg-white/10 rounded animate-pulse" />
                                                 ) : (
-                                                    ["4", "12", "10", "1", "1"][i]
+                                                    stats[i]
                                                 )}
                                             </p>
                                         </div>
                                     ))}
                                 </div>
+
                             </div>
 
                             {/* Form */}

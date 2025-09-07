@@ -57,13 +57,14 @@ import SopDocumentPage from "../pages/admin/setings/sop-document/SopDocumentPage
 import ProfilePage from "../pages/admin/setings/profile/ProfilePage";
 import RequireLocation from "../components/RequireLocation";
 import GuardTour from "../pages/admin/guardTour/GuardTour";
-import GuardTourPage from "../pages/user/GuardTour/GuardTourPage";
+
 import GuardScan from "../pages/user/GuardTour/GuardScan";
 import GuardChoice from "../pages/user/GuardTour/GuardChoice";
 import GuardSubmit from "../pages/user/GuardTour/GuardSubmit";
 import Pointers from "../pages/admin/site/Pointers";
 import Selection from "../pages/user/GuardTour/Selection";
 import RouteSelect from "../pages/user/Clocking/RouteSelect";
+import GuardTourPage from "../pages/user/GuardTour/GuardTourPage";
 
 const AppRoutes = () => {
   return (
