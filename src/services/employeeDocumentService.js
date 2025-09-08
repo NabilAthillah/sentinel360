@@ -19,7 +19,7 @@ const employeeDocumentService = {
 
     addEmployeeDocument: async (token, name) => {
         try {
-            const response = await api.post(`master-settings/employee-documents`, {name: name});
+            const response = await api.post(`master-settings/employee-documents`, { name: name });
 
             if (response.data) {
                 return response.data;
@@ -31,7 +31,7 @@ const employeeDocumentService = {
 
     editEmployeeDocument: async (token, id, name) => {
         try {
-            const response = await api.put(`master-settings/employee-documents/${id}`, {name: name});
+            const response = await api.put(`master-settings/employee-documents/${id}`, { name: name });
 
             if (response.data) {
                 return response.data;
@@ -43,7 +43,7 @@ const employeeDocumentService = {
 
     editEmployeeDocumentStatus: async (token, id, status) => {
         try {
-            const response = await api.put(`master-settings/employee-documents/${id}`, {status});
+            const response = await api.put(`master-settings/employee-documents/${id}`, { status });
             if (response.data) {
                 return response.data;
             }
@@ -51,7 +51,14 @@ const employeeDocumentService = {
             throw error.response ? error.response.data : { message: 'Network error' };
         }
     },
-
+    deleteEmployeeDocument: async (id) => {
+        try {
+            const response = await api.delete(`master-settings/employee-documents/${id}`)
+            return response.data;
+        } catch (error) {
+            throw error.response ? error.response.data : { message: 'Network error' };
+        }
+    },
     deleteRoute: async (token, route) => {
         try {
             const response = await api.post(`/routes/${route.id}`, {

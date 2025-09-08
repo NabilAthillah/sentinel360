@@ -19,7 +19,7 @@ const occurrenceCatgService = {
 
     addCategory: async (token, name) => {
         try {
-            const response = await api.post(`master-settings/occurrence-categories`, {name:name});
+            const response = await api.post(`master-settings/occurrence-categories`, { name: name });
 
             if (response.data) {
                 return response.data;
@@ -31,7 +31,7 @@ const occurrenceCatgService = {
 
     editCategory: async (token, id, name) => {
         try {
-            const response = await api.put(`master-settings/occurrence-categories/${id}`, {name:name});
+            const response = await api.put(`master-settings/occurrence-categories/${id}`, { name: name });
 
             if (response.data) {
                 return response.data;
@@ -43,11 +43,20 @@ const occurrenceCatgService = {
 
     editCategoryStatus: async (token, id, status) => {
         try {
-            const response = await api.put(`master-settings/occurrence-categories/${id}`, {status});
+            const response = await api.put(`master-settings/occurrence-categories/${id}`, { status });
 
             if (response.data) {
                 return response.data;
             }
+        } catch (error) {
+            throw error.response ? error.response.data : { message: 'Network error' };
+        }
+    },
+
+    deleteCategory: async (id) => {
+        try {
+            const response = await api.delete(`master-settings/occurrence-categories/${id}`)
+            return response.data;
         } catch (error) {
             throw error.response ? error.response.data : { message: 'Network error' };
         }

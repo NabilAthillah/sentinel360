@@ -14,26 +14,27 @@ import { RootState } from "../../../../store";
 import { EmployeeDocument } from "../../../../types/employeeDocument";
 import SecondLayout from "../../../../layouts/SecondLayout";
 import SidebarLayout from "../../../../components/SidebarLayout";
+import DeleteModal from "../../../../components/DeleteModal";
 
 const EmployeeDocumentPage = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const user = useSelector((state: RootState) => state.user.user);
     const token = useSelector((state: RootState) => state.token.token);
-
+    const [selectedId, setSelectedId] = useState<string | null>(null);
     const [employeeDocuments, setEmployeeDocuments] = useState<EmployeeDocument[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 5;
     const [searchTerm, setSearchTerm] = useState('');
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
     const [loading, setLoading] = useState(false);
-    const [sidebar ,setSidebar]= useState(true);
+    const [sidebar, setSidebar] = useState(true);
     const [addDocumentOpen, setAddDocumentOpen] = useState(false);
     const [editDocumentOpen, setEditDocumentOpen] = useState(false);
     const [editDocumentData, setEditDocumentData] = useState<EmployeeDocument | null>(null);
     const [documentName, setDocumentName] = useState('');
     const [switchStates, setSwitchStates] = useState<Record<string, boolean>>({});
-
+    const [deleteModal, setDeleteModal] = useState(false);
     useEffect(() => {
         if (!token) navigate('/auth/login');
         if (!user?.role?.permissions?.some(p => p.name === 'list_employee_documents')) navigate('/dashboard');
@@ -141,6 +142,32 @@ const EmployeeDocumentPage = () => {
         }
     };
 
+    const handleDelete = async () => {
+        setLoading(true);
+        if (!token) {
+            navigate('/auth/login');
+            return;
+        }
+        try {
+            if (!selectedId) {
+                toast.error("No selected ID");
+                return;
+            }
+            const response = await employeeDocumentService.deleteEmployeeDocument(selectedId);
+            if (response.success) {
+                toast.success("Employee Document deleted successfully");
+                fetchEmployeeDocuments();
+                setDeleteModal(false);
+                setSelectedId(null);
+            } else {
+                toast.error("Failed to delete employee document");
+            }
+        } catch (error: any) {
+            toast.error(error.message || "Error deleting employee document");
+        } finally {
+            setLoading(false);
+        }
+    };
     const filteredData = employeeDocuments.filter(doc =>
         doc.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -184,7 +211,7 @@ const EmployeeDocumentPage = () => {
                                     type="button"
                                     className="p-2 rounded-[4px_4px_0px_0px]"
                                     tabIndex={-1}
-                                    
+
                                 >
                                     <svg
                                         xmlns="http://www.w3.org/2000/svg"
@@ -283,11 +310,31 @@ const EmployeeDocumentPage = () => {
 
                                                 {/* Action Edit */}
                                                 <td className="text-[#F4F7FF] pt-4 pb-2 items-center justify-center flex">
-                                                    {user?.role?.permissions?.some(p => p.name === 'edit_employee_document') && (
+                                                    <div className="flex gap-6 items-center justify-center">
+                                                        {user?.role?.permissions?.some(p => p.name === 'edit_employee_document') && (
+                                                            <svg
+                                                                onClick={() => {
+                                                                    setEditDocumentData(doc);
+                                                                    setEditDocumentOpen(true);
+                                                                }}
+                                                                className="cursor-pointer"
+                                                                xmlns="http://www.w3.org/2000/svg"
+                                                                fill="none"
+                                                                version="1.1"
+                                                                width="28"
+                                                                height="28"
+                                                                viewBox="0 0 28 28"
+                                                            >
+                                                                <path
+                                                                    d="M3.5,20.1249V24.5H7.875L20.7783,11.5967L16.4033,7.2217L3.5,20.1249ZM24.1617,8.2133C24.6166,7.7593,24.6166,7.0223,24.1617,6.5683L21.4317,3.8383C20.9777,3.3834,20.2406,3.3834,19.7867,3.8383L17.6517,5.9733L22.0267,10.3483L24.1617,8.2133Z"
+                                                                    fill="#F4F7FF"
+                                                                />
+                                                            </svg>
+                                                        )}
                                                         <svg
                                                             onClick={() => {
-                                                                setEditDocumentData(doc);
-                                                                setEditDocumentOpen(true);
+                                                                setSelectedId(doc.id);
+                                                                setDeleteModal(true);
                                                             }}
                                                             className="cursor-pointer"
                                                             xmlns="http://www.w3.org/2000/svg"
@@ -297,12 +344,20 @@ const EmployeeDocumentPage = () => {
                                                             height="28"
                                                             viewBox="0 0 28 28"
                                                         >
-                                                            <path
-                                                                d="M3.5,20.1249V24.5H7.875L20.7783,11.5967L16.4033,7.2217L3.5,20.1249ZM24.1617,8.2133C24.6166,7.7593,24.6166,7.0223,24.1617,6.5683L21.4317,3.8383C20.9777,3.3834,20.2406,3.3834,19.7867,3.8383L17.6517,5.9733L22.0267,10.3483L24.1617,8.2133Z"
-                                                                fill="#F4F7FF"
-                                                            />
+                                                            <defs>
+                                                                <clipPath id="delete_icon_clip">
+                                                                    <rect x="0" y="0" width="28" height="28" rx="0" />
+                                                                </clipPath>
+                                                            </defs>
+                                                            <g clipPath="url(#delete_icon_clip)">
+                                                                <path
+                                                                    d="M6.9997,24.5H21V8.16667H6.9997V24.5ZM22.1663,4.66667H18.083L16.9163,3.5H11.083L9.9163,4.66667H5.833V7H22.1663V4.66667Z"
+                                                                    fill="#F4F7FF"
+                                                                    fillOpacity="1"
+                                                                />
+                                                            </g>
                                                         </svg>
-                                                    )}
+                                                    </div>
                                                 </td>
                                             </tr>
                                         ))
@@ -461,6 +516,19 @@ const EmployeeDocumentPage = () => {
                     )}
                 </AnimatePresence>
             </div>
+            <AnimatePresence>
+                {deleteModal && (
+                    <motion.div
+                        className="fixed w-screen h-screen flex justify-center items-center top-0 left-0 z-50 bg-[rgba(0,0,0,0.5)]"
+                        key="add-overlay"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => setDeleteModal(false)}>
+                        <DeleteModal loading={loading} setModal={setDeleteModal} handleDelete={handleDelete} />
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </SecondLayout>
     );
 };

@@ -18,7 +18,7 @@ type Settings = { label: string; placeholder: string; value: string };
 const HomePage = () => {
   const user = useSelector((s: RootState) => s.user.user);
   const token = useSelector((s: RootState) => s.token.token);
-
+  const [nearestSite, setNearestSite] = useState<Site | null>(null);
   const [siteEmployee, setSiteEmployee] = useState<SiteEmployee>();
   const [sites, setSites] = useState<Site[]>([]);
   const [attendance, setAttendance] = useState<any>();
@@ -74,7 +74,7 @@ const HomePage = () => {
         e.code = 1;
         throw e;
       }
-    } catch {}
+    } catch { }
 
     try {
       return await getFirstFix(hi);
@@ -275,8 +275,11 @@ const HomePage = () => {
       );
       return dist <= geoFencing;
     });
-
+    if (nearestSite) {
+      setNearestSite(nearestSite);
+    }
     if (!nearestSite) {
+      console.log(currentLat, currentLng);
       setIsSecondHome(true);
       return;
     }
@@ -478,27 +481,26 @@ const HomePage = () => {
               {siteEmployee.shift} Shift
             </p>
             <p
-              className={`text-xs font-normal ${
-                isLate ? "text-red-400" : "text-[#181D26]"
-              }`}
+              className={`text-xs font-normal ${isLate ? "text-red-400" : "text-[#181D26]"
+                }`}
             >
               {siteEmployee?.date
                 ? (() => {
-                    const dateObj = new Date(siteEmployee.date);
-                    const day = dateObj.toLocaleDateString("en-GB", {
-                      day: "2-digit",
-                    });
-                    const month = dateObj.toLocaleDateString("en-GB", {
-                      month: "long",
-                    });
-                    const year = dateObj.toLocaleDateString("en-GB", {
-                      year: "numeric",
-                    });
-                    const weekday = dateObj.toLocaleDateString("en-GB", {
-                      weekday: "long",
-                    });
-                    return `${day} ${month} ${year}, ${weekday}`;
-                  })()
+                  const dateObj = new Date(siteEmployee.date);
+                  const day = dateObj.toLocaleDateString("en-GB", {
+                    day: "2-digit",
+                  });
+                  const month = dateObj.toLocaleDateString("en-GB", {
+                    month: "long",
+                  });
+                  const year = dateObj.toLocaleDateString("en-GB", {
+                    year: "numeric",
+                  });
+                  const weekday = dateObj.toLocaleDateString("en-GB", {
+                    weekday: "long",
+                  });
+                  return `${day} ${month} ${year}, ${weekday}`;
+                })()
                 : "Invalid date"}{" "}
               {diffLabel ? ` | ${diffLabel}` : ""}
             </p>
@@ -525,7 +527,7 @@ const HomePage = () => {
 
       <div className="grid grid-cols-2 gap-4 mt-6">
         <Link
-          to="/user/e-occurence"
+          to={`/user/e-occurence/${siteEmployee?.site.id}`}
           className="bg-[#FFFFFF1A] p-4 rounded-xl flex flex-col justify-center items-center gap-2 w-full py-6 px-3 text-center"
         >
           <svg

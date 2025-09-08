@@ -14,6 +14,7 @@ import Navbar from "../../../../components/Navbar";
 import Loader from "../../../../components/Loader";
 import SecondLayout from "../../../../layouts/SecondLayout";
 import SidebarLayout from "../../../../components/SidebarLayout";
+import DeleteModal from "../../../../components/DeleteModal";
 const OccurrenceCatgPage = () => {
     const [addCatg, setAddCatg] = useState(false);
     const [editCatg, setEditCatg] = useState(false);
@@ -25,13 +26,13 @@ const OccurrenceCatgPage = () => {
     const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 5;
-    const [sidebar , setSidebar] = useState(true);
+    const [sidebar, setSidebar] = useState(true);
     const navigate = useNavigate();
     const user = useSelector((state: RootState) => state.user.user);
     const token = useSelector((state: RootState) => state.token.token);
-
+    const [deleteModal, setDeleteModal] = useState(false);
     const [name, setName] = useState("");
-
+    const [selectedId, setSelectedId] = useState<string | null>(null);
     const filteredData = categories.filter((c) =>
         c.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -147,6 +148,32 @@ const OccurrenceCatgPage = () => {
             setLoading(false);
         }
     };
+    const handleDelete = async () => {
+        setLoading(true);
+        if (!token) {
+            navigate('/auth/login');
+            return;
+        }
+        try {
+            if (!selectedId) {
+                toast.error("No selected ID");
+                return;
+            }
+            const response = await occurrenceCatgService.deleteCategory(selectedId);
+            if (response.success) {
+                toast.success("Category deleted successfully");
+                fetchCategories();
+                setDeleteModal(false);
+                setSelectedId(null);
+            } else {
+                toast.error("Failed to delete category");
+            }
+        } catch (error: any) {
+            toast.error(error.message || "Error deleting category");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const audit = async () => {
         if (!token) return;
@@ -200,7 +227,7 @@ const OccurrenceCatgPage = () => {
 
     return (
         <SecondLayout>
-            <SidebarLayout isOpen={sidebar} closeSidebar={setSidebar}/>
+            <SidebarLayout isOpen={sidebar} closeSidebar={setSidebar} />
             <div className="flex flex-col gap-4 px-6 pb-20 w-full h-full flex-1">
                 <h2 className="text-2xl leading-9 text-white font-noto">{t('Settings')}</h2>
 
@@ -346,6 +373,32 @@ const OccurrenceCatgPage = () => {
                                                                         />
                                                                     </svg>
                                                                 )}
+                                                                <svg
+                                                                    onClick={() => {
+                                                                        setSelectedId(category.id);
+                                                                        setDeleteModal(true);
+                                                                    }}
+                                                                    className="cursor-pointer"
+                                                                    xmlns="http://www.w3.org/2000/svg"
+                                                                    fill="none"
+                                                                    version="1.1"
+                                                                    width="28"
+                                                                    height="28"
+                                                                    viewBox="0 0 28 28"
+                                                                >
+                                                                    <defs>
+                                                                        <clipPath id="delete_icon_clip">
+                                                                            <rect x="0" y="0" width="28" height="28" rx="0" />
+                                                                        </clipPath>
+                                                                    </defs>
+                                                                    <g clipPath="url(#delete_icon_clip)">
+                                                                        <path
+                                                                            d="M6.9997,24.5H21V8.16667H6.9997V24.5ZM22.1663,4.66667H18.083L16.9163,3.5H11.083L9.9163,4.66667H5.833V7H22.1663V4.66667Z"
+                                                                            fill="#F4F7FF"
+                                                                            fillOpacity="1"
+                                                                        />
+                                                                    </g>
+                                                                </svg>
                                                             </div>
                                                         </td>
                                                     </tr>
@@ -489,6 +542,20 @@ const OccurrenceCatgPage = () => {
                     </motion.div>
                 )}
             </AnimatePresence>
+            <AnimatePresence>
+                {deleteModal && (
+                    <motion.div
+                        className="fixed w-screen h-screen flex justify-center items-center top-0 left-0 z-50 bg-[rgba(0,0,0,0.5)]"
+                        key="add-overlay"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => setDeleteModal(false)}>
+                        <DeleteModal loading={loading} setModal={setDeleteModal} handleDelete={handleDelete} />
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
         </SecondLayout>
     );
 };

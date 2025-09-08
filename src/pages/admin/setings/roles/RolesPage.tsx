@@ -13,6 +13,7 @@ import roleService from "../../../../services/roleService";
 import { RootState } from "../../../../store";
 import SecondLayout from "../../../../layouts/SecondLayout";
 import SidebarLayout from "../../../../components/SidebarLayout";
+import DeleteModal from "../../../../components/DeleteModal";
 type Role = {
   id: string;
   name: string;
@@ -41,7 +42,7 @@ const RolesPage = () => {
   const [roles, setRoles] = useState<Role[]>([]);
   const [editedRole, setEditedRole] = useState<Role>();
   const permissionsFlat = Object.values(permissions).flat();
-
+  const [deleteModal, setDeleteModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredRoles, setFilteredRoles] = useState<Role[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -53,7 +54,7 @@ const RolesPage = () => {
     indexOfFirstItem,
     indexOfLastItem
   );
-
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const totalItems = searchTerm ? filteredRoles.length : roles.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
 
@@ -229,6 +230,32 @@ const RolesPage = () => {
     }
   }, []);
 
+  const handleDelete = async () => {
+    setLoading(true);
+    if (!token) {
+      navigate('/auth/login');
+      return;
+    }
+    try {
+      if (!selectedId) {
+        toast.error("No selected ID");
+        return;
+      }
+      const response = await roleService.deleterole(selectedId);
+      if (response.success) {
+        toast.success("Role deleted successfully");
+        fetchRoles();
+        setDeleteModal(false);
+        setSelectedId(null);
+      } else {
+        toast.error("Failed to delete role");
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Error deleting role");
+    } finally {
+      setLoading(false);
+    }
+  };
   useEffect(() => {
     const filtered = roles.filter((role) =>
       role.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -237,12 +264,12 @@ const RolesPage = () => {
   }, [searchTerm, roles]);
 
   useEffect(() => {
-    const anyOpen = addRole || editRole ;
+    const anyOpen = addRole || editRole;
     document.body.style.overflow = anyOpen ? "hidden" : "";
     return () => {
       document.body.style.overflow = "";
     };
-  }, [addRole, editRole, ]);
+  }, [addRole, editRole,]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -257,7 +284,7 @@ const RolesPage = () => {
 
   return (
     <SecondLayout>
-      <SidebarLayout isOpen={sidebar} closeSidebar={setSidebar}/>
+      <SidebarLayout isOpen={sidebar} closeSidebar={setSidebar} />
       <div className="flex flex-col gap-4 px-6 pb-20 w-full h-full flex-1">
         <h2 className="text-2xl leading-9 text-white font-noto">
           {t("Settings")}
@@ -396,6 +423,32 @@ const RolesPage = () => {
                                   </g>
                                 </svg>
                               )}
+                              <svg
+                                onClick={() => {
+                                  setSelectedId(data.id);
+                                  setDeleteModal(true);
+                                }}
+                                className="cursor-pointer"
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                version="1.1"
+                                width="28"
+                                height="28"
+                                viewBox="0 0 28 28"
+                              >
+                                <defs>
+                                  <clipPath id="delete_icon_clip">
+                                    <rect x="0" y="0" width="28" height="28" rx="0" />
+                                  </clipPath>
+                                </defs>
+                                <g clipPath="url(#delete_icon_clip)">
+                                  <path
+                                    d="M6.9997,24.5H21V8.16667H6.9997V24.5ZM22.1663,4.66667H18.083L16.9163,3.5H11.083L9.9163,4.66667H5.833V7H22.1663V4.66667Z"
+                                    fill="#F4F7FF"
+                                    fillOpacity="1"
+                                  />
+                                </g>
+                              </svg>
                               {/* <svg xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1" width="28" height="28" viewBox="0 0 28 28"><defs><clipPath id="master_svg0_247_14302"><rect x="0" y="0" width="28" height="28" rx="0" /></clipPath></defs><g><g clipPath="url(#master_svg0_247_14302)"><g><path d="M6.9996778125,24.5L20.9997078125,24.5L20.9997078125,8.16667L6.9996778125,8.16667L6.9996778125,24.5ZM22.1663078125,4.66667L18.0830078125,4.66667L16.9163078125,3.5L11.0830078125,3.5L9.9163378125,4.66667L5.8330078125,4.66667L5.8330078125,7L22.1663078125,7L22.1663078125,4.66667Z" fill="#F4F7FF" fillOpacity="1" /></g></g></g></svg> */}
                             </div>
                           </td>
@@ -623,6 +676,19 @@ const RolesPage = () => {
                 </div>
               </div>
             </motion.aside>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {deleteModal && (
+          <motion.div
+            className="fixed w-screen h-screen flex justify-center items-center top-0 left-0 z-50 bg-[rgba(0,0,0,0.5)]"
+            key="add-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setDeleteModal(false)}>
+            <DeleteModal loading={loading} setModal={setDeleteModal} handleDelete={handleDelete} />
           </motion.div>
         )}
       </AnimatePresence>

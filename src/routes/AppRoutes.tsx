@@ -57,13 +57,14 @@ import SopDocumentPage from "../pages/admin/setings/sop-document/SopDocumentPage
 import ProfilePage from "../pages/admin/setings/profile/ProfilePage";
 import RequireLocation from "../components/RequireLocation";
 import GuardTour from "../pages/admin/guardTour/GuardTour";
-import GuardTourPage from "../pages/user/GuardTour/GuardTourPage";
+
 import GuardScan from "../pages/user/GuardTour/GuardScan";
 import GuardChoice from "../pages/user/GuardTour/GuardChoice";
 import GuardSubmit from "../pages/user/GuardTour/GuardSubmit";
 import Pointers from "../pages/admin/site/Pointers";
 import Selection from "../pages/user/GuardTour/Selection";
 import RouteSelect from "../pages/user/Clocking/RouteSelect";
+import GuardTourPage from "../pages/user/GuardTour/GuardTourPage";
 
 const AppRoutes = () => {
   return (
@@ -79,7 +80,8 @@ const AppRoutes = () => {
           <Route path="/dashboard/e-occurrences" element={<OccurencePage />} />
           <Route path="/dashboard/e-learning" element={<LearningPage />} />
           <Route path="/dashboard/guard-tours" element={<GuardTour />} />
-
+          <Route path="/dashboard/leave-managements" element={<LeaveManagementPage />} />
+          
           <Route
             path="/dashboard/e-learning/history"
             element={<HistoryPage />}
@@ -144,17 +146,17 @@ const AppRoutes = () => {
           <Route path="/user/clocking/:idSite" element={<Clocking />} />
           <Route path="/user/clocking/:idSite/route-select" element={<RouteSelect />} />
           <Route path="/user/clocking/scan" element={<ScanClocking />} />
-          <Route path="/user/e-occurence" element={<Occurence />} />
+          <Route path="/user/e-occurence/:idSite" element={<Occurence />} />
           <Route
-            path="/user/e-occurence/report"
+            path="/user/e-occurence/:idSite/report"
             element={<ReportOccurance />}
           />
           <Route
-            path="/user/e-occurence/report/edit/:id"
+            path="/user/e-occurence/report/edit/:idSite"
             element={<EditOccurance />}
           />
           <Route
-            path="/user/e-occurence/history"
+            path="/user/e-occurence/:idSite/history"
             element={<HistoryOccurance />}
           />
           <Route path="/user/incident/:idSite" element={<Incident />} />

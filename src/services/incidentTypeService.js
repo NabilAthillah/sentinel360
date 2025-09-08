@@ -19,7 +19,7 @@ const IncidentTypesService = {
 
     addIncidentTypes: async (token, name) => {
         try {
-            const response = await api.post(`master-settings/incident-types`, {name: name});
+            const response = await api.post(`master-settings/incident-types`, { name: name });
 
             if (response.data) {
                 return response.data;
@@ -31,7 +31,7 @@ const IncidentTypesService = {
 
     editIncidentTypes: async (token, id, name) => {
         try {
-            const response = await api.put(`master-settings/incident-types/${id}`, {name});
+            const response = await api.put(`master-settings/incident-types/${id}`, { name });
 
             if (response.data) {
                 return response.data;
@@ -43,7 +43,7 @@ const IncidentTypesService = {
 
     editIncidentTypesStatus: async (token, id, status) => {
         try {
-            const response = await api.put(`master-settings/incident-types/${id}`, {status});
+            const response = await api.put(`master-settings/incident-types/${id}`, { status });
 
             if (response.data) {
                 return response.data;
@@ -53,6 +53,14 @@ const IncidentTypesService = {
         }
     },
 
+    deleteIncindentType: async (id) => {
+        try {
+            const response = await api.delete(`master-settings/incident-types/${id}`)
+            return response.data;
+        } catch (error) {
+            throw error.response ? error.response.data : { message: 'Network error' };
+        }
+    },
     deleteRoute: async (token, route) => {
         try {
             const response = await api.post(`/routes/${route.id}`, {

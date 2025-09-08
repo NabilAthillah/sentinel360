@@ -1,6 +1,6 @@
 import { ChevronLeft } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import Swal from "sweetalert2";
 import Loader from "../../../components/Loader";
 import occurrenceCatgService from "../../../services/occurrenceCatgService";
@@ -26,6 +26,7 @@ const ReportOccurance = () => {
   const [formData, setFormData] = useState<OccurrenceInput[]>([
     { id_site: "", id_category: "", occurred_at: "", detail: "" },
   ]);
+  const { idSite } = useParams<{ idSite: string }>();
 
   const swalOpt = {
     background: "#1e1e1e",
@@ -125,7 +126,7 @@ const ReportOccurance = () => {
           text: "Occurrence report saved.",
           ...swalOpt,
         });
-        navigate("/user/e-occurence")
+        navigate(`/user/e-occurence/${idSite}`);
         setFormData([{ id_site: "", id_category: "", occurred_at: "", detail: "" }]);
       } else {
         Swal.fire({
