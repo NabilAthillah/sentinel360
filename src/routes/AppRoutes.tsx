@@ -148,15 +148,15 @@ const AppRoutes = () => {
           <Route path="/user/clocking/scan" element={<ScanClocking />} />
           <Route path="/user/e-occurence/:idSite" element={<Occurence />} />
           <Route
-            path="/user/e-occurence/report"
+            path="/user/e-occurence/:idSite/report"
             element={<ReportOccurance />}
           />
           <Route
-            path="/user/e-occurence/report/edit/:id"
+            path="/user/e-occurence/report/edit/:idSite"
             element={<EditOccurance />}
           />
           <Route
-            path="/user/e-occurence/history"
+            path="/user/e-occurence/:idSite/history"
             element={<HistoryOccurance />}
           />
           <Route path="/user/incident/:idSite" element={<Incident />} />

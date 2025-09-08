@@ -20,6 +20,7 @@ import employeeService from "../../../../services/employeeService";
 import { Employee } from "../../../../types/employee";
 import { SiteEmployee } from "../../../../types/siteEmployee";
 import siteEmployeeService from "../../../../services/siteEmployeeService";
+import { LeaveManagement } from "../../../../types/leaveManagements";
 
 const ClientInfoPage = () => {
     const navigate = useNavigate();
@@ -58,10 +59,13 @@ const ClientInfoPage = () => {
     const [siteUser, setSiteUser] = useState<SiteEmployee[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
     const [saving, setSaving] = useState<boolean>(false);
+    const [leaves , setLeaves] = useState<LeaveManagement[]>([]);
     const stats = [
         site.length,
         employees.length,
         siteUser.length,
+        siteUser.length,
+        leaves.length,
     ];
 
     const baseURL = new URL(process.env.REACT_APP_API_URL || "http://localhost:8000/api");

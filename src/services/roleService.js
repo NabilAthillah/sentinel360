@@ -39,6 +39,15 @@ const roleService = {
             throw error.response ? error.response.data : { message: 'Network error' };
         }
     },
+
+    deleterole: async (id) => {
+        try {
+            const response = await api.delete(`master-settings/roles/${id}`)
+            return response.data;
+        } catch (error) {
+            throw error.response ? error.response.data : { message: 'Network error' };
+        }
+    },
 }
 
 export default roleService;

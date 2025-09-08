@@ -7,6 +7,8 @@ import occurrenceCatgService from "../../../services/occurrenceCatgService";
 import occurrenceService from "../../../services/occurrenceService";
 import siteService from "../../../services/siteService";
 import { Site } from "../../../types/site";
+import { useDispatch } from "react-redux";
+import { clearUser } from "../../../features/user/userSlice";
 
 type Occurrence = {
     id: string;
@@ -22,18 +24,20 @@ const Occurence = () => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [occurrences, setOccurrences] = useState<Occurrence[]>([]);
-    const [nearestSite , setNearestSite] =useState<Site[]>([]);
+    const [nearestSite, setNearestSite] = useState<Site[]>([]);
     const { idSite } = useParams<{ idSite: string }>();
+    const dispatch = useDispatch();
+    const [site, setSite] = useState<Site>();
     const swalOpt = {
         background: "#1e1e1e",
         color: "#f4f4f4",
         confirmButtonColor: "#EFBF04",
         customClass: { popup: "swal2-dark-popup" },
     } as const;
-
+    const baseURL = new URL(process.env.REACT_APP_API_URL || "");
     const tokenGuard = () => {
         const token = localStorage.getItem("token");
-        if (!token || !idSite ) {
+        if (!token || !idSite) {
             localStorage.clear();
             Swal.fire({
                 icon: "error",
@@ -45,7 +49,23 @@ const Occurence = () => {
         }
         return token;
     };
-
+    const fetchSite = async () => {
+        const token = localStorage.getItem("token");
+        if (!token || !idSite) {
+            localStorage.removeItem("token");
+            dispatch(clearUser());
+            navigate("/auth/login")
+        };
+        try {
+            const res = await siteService.getSiteById(idSite, token);
+            if (res?.success) {
+                const s = res.data?.site ?? res.data;
+                setSite(s);
+            }
+        } catch (e: any) {
+            console.error(e?.message || e);
+        }
+    };
     const fetchAll = async () => {
         setLoading(true);
         try {
@@ -69,6 +89,7 @@ const Occurence = () => {
 
     useEffect(() => {
         fetchAll();
+        fetchSite();
     }, []);
 
     const headerTitle = useMemo(() => occurrences[0]?.site?.name || "e-Occurrence", [occurrences]);
@@ -125,7 +146,9 @@ const Occurence = () => {
                 </div>
             ) : occurrences.length === 0 ? (
                 <div className="flex flex-col flex-1 justify-center items-center w-full">
-                    <img src="/images/Incident.png" alt="Incident" className="w-1/2" />
+                    <img src={site?.image ? `${baseURL}storage/${site?.image}` : "/images/Incident.png"} alt="" className="w-1/2 " />
+                    <p className="text-[#F4F7FF] text-base font-medium">{site?.name}</p>
+                    <p className="text-[#98A1B3] text-sm font-normal">{site?.address}, {site?.postal_code}</p>
                 </div>
             ) : (
                 <div className="px-6 pt-4 flex flex-col gap-4 ">
@@ -167,13 +190,13 @@ const Occurence = () => {
 
             <div className="flex flex-col gap-4 justify-center items-center px-6 w-full py-10">
                 <Link
-                    to="/user/e-occurence/history"
+                    to={`/user/e-occurence/${site?.id}/history`}
                     className="gap-3 w-full border py-3 border-[#EFBF04] text-[#EFBF04] rounded-full flex flex-row justify-center items-center"
                 >
                     <p>History</p>
                 </Link>
                 <Link
-                    to="/user/e-occurence/report"
+                    to={`/user/e-occurence/${site?.id}/report`}
                     className="gap-3 w-full py-3 bg-[#EFBF04] text-[#181D26] rounded-full flex flex-row justify-center items-center"
                 >
                     <p>Report</p>

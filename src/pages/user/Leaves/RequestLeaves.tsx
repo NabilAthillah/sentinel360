@@ -33,6 +33,7 @@ const RequestLeaves = () => {
         try {
             setLoading(true);
             const payload = {
+                id_site: idSite,
                 type: selectedType,
                 from,
                 to,
@@ -45,7 +46,7 @@ const RequestLeaves = () => {
                 to,
                 reason
             });
-            const res = await leaveManagement.addLeaveManagement( token , payload);
+            const res = await leaveManagement.addLeaveManagement(token, payload);
             toast.success(res.message || "Leave request submitted successfully");
 
             if (res.data) {
@@ -59,7 +60,6 @@ const RequestLeaves = () => {
             setLoading(false);
         }
     };
-
 
     return (
         <div className="min-h-screen bg-[#181D26] text-white flex flex-col">

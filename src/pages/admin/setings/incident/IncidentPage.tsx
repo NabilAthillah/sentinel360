@@ -14,6 +14,7 @@ import { RootState } from "../../../../store";
 import { IncidentType } from "../../../../types/incidentType";
 import SecondLayout from "../../../../layouts/SecondLayout";
 import SidebarLayout from "../../../../components/SidebarLayout";
+import DeleteModal from "../../../../components/DeleteModal";
 
 const IncidentPageMaster = () => {
     const navigate = useNavigate();
@@ -22,16 +23,16 @@ const IncidentPageMaster = () => {
     // ambil langsung dari redux (NO localStorage lagi)
     const user = useSelector((state: RootState) => state.user.user);
     const token = useSelector((state: RootState) => state.token.token);
-
+    const [deleteModal, setDeleteModal] = useState(false);
     const [datas, setDatas] = useState<IncidentType[]>([]);
     const [switchStates, setSwitchStates] = useState<Record<string, boolean>>({});
     const [loading, setLoading] = useState(false);
-    const [sidebar , setSidebar]= useState(true);
+    const [sidebar, setSidebar] = useState(true);
     const [addIncident, setAddIncident] = useState(false);
     const [editIncident, setEditIncident] = useState(false);
     const [editData, setEditData] = useState<IncidentType | null>(null);
     const [name, setName] = useState('');
-
+    const [selectedId, setSelectedId] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
@@ -157,6 +158,32 @@ const IncidentPageMaster = () => {
         }
     };
 
+    const handleDelete = async () => {
+        setLoading(true);
+        if (!token) {
+            navigate('/auth/login');
+            return;
+        }
+        try {
+            if (!selectedId) {
+                toast.error("No selected ID");
+                return;
+            }
+            const response = await IncidentTypesService.deleteIncindentType(selectedId);
+            if (response.success) {
+                toast.success("Incindent Type deleted successfully");
+                fetchIncidentTypes();
+                setDeleteModal(false);
+                setSelectedId(null);
+            } else {
+                toast.error("Failed to delete incident type");
+            }
+        } catch (error: any) {
+            toast.error(error.message || "Error deleting incident type");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const audit = async () => {
         try {
@@ -294,8 +321,8 @@ const IncidentPageMaster = () => {
                                                             )}
                                                         </td>
                                                         <td className="pt-6 pb-3">
-                                                            {hasPermission('edit_incident_type') && (
-                                                                <div className="flex gap-6 items-center justify-center">
+                                                            <div className="flex gap-6 items-center justify-center">
+                                                                {hasPermission('edit_incident_type') && (
                                                                     <svg
                                                                         onClick={() => {
                                                                             setEditIncident(true);
@@ -314,8 +341,34 @@ const IncidentPageMaster = () => {
                                                                             fill="#F4F7FF"
                                                                         />
                                                                     </svg>
-                                                                </div>
-                                                            )}
+                                                                )}
+                                                                <svg
+                                                                    onClick={() => {
+                                                                        setSelectedId(incident.id);
+                                                                        setDeleteModal(true);
+                                                                    }}
+                                                                    className="cursor-pointer"
+                                                                    xmlns="http://www.w3.org/2000/svg"
+                                                                    fill="none"
+                                                                    version="1.1"
+                                                                    width="28"
+                                                                    height="28"
+                                                                    viewBox="0 0 28 28"
+                                                                >
+                                                                    <defs>
+                                                                        <clipPath id="delete_icon_clip">
+                                                                            <rect x="0" y="0" width="28" height="28" rx="0" />
+                                                                        </clipPath>
+                                                                    </defs>
+                                                                    <g clipPath="url(#delete_icon_clip)">
+                                                                        <path
+                                                                            d="M6.9997,24.5H21V8.16667H6.9997V24.5ZM22.1663,4.66667H18.083L16.9163,3.5H11.083L9.9163,4.66667H5.833V7H22.1663V4.66667Z"
+                                                                            fill="#F4F7FF"
+                                                                            fillOpacity="1"
+                                                                        />
+                                                                    </g>
+                                                                </svg>
+                                                            </div>
                                                         </td>
                                                     </tr>
                                                 ))
@@ -428,6 +481,19 @@ const IncidentPageMaster = () => {
                                 <button type="submit" className="font-medium text-base leading-[21px] text-[#181D26] bg-[#EFBF04] px-12 py-3 border-[1px] border-[#EFBF04] rounded-full transition-all hover:bg-[#181D26] hover:text-[#EFBF04]">{loading ? <Loader primary={true} /> : 'Submit'}</button>
                             </div>
                         </motion.form>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+            <AnimatePresence>
+                {deleteModal && (
+                    <motion.div
+                        className="fixed w-screen h-screen flex justify-center items-center top-0 left-0 z-50 bg-[rgba(0,0,0,0.5)]"
+                        key="add-overlay"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => setDeleteModal(false)}>
+                        <DeleteModal loading={loading} setModal={setDeleteModal} handleDelete={handleDelete} />
                     </motion.div>
                 )}
             </AnimatePresence>
