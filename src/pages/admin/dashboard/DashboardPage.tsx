@@ -82,12 +82,12 @@ const DashboardPage = () => {
                     Hello {user?.name}
                 </h2>
 
-                <div className='px-[156px] h-[630px] flex flex-col gap-6'>
+                <div className='flex flex-col gap-6'>
                     {/* Row 1 */}
-                    <div className='flex gap-6 flex-1 w-full'>
+                    <div className='flex gap-6 flex-1 w-full flex-col md:flex-row'>
                         {hasPermission("list_employees") && (
                             <div
-                                className="flex flex-col items-center justify-center rounded-2xl bg-[#2A1F2E] p-6 shadow-md cursor-pointer hover:scale-105 transition-transform w-full min-w-[204px] max-w-[204px]"
+                                className="flex flex-col items-center justify-center rounded-2xl bg-[#2A1F2E] p-6 shadow-md cursor-pointer hover:scale-105 transition-transform w-full md:w-1/2"
                                 onClick={() => navigate("/dashboard/employees")}>
 
                                 <span className="text-pink-400 text-4xl mb-3"><svg width="56" height="57" viewBox="0 0 56 57" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -109,7 +109,7 @@ const DashboardPage = () => {
                         )}
                         {hasPermission("list_employee_attendances") && (
                             <div
-                                className="flex flex-col items-center justify-center rounded-2xl bg-[#1E2535] p-6 shadow-md cursor-pointer hover:scale-105 transition-transform w-1/2"
+                                className="flex flex-col items-center justify-center rounded-2xl bg-[#1E2535] p-6 shadow-md cursor-pointer hover:scale-105 transition-transform w-full md:w-1/2"
                                 onClick={() => navigate("/dashboard/attendances")}>
 
                                 <span className="text-pink-400 text-4xl mb-3"><svg width="56" height="57" viewBox="0 0 56 57" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -126,7 +126,7 @@ const DashboardPage = () => {
                                 <p className="text-white font-medium">Attendance</p>
                             </div>
                         )}
-                        <div className='w-1/2 flex flex-col gap-6'>
+                        <div className='flex flex-col gap-6 '>
                             {hasPermission("list_e-occurrences") && (
                                 <div
                                     className="flex flex-col items-center justify-center rounded-2xl bg-[#1E282E] p-6 shadow-md cursor-pointer hover:scale-105 transition-transform"
@@ -176,10 +176,10 @@ const DashboardPage = () => {
                         </div>
                     </div>
                     {/* Row 2 */}
-                    <div className='flex gap-6 flex-1 w-full'>
+                    <div className='flex gap-6 flex-1 w-full flex-col md:flex-row'>
                         {hasPermission("list_sites") && (
                             <div
-                                className="flex flex-col items-center justify-center rounded-2xl bg-[#2D2A41] p-6 shadow-md cursor-pointer hover:scale-105 transition-transform w-full min-w-[204px] max-w-[204px]"
+                                className="flex flex-col items-center justify-center rounded-2xl bg-[#2D2A41] p-6 shadow-md cursor-pointer hover:scale-105 transition-transform w-full"
                                 onClick={() => navigate("/dashboard/sites")}>
                                 <span className="text-pink-400 text-4xl mb-3"><svg width="56" height="57" viewBox="0 0 56 57" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <svg width="60" height="61" viewBox="0 0 60 61" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -195,7 +195,7 @@ const DashboardPage = () => {
                                 <p className="text-white font-medium">Sites</p>
                             </div>
                         )}
-                        <div className='w-1/2 flex flex-col gap-6'>
+                        <div className='flex flex-col gap-6 w-full'>
                             {hasPermission("list_incidents") && (
                                 <div
                                     className="flex flex-col items-center justify-center rounded-2xl bg-[#1E282B] p-6 shadow-md cursor-pointer hover:scale-105 transition-transform"
@@ -242,7 +242,7 @@ const DashboardPage = () => {
                                 </div>
                             )}
                         </div>
-                        <div className='w-1/2 flex gap-6'>
+                        <div className='flex gap-6 flex-col md:flex-row' >
                             {hasPermission("list_audit_trails") && (
                                 <div
                                     className="flex flex-col items-center justify-center rounded-2xl bg-[#232835] p-6 shadow-md cursor-pointer hover:scale-105 transition-transform w-full"
@@ -285,6 +285,7 @@ const DashboardPage = () => {
                         </div>
                     </div>
                 </div>
+                <Map sites={sites} />
 
                 {/* <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     <div className="flex flex-col items-center justify-center rounded-2xl bg-[#2A1F2E] p-6 shadow-md cursor-pointer hover:scale-105 transition-transform">
