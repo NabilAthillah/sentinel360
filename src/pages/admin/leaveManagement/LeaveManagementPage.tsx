@@ -1,16 +1,26 @@
+import { Switch } from "@material-tailwind/react";
 import { useEffect, useState } from "react";
-import { toast } from "react-toastify";
-import { SwitchCustomStyleToggleable } from "../../../components/SwitchCustomStyleToggleable";
-import SecondLayout from "../../../layouts/SecondLayout";
-import SidebarLayout from "../../../components/SidebarLayout";
-import { LeaveManagement } from "../../../types/leaveManagements";
-import leaveManagement from "../../../services/leaveManagement";
-import { useSelector } from "react-redux";
-import { RootState } from "../../../store";
-import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import SidebarLayout from "../../../components/SidebarLayout";
+import SecondLayout from "../../../layouts/SecondLayout";
+import leaveManagement from "../../../services/leaveManagement";
+import { leaveTypeService } from "../../../services/leaveManagementType";
+import siteService from "../../../services/siteService";
+import userService from "../../../services/userService";
+import { RootState } from "../../../store";
+import { LeaveManagement } from "../../../types/leaveManagements";
+import { Site } from "../../../types/site";
+import { User } from "../../../types/user";
 
 const ITEMS_PER_PAGE = 5; // jumlah data per page
+
+type NewLeaveType = {
+    name: string;
+    status: "active" | "deactive";
+};
 
 const LeaveManagementPage = () => {
     const token = useSelector((state: RootState) => state.token.token);
@@ -28,6 +38,13 @@ const LeaveManagementPage = () => {
         from: "",
         to: "",
     });
+    const [newLeaveTypes, setNewLeaveTypes] = useState<NewLeaveType[]>([
+        { name: "", status: "active" },
+    ]);
+    const [leaveTypes, setLeaveTypes] = useState<{ id: string; name: string }[]>([]);
+    const [employees, setEmployees] = useState<User[]>([]);
+    const [sites, setSites] = useState<Site[]>([]);
+
 
     // Pagination state
     const [currentPage, setCurrentPage] = useState(1);
@@ -51,7 +68,25 @@ const LeaveManagementPage = () => {
 
     useEffect(() => {
         fetchLeaves();
-    }, []);
+
+        const fetchFilters = async () => {
+            try {
+                const [typesRes, usersRes, sitesRes] = await Promise.all([
+                    leaveTypeService.getAll(),
+                    userService.getAllUsers(),
+                    siteService.getAllSite(token),
+                ]);
+
+                setLeaveTypes(typesRes.data || []);
+                setEmployees(usersRes.data || []);
+                setSites(sitesRes.data);
+            } catch (err: any) {
+                toast.error(err.message || "Failed to fetch filter data");
+            }
+        };
+
+        if (token) fetchFilters();
+    }, [token]);
 
     // Apply filter ke data
     const filteredLeaves = leaves.filter((leave) => {
@@ -60,22 +95,17 @@ const LeaveManagementPage = () => {
             leave.type?.toLowerCase().includes(search.toLowerCase()) ||
             leave.user?.name?.toLowerCase().includes(search.toLowerCase());
 
-        // const matchSite =
-        //     siteFilter === "" || leave.site?.toLowerCase().includes(siteFilter.toLowerCase());
-
-        const matchEmployee =
-            employeeFilter === "" ||
-            leave.user?.name?.toLowerCase().includes(employeeFilter.toLowerCase());
-
-        const matchStatus =
-            statusFilter === "" || leave.status?.toLowerCase() === statusFilter.toLowerCase();
+        const matchSite = siteFilter === "" || leave.site?.id === siteFilter;
+        const matchEmployee = employeeFilter === "" || leave.user?.id === employeeFilter;
+        const matchType = statusFilter === "" || leave.type?.toLowerCase() === statusFilter.toLowerCase();
 
         const matchDate =
             (dateRange.from === "" || new Date(leave.from) >= new Date(dateRange.from)) &&
             (dateRange.to === "" || new Date(leave.to) <= new Date(dateRange.to));
 
-        return matchSearch && matchEmployee && matchStatus && matchDate;
+        return matchSearch && matchSite && matchEmployee && matchType && matchDate;
     });
+
 
     // Pagination
     const totalPages = Math.ceil(filteredLeaves.length / ITEMS_PER_PAGE);
@@ -83,6 +113,20 @@ const LeaveManagementPage = () => {
         (currentPage - 1) * ITEMS_PER_PAGE,
         currentPage * ITEMS_PER_PAGE
     );
+
+    const handleAddMore = () => {
+        setNewLeaveTypes([...newLeaveTypes, { name: "", status: "active" }]);
+    };
+
+    const handleRemove = (index: number) => {
+        setNewLeaveTypes(newLeaveTypes.filter((_, i) => i !== index));
+    };
+
+    const handleChange = (index: number, field: keyof NewLeaveType, value: any) => {
+        const updated = [...newLeaveTypes];
+        updated[index][field] = value;
+        setNewLeaveTypes(updated);
+    };
 
     return (
         <SecondLayout>
@@ -119,54 +163,80 @@ const LeaveManagementPage = () => {
                             </div>
                         </div>
 
-                        <div className="flex flex-col gap-4 w-full xl:grid xl:grid-cols-4">
+                        <div className="flex flex-col gap-4 w-full">
+                            {/* Row 1: Site, Employee, Type */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 w-full">
+                                {/* Site filter */}
+                                <select
+                                    value={siteFilter}
+                                    onChange={(e) => setSiteFilter(e.target.value)}
+                                    className="w-full px-4 py-2 bg-[#222834] text-[#F4F7FF] 
+                 border-b border-[#98A1B3] rounded"
+                                >
+                                    <option value="">All Sites</option>
+                                    {sites?.map(site => (
+                                        <option key={site.id} value={site.id}>
+                                            {site.name}
+                                        </option>
+                                    ))}
+                                </select>
 
-                            <input
-                                type="text"
-                                value={siteFilter}
-                                onChange={(e) => setSiteFilter(e.target.value)}
-                                placeholder="Filter by site"
-                                className="w-full px-4 py-2 bg-[#222834] text-[#F4F7FF] border-b border-[#98A1B3] placeholder:text-[#98A1B3] focus:outline-none rounded"
-                            />
+                                {/* Employee filter */}
+                                <select
+                                    value={employeeFilter}
+                                    onChange={(e) => setEmployeeFilter(e.target.value)}
+                                    className="w-full px-4 py-2 bg-[#222834] text-[#F4F7FF] 
+                 border-b border-[#98A1B3] rounded"
+                                >
+                                    <option value="">All Employees</option>
+                                    {employees?.map(emp => (
+                                        <option key={emp.id} value={emp.id}>
+                                            {emp.name}
+                                        </option>
+                                    ))}
+                                </select>
 
-                            <input
-                                type="text"
-                                value={employeeFilter}
-                                onChange={(e) => setEmployeeFilter(e.target.value)}
-                                placeholder="Filter by employee"
-                                className="w-full px-4 py-2 bg-[#222834] text-[#F4F7FF] border-b border-[#98A1B3] placeholder:text-[#98A1B3] focus:outline-none rounded"
-                            />
-                            <input
-                                type="text"
-                                value={statusFilter}
-                                onChange={(e) => setStatusFilter(e.target.value)}
-                                placeholder="Filter by status"
-                                className="w-full px-4 py-2 bg-[#222834] text-[#F4F7FF] border-b border-[#98A1B3] placeholder:text-[#98A1B3] focus:outline-none rounded"
-                            />
+                                {/* Type filter */}
+                                <select
+                                    value={statusFilter}
+                                    onChange={(e) => setStatusFilter(e.target.value)}
+                                    className="w-full px-4 py-2 bg-[#222834] text-[#F4F7FF] 
+                 border-b border-[#98A1B3] rounded"
+                                >
+                                    <option value="">All Types</option>
+                                    {leaveTypes?.map(type => (
+                                        <option key={type.id} value={type.name}>
+                                            {type.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
 
+                            {/* Row 2: Date Range */}
                             <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full">
-
                                 <input
                                     type="date"
                                     value={dateRange.from}
                                     onChange={(e) => setDateRange({ ...dateRange, from: e.target.value })}
-                                    className="w-full px-2 py-2 bg-[#222834] text-[#F4F7FF] border-b border-[#98A1B3] rounded"
+                                    className="w-full sm:w-auto px-2 py-2 bg-[#222834] text-[#F4F7FF] 
+                 border-b border-[#98A1B3] rounded"
                                 />
-                                <span className="text-[#F4F7FF]">to</span>
+                                <span className="text-[#F4F7FF] text-center sm:text-left">to</span>
                                 <input
                                     type="date"
                                     value={dateRange.to}
                                     onChange={(e) => setDateRange({ ...dateRange, to: e.target.value })}
-                                    className="w-full px-2 py-2 bg-[#222834] text-[#F4F7FF] border-b border-[#98A1B3] rounded"
+                                    className="w-full sm:w-auto px-2 py-2 bg-[#222834] text-[#F4F7FF] 
+                 border-b border-[#98A1B3] rounded"
                                 />
-
                                 <button
                                     onClick={() => setDateRange({ from: "", to: "" })}
-                                    className="text-sm text-[#EFBF04] px-3 py-2 border border-[#EFBF04] rounded-full hover:bg-[#EFBF04] hover:text-[#252C38] transition-all"
+                                    className="text-sm w-full sm:w-auto text-[#EFBF04] px-3 py-2 border 
+                 border-[#EFBF04] rounded-full hover:bg-[#EFBF04] 
+                 hover:text-[#252C38] transition-all"
                                 >
-                                    {t(' Clear Time')}
+                                    {t("Clear Time")}
                                 </button>
-
                             </div>
                         </div>
 
@@ -247,35 +317,94 @@ const LeaveManagementPage = () => {
                             {/* Header */}
                             <div className="flex justify-between items-center">
                                 <h2 className="text-2xl leading-[36px] text-white font-noto">Add leave type</h2>
-                                <button className="font-medium text-sm min-w-[142px] text-[#EFBF04] px-4 py-[9.5px] border border-[#EFBF04] rounded-full hover:bg-[#EFBF04] hover:text-[#252C38] transition-all">
+                                <button
+                                    onClick={handleAddMore}
+                                    className="font-medium text-sm min-w-[142px] text-[#EFBF04] px-4 py-[9.5px] border border-[#EFBF04] rounded-full hover:bg-[#EFBF04] hover:text-[#252C38] transition-all"
+                                >
                                     Add another
                                 </button>
                             </div>
 
-                            {/* Input Select */}
-                            <div className="flex flex-col w-full px-4 pt-2 py-2 bg-[#222834] border-b border-[#98A1B3] rounded-t">
-                                <label className="text-xs leading-[21px] text-[#98A1B3]">Name</label>
-                                <select className="w-full bg-[#222834] text-[#F4F7FF] text-base focus:outline-none">
-                                    <option value="">Annual</option>
-                                    <option value="">Sick</option>
-                                    <option value="">Hospitalization</option>
-                                    <option value="">Compassion</option>
-                                    <option value="">Add new type</option>
-                                </select>
-                            </div>
+                            <div className="flex flex-col gap-6">
+                                {newLeaveTypes.map((item, index) => (
+                                    <div
+                                        key={index}
+                                        className="flex flex-col gap-3 p-4 bg-[#222834] rounded"
+                                    >
+                                        {/* Input Name */}
+                                        <div className="flex flex-col">
+                                            <label className="text-xs text-[#98A1B3]">Name</label>
+                                            <input
+                                                type="text"
+                                                value={item.name}
+                                                onChange={(e) => handleChange(index, "name", e.target.value)}
+                                                className="w-full bg-[#222834] text-[#F4F7FF] border-b border-[#98A1B3] focus:outline-none"
+                                                placeholder="Leave type name"
+                                            />
+                                        </div>
 
-                            {/* Active Toggle */}
-                            <div className="flex items-center gap-4">
-                                <SwitchCustomStyleToggleable />
-                                <p className="font-medium text-sm text-[#19CE74]">Active</p>
+                                        {/* Switch */}
+                                        <div className="flex items-center gap-3">
+                                            <Switch
+                                                id={`leave-switch-${index}`}
+                                                ripple={false}
+                                                checked={item.status === "active"}
+                                                onChange={() =>
+                                                    handleChange(
+                                                        index,
+                                                        "status",
+                                                        item.status === "active" ? "deactive" : "active"
+                                                    )
+                                                }
+                                                className="h-full w-full checked:bg-[#446FC7]"
+                                                containerProps={{ className: "w-11 h-6" }}
+                                                circleProps={{ className: "before:hidden left-0.5 border-none" }}
+                                                onResize={undefined}
+                                                onResizeCapture={undefined}
+                                                onPointerEnterCapture={undefined}
+                                                onPointerLeaveCapture={undefined}
+                                                crossOrigin={undefined}
+                                            />
+                                            <span
+                                                className={`font-medium text-sm capitalize ${item.status === "active" ? "text-[#19CE74]" : "text-[#FF7E6A]"
+                                                    }`}
+                                            >
+                                                {item.status}
+                                            </span>
+                                        </div>
+
+                                        {/* Remove button (kecuali kalau cuma 1 row) */}
+                                        {newLeaveTypes.length > 1 && (
+                                            <button
+                                                onClick={() => handleRemove(index)}
+                                                className="text-sm text-red-400 mt-2 self-start"
+                                            >
+                                                Remove
+                                            </button>
+                                        )}
+                                    </div>
+                                ))}
                             </div>
 
                             {/* Action Buttons */}
                             <div className="flex gap-4 flex-wrap">
                                 <button
-                                    onClick={() => {
-                                        setAdd(false);
-                                        toast.success("Leave type added successfully");
+                                    onClick={async () => {
+                                        try {
+                                            // kirim banyak sekaligus (loop create atau bikin batch di backend)
+                                            await Promise.all(
+                                                newLeaveTypes.map((lt) =>
+                                                    leaveTypeService.create({ name: lt.name, status: lt.status })
+                                                )
+                                            );
+
+                                            toast.success("Leave types added successfully");
+                                            setAdd(false);
+                                            setNewLeaveTypes([{ name: "", status: "active" }]);
+                                            fetchLeaves(); // refresh list
+                                        } catch (err: any) {
+                                            toast.error(err.response?.data?.message || "Failed to add leave types");
+                                        }
                                     }}
                                     className="font-medium text-base text-[#181D26] bg-[#EFBF04] px-12 py-3 border border-[#EFBF04] rounded-full hover:bg-[#181D26] hover:text-[#EFBF04] transition-all"
                                 >

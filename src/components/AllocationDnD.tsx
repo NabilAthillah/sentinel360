@@ -4,17 +4,15 @@ import {
   useDraggable,
   useDroppable,
 } from "@dnd-kit/core";
+import { PersonStanding } from "lucide-react";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import employeeService from "../services/employeeService";
 import siteEmployeeService from "../services/siteEmployeeService";
-import { Employee } from "../types/employee";
 import { Site } from "../types/site";
 import { SiteEmployee } from "../types/siteEmployee";
 import { User } from "../types/user";
-import { PersonStanding } from "lucide-react";
-import { Role } from "../types/role";
 
 interface EmployeeCardProps {
   employee: User;
@@ -62,9 +60,8 @@ const EmployeeDropZone = ({ employees }: { employees: User[] }) => {
   return (
     <div
       ref={setNodeRef}
-      className={`w-full p-6 rounded-md border min-h-[500px] h-full flex flex-col flex-1 bg-[#252C38] ${
-        isOver ? "border-[#F3C511]" : "border-[#252C38]"
-      }`}
+      className={`w-full p-6 rounded-md border min-h-[500px] h-full flex flex-col flex-1 bg-[#252C38] ${isOver ? "border-[#F3C511]" : "border-[#252C38]"
+        }`}
     >
       <h3 className="font-semibold mb-3 text-2xl text-white">
         List of Employees
@@ -99,9 +96,8 @@ const SiteDropZone = ({
   return (
     <div
       ref={setNodeRef}
-      className={`p-4 min-h-[100px] h-fit w-full bg-[#181D26] rounded-md border mb-4 lg:w-1/2 xl:w-1/3 flex flex-col gap-4 ${
-        isOver ? "border-[#F3C511]" : "border-[#181D26]"
-      }`}
+      className={`p-4 min-h-[100px] h-fit w-full bg-[#181D26] rounded-md border mb-4 lg:w-1/2 xl:w-1/3 flex flex-col gap-4 ${isOver ? "border-[#F3C511]" : "border-[#181D26]"
+        }`}
     >
       <div className="flex items-center gap-2">
         <img
@@ -147,6 +143,26 @@ const AllocationDnD = ({
   const [draggingEmployee, setDraggingEmployee] = useState<User | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
 
+  const isAssigned = (userId: string, shift: string, date: string) => {
+    if (allocationType === "bydate") {
+      return assignments.some(
+        (a) =>
+          a.user.id === userId &&
+          a.shift === shift &&
+          a.date === date
+      );
+    } else if (allocationType === "bymonth") {
+      const [year, month] = date.split("-");
+      return assignments.some(
+        (a) =>
+          a.user.id === userId &&
+          a.shift === shift &&
+          a.date.startsWith(`${year}-${month}`)
+      );
+    }
+    return false;
+  };
+
   const fetchEmployees = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -191,6 +207,14 @@ const AllocationDnD = ({
           filtered = data.filter(
             (item) => item.shift === shiftType && item.date === date
           );
+
+          const uniqueAssignments = Array.from(
+            new Map(
+              filtered.map((a) => [`${a.user.id}-${a.shift}-${a.date}`, a])
+            ).values()
+          );
+
+          setAssignments(uniqueAssignments);
         } else if (allocationType === "bymonth") {
           const [year, month] = date.split("-");
 
@@ -199,9 +223,18 @@ const AllocationDnD = ({
               item.shift === shiftType &&
               item.date.startsWith(`${year}-${month}`)
           );
-        }
 
-        setAssignments(filtered);
+          const uniqueAssignments = Array.from(
+            new Map(
+              filtered.map((a) => [
+                `${a.user.id}-${a.shift}-${year}-${month}`,
+                a,
+              ])
+            ).values()
+          );
+
+          setAssignments(uniqueAssignments);
+        }
       }
     } catch (error) {
       console.error(error);
@@ -215,6 +248,8 @@ const AllocationDnD = ({
 
   useEffect(() => {
     if (allocationType && shiftType && date) {
+      setDraggingEmployee(null);
+      setAssignments([]);
       loadData();
     }
   }, [allocationType, shiftType, date]);
@@ -232,6 +267,15 @@ const AllocationDnD = ({
 
     if (dropId.startsWith("site-")) {
       const siteId = dropId.replace("site-", "");
+
+      if (assignments.some(a =>
+        a.user.id.toString() === employeeId &&
+        a.shift === shiftType &&
+        a.date === date
+      )) {
+        setLoading(false);
+        return;
+      }
 
       setEmployees((prev) =>
         prev.filter((e) => e.id.toString() !== employeeId)
@@ -315,6 +359,8 @@ const AllocationDnD = ({
         setLoading(false);
       }
     }
+
+    setDraggingEmployee(null);
   };
 
   useEffect(() => {
@@ -339,9 +385,7 @@ const AllocationDnD = ({
       <div className="flex flex-col gap-6 flex-1 h-full lg:flex-row">
         <div className="w-full lg:w-1/3 flex flex-1 h-full">
           <EmployeeDropZone
-            employees={employees.filter(
-              (e) => !assignments.find((a) => a.user.id === e.id)
-            )}
+            employees={employees.filter((e) => !isAssigned(e.id.toString(), shiftType, date))}
           />
         </div>
         <div className="w-full lg:w-2/3 flex flex-col bg-[#252C38] p-6 rounded-md h-full min-h-[500px]">
@@ -353,9 +397,13 @@ const AllocationDnD = ({
               <SiteDropZone
                 key={site.id}
                 site={site}
-                users={assignments
-                  .filter((a) => a.site.id === site.id)
-                  .map((a) => a.user)}
+                users={Array.from(
+                  new Map(
+                    assignments
+                      .filter((a) => a.site.id === site.id)
+                      .map((a) => [a.user.id, a.user])
+                  ).values()
+                )}
                 isOver={overId === `site-${site.id}`}
                 draggingEmployee={draggingEmployee}
               />

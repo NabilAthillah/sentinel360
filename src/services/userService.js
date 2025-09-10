@@ -5,7 +5,7 @@ const userService = {
   // Get all users
   getAllUsers: async (params = {}) => {
     try {
-      const response = await api.get('/users', { params });
+      const response = await api.get('/employees', { params });
       return response.data;
     } catch (error) {
       throw error.response ? error.response.data : { message: 'Network error' };

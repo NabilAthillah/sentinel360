@@ -7,20 +7,20 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import Loader from "../../../../components/Loader";
 import Navbar from "../../../../components/Navbar";
-import MainLayout from "../../../../layouts/MainLayout";
+import SidebarLayout from "../../../../components/SidebarLayout";
+import SecondLayout from "../../../../layouts/SecondLayout";
 import auditTrialsService from "../../../../services/auditTrailsService";
 import clientInfoService from "../../../../services/clientInfoService";
+import employeeService from "../../../../services/employeeService";
+import leaveManagement from "../../../../services/leaveManagement";
+import siteEmployeeService from "../../../../services/siteEmployeeService";
+import siteService from "../../../../services/siteService";
 import { RootState } from "../../../../store";
 import { Client } from "../../../../types/client";
-import SecondLayout from "../../../../layouts/SecondLayout";
-import SidebarLayout from "../../../../components/SidebarLayout";
-import siteService from "../../../../services/siteService";
-import { Site } from "../../../../types/site";
-import employeeService from "../../../../services/employeeService";
 import { Employee } from "../../../../types/employee";
-import { SiteEmployee } from "../../../../types/siteEmployee";
-import siteEmployeeService from "../../../../services/siteEmployeeService";
 import { LeaveManagement } from "../../../../types/leaveManagements";
+import { Site } from "../../../../types/site";
+import { SiteEmployee } from "../../../../types/siteEmployee";
 
 const ClientInfoPage = () => {
     const navigate = useNavigate();
@@ -59,14 +59,14 @@ const ClientInfoPage = () => {
     const [siteUser, setSiteUser] = useState<SiteEmployee[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
     const [saving, setSaving] = useState<boolean>(false);
-    const [leaves , setLeaves] = useState<LeaveManagement[]>([]);
-    const stats = [
-        site.length,
-        employees.length,
-        siteUser.length,
-        siteUser.length,
-        leaves.length,
-    ];
+    const [leaves, setLeaves] = useState<LeaveManagement[]>([]);
+    const [stats, setStats] = useState({
+        sites: 0,
+        employees: 0,
+        assigned: 0,
+        unassigned: 0,
+        leave: 0,
+    });
 
     const baseURL = new URL(process.env.REACT_APP_API_URL || "http://localhost:8000/api");
     baseURL.pathname = baseURL.pathname.replace(/\/api$/, "");
@@ -90,29 +90,48 @@ const ClientInfoPage = () => {
         }
     };
 
-    const fetchAllSite = async () => {
+    const fetchStats = async () => {
         if (!token) return navigate("/auth/login");
         setLoading(true);
         try {
-            const response = await siteService.getAllSite();
-            if (response.success) setSite(response.data);
-        } catch (error: any) {
-            console.error(error);
-            toast.error(error.message || "Failed to load client info");
-        } finally {
-            setLoading(false);
-        }
-    };
+            // Ambil semua data paralel
+            const [sitesRes, employeesRes, siteUserRes, leaveRes] = await Promise.all([
+                siteService.getAllSite(token),
+                employeeService.getAllEmployee(token),
+                siteEmployeeService.getAllSiteEmployee(token, "bydate", "day", new Date().toISOString().split("T")[0]),
+                leaveManagement.getLeaveManagement(token),
+            ]);
 
-    const fetchEmployees = async () => {
-        if (!token) return navigate("/auth/login");
-        setLoading(true);
-        try {
-            const response = await employeeService.getAllEmployee();
-            if (response.success) setEmployees(response.data);
-        } catch (error: any) {
-            console.error(error);
-            toast.error(error.message || "Failed to load client info");
+            if (sitesRes.success && employeesRes.success && siteUserRes.success && leaveRes.success) {
+                const allSites: Site[] = sitesRes.data;
+                const allEmployees: Employee[] = employeesRes.data;
+
+                const today = new Date().toISOString().split("T")[0];
+                const todayAssignments: SiteEmployee[] = siteUserRes.data.filter(
+                    (a: SiteEmployee) => a.date === today
+                );
+
+                const uniqueAssignedIds = Array.from(new Set(todayAssignments.map((a) => a.user.id)));
+                const assignedCount = uniqueAssignedIds.length;
+
+                const unassignedCount = allEmployees.length - assignedCount;
+
+                const todayLeaves = leaveRes.data.filter(
+                    (l: LeaveManagement) =>
+                        new Date(l.from) <= new Date(today) &&
+                        new Date(l.to) >= new Date(today)
+                );
+
+                setStats({
+                    sites: allSites.length,
+                    employees: allEmployees.length,
+                    assigned: assignedCount,
+                    unassigned: unassignedCount,
+                    leave: todayLeaves.length,
+                });
+            }
+        } catch (err: any) {
+            toast.error(err.message || "Failed to load stats");
         } finally {
             setLoading(false);
         }
@@ -180,14 +199,12 @@ const ClientInfoPage = () => {
     };
 
     useEffect(() => {
-        if (!hasPermission('show_client')) {
-            navigate('/dashboard');
+        if (!hasPermission("show_client")) {
+            navigate("/dashboard");
             return;
         }
         fetchClientInfo();
-        fetchAllSite();
-        fetchEmployees();
-        // fetchSiteUser();
+        fetchStats();
         audit();
     }, []);
 
@@ -271,19 +288,25 @@ const ClientInfoPage = () => {
                                 </div>
 
                                 <div className="grid grid-cols-1 justify-between gap-x-2 gap-y-4 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-3">
-                                    {["Sites", "Employees", "Assigned", "Unassigned", "On leave"].map((label, i) => (
+                                    {[
+                                        { label: "Sites", value: stats.sites },
+                                        { label: "Employees", value: stats.employees },
+                                        { label: "Assigned", value: stats.assigned },
+                                        { label: "Unassigned", value: stats.unassigned },
+                                        { label: "On leave", value: stats.leave },
+                                    ].map((item, i) => (
                                         <div
                                             key={i}
                                             className="flex flex-col gap-2 px-4 py-[14px] w-full bg-[#252C38] shadow-[2px_2px_12px_rgba(24,29,38,0.14)] rounded-xl"
                                         >
                                             <p className="font-open font-semibold text-sm leading-[20px] text-[#98A1B3]">
-                                                {label}
+                                                {item.label}
                                             </p>
                                             <p className="font-open font-semibold text-2xl leading-[20px] text-[#F4F7FF]">
                                                 {loading ? (
                                                     <span className="inline-block h-6 w-10 bg-white/10 rounded animate-pulse" />
                                                 ) : (
-                                                    stats[i]
+                                                    item.value
                                                 )}
                                             </p>
                                         </div>

@@ -33,7 +33,6 @@ import SopDocument from "../pages/user/SopDocument/SopDocument";
 import EmployeeDocument from "../pages/user/EmployeDocument/EmployeeDocument";
 import Contact from "../pages/user/Contact/Contact";
 import LoginPage from "../pages/auth/LoginPage";
-import DashboardPage from "../pages/admin/dashboard/DashboardPage";
 import ReportPage from "../pages/admin/report/ReportPage";
 import EmployeesPage from "../pages/admin/employees/EmployeesPage";
 import AttendancePage from "../pages/admin/attendance/AttendancePage";
@@ -65,6 +64,7 @@ import Pointers from "../pages/admin/site/Pointers";
 import Selection from "../pages/user/GuardTour/Selection";
 import RouteSelect from "../pages/user/Clocking/RouteSelect";
 import GuardTourPage from "../pages/user/GuardTour/GuardTourPage";
+import DashboardPage from "../pages/admin/dashboard/DashboardPage";
 
 const AppRoutes = () => {
   return (
