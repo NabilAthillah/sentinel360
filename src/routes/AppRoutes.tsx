@@ -1,15 +1,15 @@
+// import {
+//   Navigate,
+//   Route,
+//   HashRouter as Router,
+//   Routes,
+// } from "react-router-dom";
 import {
   Navigate,
   Route,
   BrowserRouter as Router,
   Routes,
 } from "react-router-dom";
-// import {
-//   Navigate,
-//   Route,
-//   BrowserRouter as Router,
-//   Routes,
-// } from "react-router-dom";
 
 import Attendance from "../pages/user/Attendance/Attendance";
 import Checkin from "../pages/user/Attendance/Checkin";
@@ -144,8 +144,8 @@ const AppRoutes = () => {
           <Route path="/user/contact" element={<Contact />} />
           <Route path="/user/sop-document" element={<SopDocument />} />
           <Route path="/user/clocking/:idSite" element={<Clocking />} />
-          <Route path="/user/clocking/:idSite/route-select" element={<RouteSelect />} />
-          <Route path="/user/clocking/scan" element={<ScanClocking />} />
+          <Route path="/user/clocking/:idSite/route/:idRoute" element={<RouteSelect />} />
+          <Route path="/user/clocking/:idSite/route/:idRoute/point/:idPoint/scan" element={<ScanClocking />} />
           <Route path="/user/e-occurence/:idSite" element={<Occurence />} />
           <Route
             path="/user/e-occurence/:idSite/report"

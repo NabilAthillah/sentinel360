@@ -1,66 +1,189 @@
 import { ChevronLeft, Pencil, Trash2 } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { useDispatch } from 'react-redux';
+import { useNavigate, useParams } from 'react-router-dom';
+import Swal from 'sweetalert2';
+import { clearUser } from '../../../features/user/userSlice';
+import occurrenceCatgService from '../../../services/occurrenceCatgService';
+import occurrenceService from '../../../services/occurrenceService';
+import siteService from '../../../services/siteService';
+import { Site } from '../../../types/site';
+import Loader from '../../../components/Loader';
+
+type Occurrence = {
+  id: string;
+  occurred_at?: string;
+  date?: string;
+  time?: string;
+  detail?: string;
+  site?: { id: string; name: string };
+  category?: { id: string; name: string; status?: string };
+};
 
 const HistoryOccurance = () => {
   const navigate = useNavigate();
-
-  const data = [
-    {
-      id: 1,
-      title: "Situation",
-      description: "HDB",
-      date: "2023-01-01",
-      time: "10:00",
-    },
-    {
-      id: 2,
-      title: "HDB",
-      description: "HDB",
-      date: "2023-01-01",
-      time: "10:00",
+  const [loading, setLoading] = useState(false);
+  const [occurrences, setOccurrences] = useState<Occurrence[]>([]);
+  const [nearestSite, setNearestSite] = useState<Site[]>([]);
+  const { idSite } = useParams<{ idSite: string }>();
+  const dispatch = useDispatch();
+  const [site, setSite] = useState<Site>();
+  const swalOpt = {
+    background: "#1e1e1e",
+    color: "#f4f4f4",
+    confirmButtonColor: "#EFBF04",
+    customClass: { popup: "swal2-dark-popup" },
+  } as const;
+  const baseURL = new URL(process.env.REACT_APP_API_URL || "");
+  const tokenGuard = () => {
+    const token = localStorage.getItem("token");
+    if (!token || !idSite) {
+      localStorage.clear();
+      Swal.fire({
+        icon: "error",
+        title: "Session expired",
+        text: "Please login to continue.",
+        ...swalOpt,
+      }).then(() => navigate("/auth/login"));
+      return null;
     }
-  ];
+    return token;
+  };
+  const fetchSite = async () => {
+    const token = localStorage.getItem("token");
+    if (!token || !idSite) {
+      localStorage.removeItem("token");
+      dispatch(clearUser());
+      navigate("/auth/login")
+    };
+    try {
+      const res = await siteService.getSiteById(idSite, token);
+      if (res?.success) {
+        const s = res.data?.site ?? res.data;
+        setSite(s);
+      }
+    } catch (e: any) {
+      console.error(e?.message || e);
+    }
+  };
+  const fetchAll = async () => {
+    setLoading(true);
+    try {
+      const token = tokenGuard();
+      if (!token) return;
+      await Promise.allSettled([
+        siteService.getAllSite(token),
+        occurrenceCatgService.getCategories(token),
+      ]);
+      const res = await occurrenceService.getAllOccurrence(token);
+      if (res?.data) {
+        const data = res.data.filter((o: Occurrence) => o.category?.status === "active");
+        setOccurrences(data);
+      }
+    } catch {
+      Swal.fire({ icon: "error", title: "Error", text: "Failed to load data.", ...swalOpt });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAll();
+    fetchSite();
+  }, []);
+
+  const headerTitle = useMemo(() => occurrences[0]?.site?.name || "e-Occurrence", [occurrences]);
+
+  const formatDT = (o: Occurrence) => {
+    let iso = o.occurred_at;
+    if (!iso && o.date && o.time) {
+      const t = o.time.length === 5 ? `${o.time}:00` : o.time;
+      iso = `${o.date}T${t}`;
+    }
+    if (!iso) return "Unknown";
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return "Unknown";
+    const date = new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "long", year: "numeric" }).format(d);
+    const weekday = new Intl.DateTimeFormat("en-GB", { weekday: "long" }).format(d);
+    const time = new Intl.DateTimeFormat("en-GB", { hour: "numeric", minute: "2-digit", hour12: true }).format(d);
+    return `${date}, ${weekday}, ${time}`;
+  };
+
+  const onDelete = async (id: string) => {
+    const ask = await Swal.fire({
+      icon: "warning",
+      title: "Delete?",
+      text: "This action cannot be undone.",
+      showCancelButton: true,
+      confirmButtonText: "Delete",
+      cancelButtonText: "Cancel",
+      ...swalOpt,
+    });
+    if (!ask.isConfirmed) return;
+    try {
+      const token = tokenGuard();
+      if (!token) return;
+      if (typeof (occurrenceService as any).deleteOccurrence === "function") {
+        await (occurrenceService as any).deleteOccurrence(token, id);
+      }
+      setOccurrences((s) => s.filter((x) => x.id !== id));
+      Swal.fire({ icon: "success", title: "Deleted", text: "Occurrence removed.", ...swalOpt });
+    } catch {
+      Swal.fire({ icon: "error", title: "Error", text: "Failed to delete.", ...swalOpt });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#181D26] text-[#F4F7FF] p-4 flex flex-col gap-4 pt-20">
-        <div className="flex items-center gap-2 fixed px-6 py-6 top-0 left-0 w-full bg-[#181D26]">
-          <ChevronLeft
-            size={20}
-            className="cursor-pointer"
-            onClick={() => navigate(-1)}
-          />
-          <h1 className="text-xl text-[#F4F7FF] font-normal font-noto">HDB</h1>
+      <div className="flex items-center gap-2 fixed px-6 py-6 top-0 left-0 w-full bg-[#181D26]">
+        <ChevronLeft
+          size={20}
+          className="cursor-pointer"
+          onClick={() => navigate(-1)}
+        />
+        <h1 className="text-xl text-[#F4F7FF] font-normal font-noto">HDB</h1>
+      </div>
+      {loading ? (
+        <div className="flex-1 flex items-center justify-center">
+          <Loader primary />
         </div>
-
-      {data.map((item) => (
-        <div
-          key={item.id}
-          className="bg-[#252C38] p-4 rounded-lg flex flex-col gap-3"
-        >
-          <div className="flex justify-between items-center">
-            <p className="text-[#EFBF04] font-semibold">{item.title}</p>
-            <div className="flex gap-3 text-[#98A1B3]">
-              <Link to="/user/e-occurence/report/edit">
-                <Pencil size={16} className="cursor-pointer" />
-              </Link>
-              <Trash2 size={16} className="cursor-pointer" />
+      ) : (
+        <div className="px-6 pt-4 flex flex-col gap-4 ">
+          {occurrences.map((o) => (
+            <div key={o.id} className="bg-[#222834] rounded-xl p-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[#EFBF04] font-semibold capitalize">situation</span>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => navigate(`/user/e-occurence/report/edit/${o.id}`)}
+                    className="p-2 rounded-md hover:bg-white/5"
+                    aria-label="Edit"
+                  >
+                    <Pencil size={18} />
+                  </button>
+                  <button
+                    onClick={() => onDelete(o.id)}
+                    className="p-2 rounded-md hover:bg-white/5"
+                    aria-label="Delete"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
+              </div>
+              <div className="flex flex-col gap-3">
+                <div>
+                  <p className="text-xs text-[#98A1B3]">Date & time</p>
+                  <p className="text-sm">{formatDT(o)}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-[#98A1B3]">Occurrence</p>
+                  <p className="text-sm">{o.category?.name || "Unknown"}</p>
+                </div>
+              </div>
             </div>
-          </div>
-
-          <div className="text-sm text-[#98A1B3] gap-2 flex flex-col">
-            <div>
-              <p className="mb-1 text-xs">Date & time</p>
-              <p className="text-[#F4F7FF]">{item.date}, {item.time}</p>
-            </div>
-
-            <div>
-              <p className="mb-1 text-xs">Occurance</p>
-              <p className="text-[#F4F7FF]">{item.description}</p>
-            </div>
-          </div>
-
-
+          ))}
         </div>
-      ))}
+      )}
     </div>
   )
 }

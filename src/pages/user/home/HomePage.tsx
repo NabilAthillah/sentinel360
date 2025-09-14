@@ -422,11 +422,19 @@ const HomePage = () => {
       </div>
     );
   }
-
+  
   if (isSecondHome) {
     return <SecondHomePage />;
   }
 
+  if (!siteEmployee?.site?.id) {
+    return (
+      <div className="bg-[#0F101C] text-white min-h-screen flex items-center justify-center">
+        <Loader primary />
+      </div>
+    );
+  }
+  
   return (
     <div className="bg-[#0F101C] text-white min-h-screen px-4 pt-6 pb-20">
       <div className="mt-2 relative">

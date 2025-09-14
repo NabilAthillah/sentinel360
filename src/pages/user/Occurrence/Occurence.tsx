@@ -1,14 +1,14 @@
-import { ChevronLeft, Pencil, Trash2 } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { useDispatch } from "react-redux";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import Swal from "sweetalert2";
 import Loader from "../../../components/Loader";
+import { clearUser } from "../../../features/user/userSlice";
 import occurrenceCatgService from "../../../services/occurrenceCatgService";
 import occurrenceService from "../../../services/occurrenceService";
 import siteService from "../../../services/siteService";
 import { Site } from "../../../types/site";
-import { useDispatch } from "react-redux";
-import { clearUser } from "../../../features/user/userSlice";
 
 type Occurrence = {
     id: string;
@@ -144,51 +144,15 @@ const Occurence = () => {
                 <div className="flex-1 flex items-center justify-center">
                     <Loader primary />
                 </div>
-            ) : occurrences.length === 0 ? (
+            ) : (
                 <div className="flex flex-col flex-1 justify-center items-center w-full">
                     <img src={site?.image ? `${baseURL}storage/${site?.image}` : "/images/Incident.png"} alt="" className="w-1/2 " />
                     <p className="text-[#F4F7FF] text-base font-medium">{site?.name}</p>
                     <p className="text-[#98A1B3] text-sm font-normal">{site?.address}, {site?.postal_code}</p>
                 </div>
-            ) : (
-                <div className="px-6 pt-4 flex flex-col gap-4 ">
-                    {occurrences.map((o) => (
-                        <div key={o.id} className="bg-[#222834] rounded-xl p-4">
-                            <div className="flex items-center justify-between mb-2">
-                                <span className="text-[#EFBF04] font-semibold capitalize">situation</span>
-                                <div className="flex gap-2">
-                                    <button
-                                        onClick={() => navigate(`/user/e-occurence/report/edit/${o.id}`)}
-                                        className="p-2 rounded-md hover:bg-white/5"
-                                        aria-label="Edit"
-                                    >
-                                        <Pencil size={18} />
-                                    </button>
-                                    <button
-                                        onClick={() => onDelete(o.id)}
-                                        className="p-2 rounded-md hover:bg-white/5"
-                                        aria-label="Delete"
-                                    >
-                                        <Trash2 size={18} />
-                                    </button>
-                                </div>
-                            </div>
-                            <div className="flex flex-col gap-3">
-                                <div>
-                                    <p className="text-xs text-[#98A1B3]">Date & time</p>
-                                    <p className="text-sm">{formatDT(o)}</p>
-                                </div>
-                                <div>
-                                    <p className="text-xs text-[#98A1B3]">Occurrence</p>
-                                    <p className="text-sm">{o.category?.name || "Unknown"}</p>
-                                </div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
             )}
 
-            <div className="flex flex-col gap-4 justify-center items-center px-6 w-full py-10">
+            < div className="flex flex-col gap-4 justify-center items-center px-6 w-full py-10">
                 <Link
                     to={`/user/e-occurence/${site?.id}/history`}
                     className="gap-3 w-full border py-3 border-[#EFBF04] text-[#EFBF04] rounded-full flex flex-row justify-center items-center"
@@ -202,7 +166,7 @@ const Occurence = () => {
                     <p>Report</p>
                 </Link>
             </div>
-        </div>
+        </div >
     );
 };
 

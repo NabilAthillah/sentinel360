@@ -1,115 +1,283 @@
-import React, { useEffect, useState } from "react";
-import { ChevronRight, ArrowLeft } from "lucide-react";
-import { useNavigate, useParams } from "react-router-dom";
-import { Route } from "../../../types/route";
-import routeService from "../../../services/routeService";
+import { CheckCircle2, ChevronLeft, ChevronRight, Minus } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
+import { useNavigate, useParams } from "react-router-dom";
+
+import Loader from "../../../components/Loader";
+import guardTourService from "../../../services/guardTourService";
+import routeService from "../../../services/routeService";
 import { RootState } from "../../../store";
 import { Pointer } from "../../../types/pointer";
-import Loader from "../../../components/Loader";
-const getStepTitle = (step: string) => {
-  const titles: Record<string, string> = {
-    "1": "Section 2 Door",
-    "2": "Electric box",
-    "3": "Circuit area",
-    "4": "Section 3 garden",
-    "5": "Fountain",
-  };
-  return titles[step] || `Point ${step}`;
+
+type Status = "done" | "skipped" | "pending";
+
+type RoutePayload = {
+  id: string;
+  name: string;
+  route?: number[] | string | string[];
+  pointers?: Pointer[];
 };
+
+type GuardTourRow = {
+  pointer_id: string;
+  status?: string;
+  reason?: string | null;
+  updated_at?: string;
+};
+
+// ===== Helpers =====
+function parseSequenceTokens(seq: unknown): string[] {
+  if (seq == null) return [];
+  if (Array.isArray(seq)) return seq.map(String).map((s) => s.trim()).filter(Boolean);
+  if (typeof seq === "string") {
+    const cleaned = seq.replace(/[\[\]\(\)\s]/g, "");
+    if (!cleaned) return [];
+    return cleaned.split(/[^A-Za-z0-9_-]+/).map((s) => s.trim()).filter(Boolean);
+  }
+  return [];
+}
+const toNum = (n: unknown) => (Number.isFinite(Number(n)) ? Number(n) : Number.NaN);
+
+function normalizeGuardStatus(s?: string): Status {
+  const val = String(s ?? "").toLowerCase();
+  if (["done", "completed", "complete", "success", "finished", "checked", "scanned"].includes(val)) return "done";
+  if (["skipped", "skip"].includes(val)) return "skipped";
+  return "pending";
+}
+
 const Selection = () => {
   const navigate = useNavigate();
-  const [points, setPoints] = useState<Pointer[]>([]);
-  const { idSite } = useParams<{ idSite: string }>();
-  const { idRoute } = useParams<{ idRoute: string }>();
-  const [loading, setLoading] = useState(true);
+  const { idSite, idRoute } = useParams<{ idSite: string; idRoute: string }>();
   const token = useSelector((state: RootState) => state.token.token);
 
-  const fetchRoute = async () => {
-    try {
-      const res = await routeService.getRouteById(token, idRoute);
+  const [routeData, setRouteData] = useState<RoutePayload | null>(null);
+  const [loading, setLoading] = useState(true);
 
-      const routes = res.data?.pointers || [];
+  const [statusMap, setStatusMap] = useState<Record<string, Status>>({});
+  const [loadingStatus, setLoadingStatus] = useState(false);
 
-      setPoints(routes);
-    } catch (err) {
-      console.error("Error fetching points:", err);
-    } finally {
-      setLoading(false);
-    }
+  // mini toast
+  const [toast, setToast] = useState<{ open: boolean; msg: string }>({ open: false, msg: "" });
+  const showToast = (msg: string) => {
+    setToast({ open: true, msg });
+    setTimeout(() => setToast({ open: false, msg: "" }), 2200);
   };
 
+  // Fetch route detail (route + pointers)
   useEffect(() => {
-    fetchRoute();
-  }, []);
+    const fetchRoute = async () => {
+      setLoading(true);
+      try {
+        const res = await routeService.getRouteById(token, idRoute);
+        const payload = (res?.data?.data ?? res?.data) as RoutePayload;
+        setRouteData(payload ?? null);
+      } catch (err) {
+        console.error("Error fetching route:", err);
+        setRouteData(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (token && idRoute) fetchRoute();
+  }, [token, idRoute]);
+
+  // Fetch guard tour statuses (today) for this route
+  useEffect(() => {
+    const fetchStatuses = async () => {
+      if (!token || !idSite || !routeData?.id) return;
+      setLoadingStatus(true);
+      try {
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, "0");
+        const dd = String(today.getDate()).padStart(2, "0");
+        const date = `${yyyy}-${mm}-${dd}`;
+
+        const resp = await guardTourService.index(token, {
+          site_id: idSite,
+          route_id: routeData.id,
+          date,
+        });
+
+        const rows: GuardTourRow[] =
+          resp?.data?.items ??
+          resp?.data?.guard_tours ??
+          resp?.data ??
+          resp?.items ??
+          resp ??
+          [];
+
+        // ambil status terbaru per pointer
+        const temp: Record<string, { status: Status; ts: number }> = {};
+        for (const row of rows) {
+          const pid = row.pointer_id;
+          if (!pid) continue;
+          const st = normalizeGuardStatus(row.status);
+          const ts = row.updated_at ? Date.parse(row.updated_at) : 0;
+          const prev = temp[pid];
+          if (!prev || ts >= prev.ts) temp[pid] = { status: st, ts };
+        }
+
+        const finalMap: Record<string, Status> = {};
+        Object.keys(temp).forEach((k) => (finalMap[k] = temp[k].status));
+        setStatusMap(finalMap);
+      } catch (e) {
+        console.error(e);
+        setStatusMap({});
+      } finally {
+        setLoadingStatus(false);
+      }
+    };
+    fetchStatuses();
+  }, [token, idSite, routeData?.id]);
+
+  // Ambil urutan dari kolom "route"
+  const orderTokens = useMemo(() => {
+    const tokens = parseSequenceTokens(routeData?.route);
+    return tokens
+      .map((t) => {
+        const n = parseInt(t, 10);
+        return Number.isFinite(n) ? String(n) : null;
+      })
+      .filter((x): x is string => Boolean(x));
+  }, [routeData?.route]);
+
+  // Filter + urutkan pointers sesuai route (jika ada)
+  const pointers: Pointer[] = useMemo(() => {
+    const list = Array.isArray(routeData?.pointers) ? routeData!.pointers : [];
+    if (!list.length) return [];
+
+    if (orderTokens.length) {
+      const allowed = new Set(orderTokens);
+      const filtered = list.filter((p) => {
+        const n = toNum(p.order);
+        if (!Number.isFinite(n)) return false;
+        return allowed.has(String(n));
+      });
+
+      const indexByOrder = new Map<string, number>();
+      orderTokens.forEach((tok, i) => indexByOrder.set(tok, i));
+
+      return filtered.sort((a, b) => {
+        const ao = String(toNum(a.order));
+        const bo = String(toNum(b.order));
+        const ia = indexByOrder.get(ao) ?? Number.POSITIVE_INFINITY;
+        const ib = indexByOrder.get(bo) ?? Number.POSITIVE_INFINITY;
+        if (ia !== ib) return ia - ib;
+
+        const an = toNum(a.order);
+        const bn = toNum(b.order);
+        if (an !== bn) return an - bn;
+
+        return String(a.name ?? "").localeCompare(String(b.name ?? ""));
+      });
+    }
+
+    // fallback: urut by order naik
+    return [...list].sort((a, b) => {
+      const an = toNum(a.order);
+      const bn = toNum(b.order);
+      const aOrd = Number.isFinite(an) ? an : Number.POSITIVE_INFINITY;
+      const bOrd = Number.isFinite(bn) ? bn : Number.POSITIVE_INFINITY;
+      if (aOrd !== bOrd) return aOrd - bOrd;
+      return String(a.name ?? "").localeCompare(String(b.name ?? ""));
+    });
+  }, [routeData, orderTokens]);
+
+  // ambil status pointer dari map
+  const getStatusPointer = (p: Pointer): Status => statusMap[p.id] ?? "pending";
+
+  const cardClasses = (status: Status, disabled: boolean) => {
+    const base =
+      status === "done"
+        ? "border-green-500/60 bg-green-500/20"
+        : status === "skipped"
+          ? "border-amber-400/60 bg-amber-400/10"
+          : "border-transparent bg-[#222834]/60 hover:bg-[#222834]/10";
+    const disabledCls = disabled ? "opacity-60 cursor-not-allowed pointer-events-none" : "cursor-pointer";
+    return `group rounded-xl border px-4 py-3 transition ${base} ${disabledCls} focus:outline-none focus:ring-2 focus:ring-[#EFBF04]/60`;
+  };
+
+  const toPointerDetail = (p: Pointer) =>
+    `/user/guard-tours/${idSite}/route/${idRoute}/point/${p.id}/scan`;
+
+  const handlePointerClick = (p: Pointer, status: Status) => {
+    if (status === "done") {
+      showToast("Point sudah selesai.");
+      return;
+    }
+    navigate(toPointerDetail(p));
+  };
 
   return (
-    <div className="min-h-screen bg-[#181D26] text-white flex flex-col">
-      <div className="flex items-center justify-between px-4 py-4 border-b border-[#222630]">
-        <button
-          onClick={() => navigate(-1)}
-          className="flex items-center text-gray-300 hover:text-white"
-        >
-          <ArrowLeft size={20} className="mr-2" />
-          <span className="text-lg font-medium">Start</span>
+    <div className="min-h-screen bg-[#181D26] text-[#F4F7FF] p-6 flex flex-col gap-7 pt-20">
+      {/* Header */}
+      <div className="flex items-center gap-2 fixed px-6 py-6 top-0 left-0 w-full bg-[#181D26]">
+        <button onClick={() => navigate(-1)}>
+          <ChevronLeft className="text-[#F4F7FF]" />
         </button>
-        <svg
-          width="22"
-          height="20"
-          viewBox="0 0 22 20"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            d="M5.56836 17.75C5.8591 18.4185 6.33878 18.9876 6.94847 19.3873C7.55817 19.787 8.27133 20 9.00036 20C9.72939 20 10.4426 19.787 11.0522 19.3873C11.6619 18.9876 12.1416 18.4185 12.4324 17.75H5.56836Z"
-            fill="#374957"
-          />
-          <path
-            d="M16.7939 11.4118L15.4919 7.11951C15.0749 5.61827 14.1684 4.29934 12.9163 3.37213C11.6641 2.44493 10.1381 1.9626 8.58054 2.00172C7.02297 2.04084 5.5231 2.59917 4.31908 3.58806C3.11507 4.57696 2.27591 5.93973 1.93486 7.46001L0.923856 11.6128C0.789481 12.1646 0.782201 12.7397 0.902564 13.2947C1.02293 13.8498 1.26779 14.3702 1.61867 14.8168C1.96956 15.2634 2.41729 15.6245 2.92809 15.8727C3.43889 16.121 3.99942 16.25 4.56736 16.25H13.2051C13.7907 16.25 14.3681 16.1129 14.8911 15.8497C15.4142 15.5864 15.8683 15.2044 16.2171 14.7341C16.566 14.2638 16.7998 13.7183 16.9 13.1414C17.0001 12.5645 16.9638 11.9721 16.7939 11.4118Z"
-            fill="#374957"
-          />
-          <rect x="12" width="10" height="10" rx="5" fill="#19CE74" />
-          <path
-            d="M15.4078 8V7.55256L17.0882 5.71307C17.2855 5.49763 17.4479 5.31037 17.5755 5.15128C17.7031 4.99053 17.7975 4.83973 17.8588 4.69886C17.9218 4.55634 17.9533 4.4072 17.9533 4.25142C17.9533 4.07244 17.9102 3.9175 17.824 3.78658C17.7395 3.65566 17.6235 3.55457 17.476 3.48331C17.3285 3.41205 17.1628 3.37642 16.9789 3.37642C16.7833 3.37642 16.6126 3.41702 16.4668 3.49822C16.3226 3.57777 16.2108 3.68963 16.1312 3.83381C16.0533 3.97798 16.0144 4.14702 16.0144 4.34091H15.4277C15.4277 4.04261 15.4965 3.78078 15.6341 3.5554C15.7716 3.33002 15.9589 3.15436 16.1958 3.02841C16.4345 2.90246 16.7021 2.83949 16.9988 2.83949C17.2971 2.83949 17.5614 2.90246 17.7917 3.02841C18.0221 3.15436 18.2027 3.32422 18.3336 3.538C18.4645 3.75178 18.53 3.98958 18.53 4.25142C18.53 4.43868 18.496 4.6218 18.4281 4.80078C18.3618 4.9781 18.2458 5.17614 18.0801 5.39489C17.916 5.61198 17.6882 5.87713 17.3965 6.19034L16.253 7.41335V7.45312H18.6195V8H15.4078Z"
-            fill="#181D26"
-          />
-        </svg>
+        <h1 className="text-xl text-[#F4F7FF] font-normal font-noto">
+          {routeData?.name ?? "Pointers"}
+        </h1>
       </div>
-      <div className="flex flex-col gap-3 p-4 flex-1">
+
+      <div className="flex-1">
         {loading ? (
           <Loader primary />
-        ) : points.length === 0 ? (
-          <p className="text-gray-400">No routes available</p>
+        ) : pointers.length ? (
+          <div className="flex flex-col gap-4">
+            {pointers.map((p, i) => {
+              const status = getStatusPointer(p);
+              const disabled = status === "done";
+              const ordNum = toNum(p.order);
+              const labelIndex = Number.isFinite(ordNum) ? ordNum : i + 1;
+
+              return (
+                <div
+                  key={p.id ?? i}
+                  role="button"
+                  tabIndex={disabled ? -1 : 0}
+                  aria-disabled={disabled}
+                  aria-label={`Open ${p.name}`}
+                  onClick={() => handlePointerClick(p, status)}
+                  onKeyDown={(e) => {
+                    if (disabled) return;
+                    if (e.key === "Enter" || e.key === " ") handlePointerClick(p, status);
+                  }}
+                  className={cardClasses(status, disabled)}
+                  title={disabled ? "Point sudah selesai" : undefined}
+                >
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-medium">
+                      {`Point ${labelIndex} : ${p.name}`}
+                      {status === "skipped" && <span className="text-amber-300 ml-1">(Skipped)</span>}
+                      {status === "done" && <span className="text-green-300 ml-1">(Done)</span>}
+                      {loadingStatus && <span className="text-slate-400 ml-2 text-xs">loading…</span>}
+                    </p>
+
+                    {status === "done" ? (
+                      <CheckCircle2 className="h-5 w-5 text-green-400" />
+                    ) : status === "skipped" ? (
+                      <Minus className="h-5 w-5 text-amber-400" />
+                    ) : (
+                      <ChevronRight className="h-5 w-5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         ) : (
-          points.map((point) => {
-            return (
-              <button
-                key={point.id}
-                onClick={() =>
-                  navigate(
-                    `/user/guard-tours/${idSite}/route/${idRoute}/point/${point.id}/scan`
-                  )
-                }
-                className="flex items-center justify-between bg-[#222630] hover:bg-[#2a2f3a] px-4 py-5 rounded-md transition text-left font-inter"
-              >
-                <span className="text-sm text-gray-200">
-                  Point {point.order} : {point.name}
-                </span>
-                <ChevronRight size={18} className="text-gray-400" />
-              </button>
-            );
-          })
+          <p className="text-[#98A1B3]">No pointers available</p>
         )}
       </div>
 
-      <div className="p-4 flex flex-col items-center">
-        <button
-          onClick={() => alert("Start clicked")}
-          className="w-fit bg-[#EFBF04] text-black font-medium py-3 px-10 rounded-full hover:bg-[#e6b832] transition"
-        >
-          Start
-        </button>
-      </div>
+      {/* Toast */}
+      {toast.open && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#1A1E27] border border-[#2b3342] text-white rounded-full px-4 py-2 shadow-lg">
+          {toast.msg}
+        </div>
+      )}
     </div>
   );
 };
