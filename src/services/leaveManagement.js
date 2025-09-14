@@ -32,6 +32,22 @@ const leaveManagement = {
         }
     },
 
+    updateLeaveStatus: async (id, status, token) => {
+        try {
+            const response = await api.put(
+                `/leave-managements/${id}/status`,
+                { status },
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+            return response.data;
+        } catch (error) {
+            throw error.response ? error.response.data : { message: 'Network error' };
+        }
+    },
 
 
 }

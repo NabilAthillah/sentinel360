@@ -14,6 +14,7 @@ import { RootState } from "../../../store";
 import { LeaveManagement } from "../../../types/leaveManagements";
 import { Site } from "../../../types/site";
 import { User } from "../../../types/user";
+import { Check, X } from "lucide-react";
 
 const ITEMS_PER_PAGE = 5; // jumlah data per page
 
@@ -55,9 +56,11 @@ const LeaveManagementPage = () => {
     };
 
     const fetchLeaves = async () => {
+        if (!token) return;
         try {
             setLoading(true);
             const res = await leaveManagement.getLeaveManagement();
+            console.log("Leaves API Response:", res);
             setLeaves(res.data);
         } catch (err: any) {
             toast.error(err.message || "Failed to fetch leave data");
@@ -88,7 +91,6 @@ const LeaveManagementPage = () => {
         if (token) fetchFilters();
     }, [token]);
 
-    // Apply filter ke data
     const filteredLeaves = leaves.filter((leave) => {
         const matchSearch =
             search === "" ||
@@ -106,9 +108,52 @@ const LeaveManagementPage = () => {
         return matchSearch && matchSite && matchEmployee && matchType && matchDate;
     });
 
+    const handleStatusUpdate = async (id: string, status: 'pending' | 'approve' | 'rejected') => {
+        setLoading(true);
+        if (!token) {
+            navigate('/auth/login');
+            return;
+        }
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                toast.error("Session expired. Please login again.");
+                localStorage.clear();
+                navigate('/auth/login');
+                return;
+            }
+            const response = await leaveManagement.updateLeaveStatus(id, status, token);
+            if (response.success) {
+                if (status === 'approve') {
+                    toast.success("Leave Management: active");
+                } else if (status === 'rejected') {
+                    toast.success("Leave Management has been rejected");
+                } else {
+                    toast.success(`Status updated to ${status}`);
+                }
+                fetchLeaves();
+            } else {
+                toast.error(response.message || 'Failed to update status');
+            }
+        } catch (error: any) {
+            if (error.response?.status === 401) {
+                toast.error("Session expired. Please login again.");
+                localStorage.clear();
+                navigate('/auth/login');
+            } else if (error.response?.data?.message) {
+                toast.error(`Server Error: ${error.response.data.message}`);
+            } else if (error.message) {
+                toast.error(`Error: ${error.message}`);
+            } else {
+                toast.error("Unexpected error occurred.");
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
 
     // Pagination
-    const totalPages = Math.ceil(filteredLeaves.length / ITEMS_PER_PAGE);
+    const totalPages = Math.max(1, Math.ceil(filteredLeaves.length / ITEMS_PER_PAGE));
     const paginatedLeaves = filteredLeaves.slice(
         (currentPage - 1) * ITEMS_PER_PAGE,
         currentPage * ITEMS_PER_PAGE
@@ -127,6 +172,12 @@ const LeaveManagementPage = () => {
         updated[index][field] = value;
         setNewLeaveTypes(updated);
     };
+
+    useEffect(() => {
+        if (currentPage > totalPages) {
+            setCurrentPage(totalPages);
+        }
+    }, [totalPages, currentPage]);
 
     return (
         <SecondLayout>
@@ -281,8 +332,70 @@ const LeaveManagementPage = () => {
                                                 <td className="text-[#F4F7FF] pt-6 pb-3">
                                                     {formatToYMD(leave.created_at)}
                                                 </td>
-                                                <td className="text-[#F4F7FF] pt-6 pb-3 text-center">{leave.status}</td>
+                                                <td className="flex justify-center items-center pt-6 pb-3 ">
+                                                    <div
+                                                        className={`
+                                                                font-medium text-sm px-6 py-2 rounded-full w-fit capitalize
+                                                                ${leave.status === "approve"
+                                                                ? "text-[#19CE74] bg-[rgba(25,206,116,0.16)] border border-[#19CE74]"
+                                                                : leave.status === "pending"
+                                                                    ? "text-[#EAB308] bg-[rgba(234,179,8,0.16)] border border-[#EAB308]"
+                                                                    : leave.status === "rejected"
+                                                                        ? "text-[#EF4444] bg-[rgba(239,68,68,0.16)] border border-[#EF4444]"
+                                                                        : "text-gray-400 bg-gray-800 border border-gray-500"
+                                                            }
+  `}
+                                                    >
+                                                        {leave.status}
+                                                    </div>
+                                                </td>
+                                                <td className="pt-6 pb-3">
+                                                    <div className="flex gap-6 items-center justify-center px-2">
+                                                        {leave.status === "pending" && (
+                                                            <>
+                                                                <svg
+                                                                    height="28px"
+                                                                    version="1.1"
+                                                                    viewBox="0 0 18 15"
+                                                                    width="28px"
+                                                                    className="cursor-pointer"
+                                                                    xmlns="http://www.w3.org/2000/svg"
+                                                                    onClick={() => handleStatusUpdate(leave.id, 'approve')}
+                                                                >
+                                                                    <g fill="none" fillRule="evenodd" stroke="none" strokeWidth="1">
+                                                                        <g fill="#ffffff" transform="translate(-423.000000, -47.000000)">
+                                                                            <g transform="translate(423.000000, 47.500000)">
+                                                                                <path d="M6,10.2 L1.8,6 L0.4,7.4 L6,13 L18,1 L16.6,-0.4 L6,10.2 Z" />
+                                                                            </g>
+                                                                        </g>
+                                                                    </g>
+                                                                </svg>
 
+                                                                <svg
+                                                                    height="28"
+                                                                    viewBox="0 0 16 16"
+                                                                    width="28"
+                                                                    xmlns="http://www.w3.org/2000/svg"
+                                                                    onClick={() => handleStatusUpdate(leave.id, 'rejected')}
+                                                                    className='cursor-pointer'
+                                                                >
+                                                                    <polygon
+                                                                        fill="white"
+                                                                        fillRule="evenodd"
+                                                                        points="8 9.414 3.707 13.707 2.293 12.293 6.586 8 2.293 3.707 3.707 2.293 8 6.586 12.293 2.293 13.707 3.707 9.414 8 13.707 12.293 12.293 13.707 8 9.414"
+                                                                    />
+                                                                </svg>
+                                                            </>
+                                                        )}
+                                                        {leave.status === "approve" && (
+                                                            <Check size={28} className="text-green-500" />
+                                                        )}
+
+                                                        {leave.status === "rejected" && (
+                                                            <X size={28} className="text-red-500" />
+                                                        )}
+                                                    </div>
+                                                </td>
                                             </tr>
                                         ))
                                     )}
@@ -290,25 +403,25 @@ const LeaveManagementPage = () => {
                             </table>
                         </div>
 
-                        <div className="flex gap-2 absolute bottom-0 right-0">
-                            <button
-                                disabled={currentPage === 1}
-                                onClick={() => setCurrentPage((p) => p - 1)}
-                                className="px-3 py-1 bg-[#575F6F] text-[#B3BACA] rounded disabled:opacity-50"
-                            >
-                                Prev
-                            </button>
-                            <span className="px-3 py-1 bg-[#D4AB0B] text-[#181D26] rounded">
-                                {currentPage}
-                            </span>
-                            <button
-                                disabled={currentPage === totalPages}
-                                onClick={() => setCurrentPage((p) => p + 1)}
-                                className="px-3 py-1 bg-[#575F6F] text-[#B3BACA] rounded disabled:opacity-50"
-                            >
-                                Next
-                            </button>
-                        </div>
+                    </div>
+                    <div className="flex justify-end mt-4 text-[#F4F7FF]">
+                        <button
+                            disabled={currentPage === 1}
+                            onClick={() => setCurrentPage((p) => p - 1)}
+                            className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[8px_0px_0px_8px] bg-[#575F6F] disabled:opacity-50"
+                        >
+                            Prev
+                        </button>
+                        <span className="font-medium text-xs leading-[21px] text-[#181D26] py-1 px-3 bg-[#D4AB0B]">
+                            {currentPage}
+                        </span>
+                        <button
+                            disabled={currentPage === totalPages}
+                            onClick={() => setCurrentPage((p) => p + 1)}
+                            className="font-medium text-xs leading-[21px] text-[#B3BACA] py-1 px-[14px] rounded-[0px_8px_8px_0px] bg-[#575F6F] disabled:opacity-50"
+                        >
+                            Next
+                        </button>
                     </div>
                 </div>
                 {add && (

@@ -8,7 +8,7 @@ export type LeaveManagement = {
     to: string;
     total: number;
     date_submitted: string;
-    status: "active" | "deactive";
+    status?: string;
     created_at: string;
     updated_at: string;
     site: Site;

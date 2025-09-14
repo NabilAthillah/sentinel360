@@ -166,7 +166,7 @@ const AppRoutes = () => {
           <Route path="/user/attendance/checkin" element={<Checkin />} />
           <Route path="/user/attendance/checkin/:id" element={<Checkin />} />
           <Route path="/user/leaves" element={<Leaves />} />
-          <Route path="/user/leaves/request" element={<RequestLeaves />} />
+          <Route path="/user/leaves/request/:idSite" element={<RequestLeaves />} />
           <Route path="/user/settings" element={<Settings />} />
           <Route path="/user/settings/profile" element={<Profile />} />
           <Route

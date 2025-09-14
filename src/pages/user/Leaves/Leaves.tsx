@@ -16,12 +16,25 @@ const Leaves = () => {
     const idSite = localStorage.getItem("site_id");
     const [nearestSite, setNearestSite] = useState<Site[]>([]);
     const [loading, setLoading] = useState(false);
-    const annualDays = leaves
-        .filter(l => l.type === "Annual")
-        .reduce((sum, l) => sum + l.total, 0);
-    const SickDays = leaves
-        .filter(l => l.type === "Sick")
-        .reduce((sum, l) => sum + l.total, 0);
+    const formatDays = (days: number) => {
+        if (days === 0) return "0";         
+        if (days > 99) return "99";          
+        return days < 10 ? "0" + days : days.toString(); 
+    };
+
+    const annualDays = formatDays(
+        leaves
+            .filter(l => l.type === "Annual")
+            .reduce((sum, l) => sum + Number(l.total), 0) 
+    );
+
+    const SickDays = formatDays(
+        leaves
+            .filter(l => l.type === "Sick")
+            .reduce((sum, l) => sum + Number(l.total), 0) 
+    );
+
+
     const fetchLeaves = async () => {
         try {
             setLoading(true);
@@ -98,7 +111,7 @@ const Leaves = () => {
                                         {leave.total} days | {leave.type}
                                     </p>
                                 </div>
-                                <span
+                                {/* <span
                                     className={`px-3 py-2 text-xs ${mapStatus(leave.status) === "Approved"
                                         ? "bg-[#3BB678]/10 text-[#3BB678]"
                                         : mapStatus(leave.status) === "Rejected"
@@ -107,7 +120,7 @@ const Leaves = () => {
                                         }`}
                                 >
                                     {mapStatus(leave.status)}
-                                </span>
+                                </span> */}
                             </div>
                         ))
                     )}

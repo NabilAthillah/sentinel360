@@ -206,7 +206,7 @@ const Report = () => {
       const fd = new FormData();
       fd.append("incident_type_id", incidentTypeId);
       fd.append("occurred_at", occurredAt);
-      // fd.append("location", locationText);
+      fd.append("location", locationText);
       fd.append("why_happened", whyHappened);
       fd.append("how_happened", howHappened);
       fd.append("person_involved", personInvolved);
