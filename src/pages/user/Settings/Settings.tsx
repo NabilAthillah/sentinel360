@@ -26,8 +26,6 @@ const Settings = () => {
   const menuItems = [
     { icon: <User size={18} />, label: "Profile", path: "profile", isLogout: false },
     { icon: <Key size={18} />, label: "Change Password", path: "change-password", isLogout: false },
-    { icon: <ScanLine size={18} />, label: "Scan Tag", path: "scan-tag", isLogout: false },
-    { icon: <Info size={18} />, label: "About", path: "about", isLogout: false },
     { icon: <LogOut size={18} />, label: loggingOut ? "Logging out..." : "Logout", isLogout: true },
   ];
 

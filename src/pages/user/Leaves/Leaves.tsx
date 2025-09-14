@@ -13,7 +13,7 @@ const Leaves = () => {
         sick: 0,
     });
     const navigate = useNavigate();
-    const { idSite } = useParams<{ idSite: string }>();
+    const idSite = localStorage.getItem("site_id");
     const [nearestSite, setNearestSite] = useState<Site[]>([]);
     const [loading, setLoading] = useState(false);
     const annualDays = leaves
