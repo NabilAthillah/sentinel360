@@ -93,18 +93,18 @@ const LoginPage: React.FC = () => {
 
         toast.success("Login successful!");
 
-        if (user.role.name === "Administrator") {
+        if (user.role.name != "SO" && user.role.name != "SSO") {
           navigate("/dashboard");
         } else {
-          if (user.role.name != "SO" && user.role.name != "SSO") {
-            dispatch(clearUser());
-            dispatch(clearToken());
-            localStorage.removeItem("token");
-            localStorage.removeItem("user");
-            toast.error("Forbidden.");
-            setLoading(false);
-            return;
-          }
+          // if (user.role.name != "SO" && user.role.name != "SSO") {
+          //   dispatch(clearUser());
+          //   dispatch(clearToken());
+          //   localStorage.removeItem("token");
+          //   localStorage.removeItem("user");
+          //   toast.error("Forbidden.");
+          //   setLoading(false);
+          //   return;
+          // }
 
           navigate("/user");
         }
